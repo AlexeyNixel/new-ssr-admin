@@ -1,4 +1,6 @@
-import { useRuntimeConfig } from "nuxt/app";
+import { useRuntimeConfig } from 'nuxt/app';
+import type { User } from '~~/services/types/user.type';
+import type { AuthResponse } from '~/composables/useAuth';
 
 export interface ApiResponse<T = any> {
   data: T;
@@ -16,11 +18,11 @@ export const useApi = () => {
 
   const get = async <T>(
     endpoint: string,
-    options?: any,
+    options?: any
   ): Promise<ApiResponse<T>> => {
     try {
       const res: { data: any; meta: any } = await $fetch(baseApi + endpoint, {
-        method: "GET",
+        method: 'GET',
         ...options,
       });
 
@@ -29,19 +31,35 @@ export const useApi = () => {
         meta: res.meta,
         status: 200,
       };
-    } catch (e) {
-      throw "Неправильный запрос";
+    } catch {
+      throw 'Неправильный запрос';
+    }
+  };
+
+  const login = async (user: {
+    username: string;
+    password: string;
+  }): Promise<AuthResponse> => {
+    try {
+      return await $fetch(baseApi + '/auth/login', {
+        method: 'POST',
+        body: {
+          ...user,
+        },
+      });
+    } catch {
+      throw new Error();
     }
   };
 
   const getOne = async <T>(
     endpoint: string,
     slug: string,
-    options: any,
+    options: any
   ): Promise<ApiResponse<T>> => {
     try {
       const res: any = await $fetch(baseApi + endpoint + slug, {
-        method: "GET",
+        method: 'GET',
         ...options,
       });
       return {
@@ -56,5 +74,6 @@ export const useApi = () => {
   return {
     get,
     getOne,
+    login,
   };
 };

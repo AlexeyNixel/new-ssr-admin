@@ -1,10 +1,9 @@
 <template>
-  <div class="layout">
+  <div class="h-screen bg-neutral-300">
     <UApp>
-      <NuxtLink />
+      <NuxtPage />
     </UApp>
   </div>
 </template>
 
-<script setup lang="ts">
-</script>
+<script setup lang="ts"></script>
