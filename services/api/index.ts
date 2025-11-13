@@ -1,13 +1,14 @@
 import { useRuntimeConfig } from 'nuxt/app';
-import type { User } from '~~/services/types/user.type';
 import type { AuthResponse } from '~/composables/useAuth';
 
 export interface ApiResponse<T = any> {
   data: T;
   meta?: {
     page: number;
-    pageSize: number;
+    limit: number;
     total: number;
+    hasPrev: boolean;
+    hasNext: boolean;
   };
   status?: number;
 }
@@ -23,6 +24,7 @@ export const useApi = () => {
     try {
       const res: { data: any; meta: any } = await $fetch(baseApi + endpoint, {
         method: 'GET',
+        credentials: 'include',
         ...options,
       });
 
@@ -36,12 +38,34 @@ export const useApi = () => {
     }
   };
 
+  const post = async (endpoint: string, data: any) => {
+    const res = await $fetch(baseApi + endpoint, {
+      method: 'POST',
+      credentials: 'include',
+      body: {
+        ...data,
+      },
+    });
+    return res.data;
+  };
+
+  const patch = async (endpoint: string, id: string, data: any) => {
+    const res = await $fetch(baseApi + endpoint + id, {
+      method: 'PATCH',
+      credentials: 'include',
+      body: {
+        ...data,
+      },
+    });
+    return res.data;
+  };
+
   const login = async (user: {
     username: string;
     password: string;
   }): Promise<AuthResponse> => {
     try {
-      return await $fetch(baseApi + '/auth/login', {
+      return await $fetch(baseApi + '/api/auth/login', {
         method: 'POST',
         body: {
           ...user,
@@ -75,5 +99,7 @@ export const useApi = () => {
     get,
     getOne,
     login,
+    post,
+    patch,
   };
 };

@@ -1,9 +1,9 @@
 <template>
-  <div class="h-screen bg-neutral-300">
-    <UApp>
+  <UApp>
+    <NuxtLayout name="default">
       <NuxtPage />
-    </UApp>
-  </div>
+    </NuxtLayout>
+  </UApp>
 </template>
 
 <script setup lang="ts"></script>
