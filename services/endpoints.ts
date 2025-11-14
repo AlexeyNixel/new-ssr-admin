@@ -3,7 +3,7 @@ export const API_ENDPOINTS = {
   menu: '/api/menu/',
   menuItem: '/api/menu-item/',
   department: '/api/departments/',
-  rubric: '/api/rubric/',
+  tag: '/api/tags/',
   event: '/api/affiche/',
   slides: '/api/slides/',
   file: '/api/file/',
