@@ -75,6 +75,10 @@ const columns: TableColumn<Department>[] = [
     <!--      :items-per-page="Number(departments?.meta?.limit)"-->
     <!--      @update:page="fetchData"-->
     <!--    />-->
-    <UButton class="absolute top-2 right-2" label="Добавить пост" />
+    <UButton
+      class="absolute top-2 right-2"
+      label="Добавить пост"
+      to="/post/admin"
+    />
   </div>
 </template>

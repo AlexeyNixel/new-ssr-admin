@@ -2,7 +2,6 @@
   <client-only>
     <ckeditor
       v-if="editor && config"
-      v-model="content"
       :editor="editor"
       :config="config"
       class="w-full"
@@ -68,10 +67,9 @@ import 'ckeditor5/ckeditor5.css';
 /**
  * Create a free account with a trial: https://portal.ckeditor.com/checkout?plan=free
  */
-const LICENSE_KEY = 'GPL'; // or <YOUR_LICENSE_KEY>.
+const LICENSE_KEY = 'GPL';
 
 const isLayoutReady = ref(false);
-const content = defineModel();
 const editor = ClassicEditor;
 
 const config = computed(() => {

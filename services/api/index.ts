@@ -46,7 +46,7 @@ export const useApi = () => {
         ...data,
       },
     });
-    return res.data;
+    return res;
   };
 
   const patch = async (endpoint: string, id: string, data: any) => {

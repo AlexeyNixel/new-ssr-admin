@@ -7,5 +7,6 @@ export const useTagApi = () => {
 
   return {
     getAllTags: (params?: any) => api.get<Tag[]>(API_ENDPOINTS.tag, { params }),
+    createTag: (data: any) => api.post(API_ENDPOINTS.tag, data),
   };
 };

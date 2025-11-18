@@ -5,7 +5,7 @@ export const API_ENDPOINTS = {
   department: '/api/departments/',
   tag: '/api/tags/',
   event: '/api/affiche/',
-  slides: '/api/slides/',
+  slides: '/api/main-slider/',
   file: '/api/file/',
   document: '/api/document/',
   book: '/api/book/',
