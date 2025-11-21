@@ -5,7 +5,7 @@ export interface IEvent {
   phone: string;
   age: number;
   place: string;
-  eventTime: Date;
+  eventTime: string;
   isDeleted: boolean;
 }
 
@@ -13,4 +13,5 @@ export interface EventQuery {
   isDeleted?: boolean;
   limit?: number;
   page?: number;
+  sortBy?: string;
 }

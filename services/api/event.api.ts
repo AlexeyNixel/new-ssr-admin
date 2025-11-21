@@ -10,5 +10,6 @@ export const useEventApi = () => {
       api.get<IEvent[]>(API_ENDPOINTS.event, { params }),
     updateEvent: (id: string, data: any) =>
       api.patch(API_ENDPOINTS.event, id, data),
+    createEvent: (data: Partial<IEvent>) => api.post(API_ENDPOINTS.event, data),
   };
 };

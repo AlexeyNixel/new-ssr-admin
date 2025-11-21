@@ -44,7 +44,10 @@ const columns: TableColumn<IEvent>[] = [
     accessorKey: 'createdAt',
     header: 'Дата создания',
     cell: ({ row }) => {
-      return h('div', dayjs(row.original.eventTime).format('DD.MM.YYYY HH:mm'));
+      return h(
+        'div',
+        dayjs(row.original.eventTime).utc().format('DD.MM.YYYY HH:mm')
+      );
     },
   },
   {
@@ -69,8 +72,8 @@ const handleDeleteEvent = async (event: IEvent) => {
   });
 };
 
-const handleOpenModal = async () => {
-  modal.open();
+const handleOpenModal = async (event?: IEvent) => {
+  modal.open({ event: event });
 };
 
 const fetchData = async () => {
@@ -78,6 +81,7 @@ const fetchData = async () => {
     isDeleted: true,
     limit: 20,
     page: page.value,
+    sortBy: 'createdAt',
   });
 };
 
