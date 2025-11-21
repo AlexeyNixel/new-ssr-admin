@@ -38,15 +38,18 @@ export const useApi = () => {
     }
   };
 
+  const getWithoutPagination = async <T>(enpoint: string): Promise<T> => {
+    return await $fetch(baseApi + enpoint, {
+      method: 'GET',
+    });
+  };
+
   const post = async (endpoint: string, data: any) => {
-    const res = await $fetch(baseApi + endpoint, {
+    return await $fetch(baseApi + endpoint, {
       method: 'POST',
       credentials: 'include',
-      body: {
-        ...data,
-      },
+      body: { ...data },
     });
-    return res;
   };
 
   const patch = async (endpoint: string, id: string, data: any) => {
@@ -97,6 +100,7 @@ export const useApi = () => {
 
   return {
     get,
+    getWithoutPagination,
     getOne,
     login,
     post,

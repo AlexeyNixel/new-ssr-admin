@@ -32,12 +32,14 @@ const navLinks = [
   },
 ];
 const cookies = useCookie('user_data');
-const user = {
-  name: cookies.value?.name || '',
-  email: cookies.value?.username,
-  role: 'Администратор',
-  avatar: 'i-heroicons-user-circle',
-};
+const user = computed(() => {
+  return {
+    name: cookies.value?.name || '',
+    email: cookies.value?.username,
+    role: 'Администратор',
+    avatar: 'i-heroicons-user-circle',
+  };
+});
 
 const handleLogout = () => {
   console.log('Logout clicked');

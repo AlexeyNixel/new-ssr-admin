@@ -1,6 +1,8 @@
 <script setup lang="ts">
+import type { NavigationItem } from '~~/services/types/navigation-item.type';
+
 interface Props {
-  id?: string;
+  navigationItem?: NavigationItem;
 }
 
 interface SelectItem {
@@ -9,6 +11,24 @@ interface SelectItem {
 }
 
 const props = defineProps<Props>();
+
+const newNavigationItem = ref({
+  title: '',
+  description: '',
+  url: '',
+  slug: '',
+  icon: '',
+  order: 0,
+  isExternal: false,
+  targer: '',
+});
+
+if (props.navigationItem) {
+  Object.keys(newNavigationItem.value).forEach((key: string) => {
+    newNavigationItem.value[key] = props.navigationItem[key];
+  });
+}
+
 const icon = ref('');
 const items = ref<SelectItem[]>([
   {
@@ -29,11 +49,11 @@ const items = ref<SelectItem[]>([
         <!-- Заголовок -->
         <div class="mb-6">
           <h3 class="text-xl font-semibold text-gray-900 dark:text-white">
-            {{ id ? 'Обновить запись' : 'Создать запись' }}
+            {{ navigationItem.id ? 'Обновить запись' : 'Создать запись' }}
           </h3>
           <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
             {{
-              id
+              navigationItem.id
                 ? 'Внесите изменения в существующую запись'
                 : 'Заполните все обязательные поля для создания новой записи'
             }}
@@ -46,6 +66,7 @@ const items = ref<SelectItem[]>([
           <div class="space-y-4">
             <UFormField label="Название" name="title" required>
               <UInput
+                v-model="newNavigationItem.title"
                 placeholder="Введите название записи"
                 class="w-full"
                 size="lg"
@@ -54,6 +75,7 @@ const items = ref<SelectItem[]>([
 
             <UFormField label="Описание" name="description" required>
               <UTextarea
+                v-model="newNavigationItem.description"
                 placeholder="Введите описание записи"
                 class="w-full"
                 :rows="3"
@@ -62,6 +84,7 @@ const items = ref<SelectItem[]>([
 
             <UFormField label="Ссылка" name="link" required>
               <UInput
+                v-model="newNavigationItem.slug"
                 placeholder="https://example.com"
                 class="w-full"
                 icon="i-heroicons-link"
@@ -74,6 +97,7 @@ const items = ref<SelectItem[]>([
             <!-- Тип открытия ссылки -->
             <UFormField label="Тип открытия ссылки" name="target" required>
               <USelect
+                v-model="newNavigationItem.target"
                 :items="items"
                 placeholder="Выберите тип"
                 class="w-full"
@@ -86,17 +110,12 @@ const items = ref<SelectItem[]>([
                 <div
                   class="flex items-center gap-3 p-2 bg-gray-50 dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700"
                 >
-                  <div
-                    v-if="icon"
-                    class="flex-shrink-0 w-8 h-8 flex items-center justify-center bg-white dark:bg-gray-700 rounded border"
-                  >
-                    <Icon
-                      :name="icon"
-                      class="text-lg text-gray-600 dark:text-gray-300"
-                    />
-                  </div>
+                  <Icon
+                    :name="newNavigationItem.icon"
+                    class="text-lg text-gray-600 dark:text-gray-300"
+                  />
                   <UInput
-                    v-model="icon"
+                    v-model="newNavigationItem.icon"
                     placeholder="icon-name"
                     class="flex-1 border-0 bg-transparent focus:ring-0 p-0"
                   />
@@ -109,7 +128,13 @@ const items = ref<SelectItem[]>([
 
             <!-- Позиция -->
             <UFormField label="Позиция" name="position" required>
-              <UInput type="number" placeholder="0" min="0" class="w-full" />
+              <UInput
+                v-model="newNavigationItem.order"
+                type="number"
+                placeholder="0"
+                min="0"
+                class="w-full"
+              />
             </UFormField>
           </div>
 

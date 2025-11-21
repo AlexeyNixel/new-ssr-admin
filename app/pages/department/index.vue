@@ -1,29 +1,21 @@
 <script setup lang="ts">
 import { ModalsAdminDepartment, UBadge, UButton } from '#components';
 import dayjs from 'dayjs';
-import { useDepartmentStore } from '~/stores/department.store';
 import type { Department } from '~~/services/types/department.type';
 import type { TableColumn } from '#ui/components/Table.vue';
+import { useDepartmentApi } from '~~/services/api/department.api';
+
+const limit = 9;
+const isDeleted = true;
 
 const toast = useToast();
-
-const departmentStore = useDepartmentStore();
-const { departments } = storeToRefs(departmentStore);
-
 const overlay = useOverlay();
+const departmentApi = useDepartmentApi();
+
 const modal = overlay.create(ModalsAdminDepartment);
 
 const page = ref(1);
-
-const fetchData = async () => {
-  await departmentStore.getDepartments({
-    isDeleted: true,
-    limit: 15,
-    page: page.value,
-  });
-};
-
-await fetchData();
+const departmentsRes = ref();
 
 const columns: TableColumn<Department>[] = [
   {
@@ -32,8 +24,9 @@ const columns: TableColumn<Department>[] = [
     cell: ({ row }) => {
       return h(UBadge, {
         class: 'hover:cursor-pointer',
-        color: row.original.isDeleted ? 'error' : 'success',
-        label: row.original.isDeleted ? 'Скрыта' : 'Активна',
+        variant: 'subtle',
+        color: row.original.isDeleted ? 'warning' : 'success',
+        label: row.original.isDeleted ? 'Скрыта' : 'Опубликована',
         onClick: () => handleHideDepartment(row.original),
       });
     },
@@ -41,6 +34,8 @@ const columns: TableColumn<Department>[] = [
   {
     accessorKey: 'title',
     header: 'Название',
+    cell: ({ row }) =>
+      h('div', { class: 'text-gray-900 font-medium' }, row.original.title),
   },
   {
     accessorKey: 'slug',
@@ -50,66 +45,70 @@ const columns: TableColumn<Department>[] = [
     accessorKey: 'createdAt',
     header: 'Дата создания',
     cell: ({ row }) => {
-      return h('div', dayjs(row.original.createdAt).format('DD.MM.YYYY'));
+      return h('div', dayjs(row.original.createdAt).format('DD.MM.YYYY HH:mm'));
     },
   },
   {
     id: 'actions',
     cell: ({ row }) => {
       return h(UButton, {
-        label: 'Обновить',
-        icon: 'i-solar-refresh-outline',
-        onClick: () => handleOpenModalUpdate(row.original),
+        variant: 'subtle',
+        color: 'secondary',
+        icon: 'i-heroicons-pencil-square',
+        onClick: () => handleOpenModal(row.original),
       });
     },
   },
 ];
 
-const handleOpenModalCreate = () => {
-  modal.open();
-};
-
-const handleOpenModalUpdate = (department: Department) => {
+const handleOpenModal = (department?: Department) => {
   modal.open({ department: department });
 };
 
 const handleHideDepartment = async (department: Department) => {
-  try {
-    department.isDeleted = !department.isDeleted;
-    await departmentStore.updateDepartments(department.id, {
-      isDeleted: department.isDeleted,
-    });
+  department.isDeleted = !department.isDeleted;
 
-    toast.add({
-      title: department.isDeleted ? 'Отдел скрыт' : 'Отдел восстановлен',
-      color: 'success',
-    });
-  } catch {
-    toast.add({
-      title: 'Произошла ошибка проверьте введеные данные',
-      color: 'warning',
-    });
-  }
+  await departmentApi.updateDepartment(department.id, {
+    isDeleted: department.isDeleted,
+  });
+
+  toast.add({
+    title: department.isDeleted ? 'Отдел скрыт' : 'Отдел восстановлен',
+    color: 'success',
+  });
 };
+
+const fetchData = async () => {
+  departmentsRes.value = await departmentApi.getAllDepartments({
+    isDeleted,
+    limit,
+    page: page.value,
+  });
+};
+
+await fetchData();
+
+watch(page, () => {
+  fetchData();
+});
 </script>
 
 <template>
-  <div class="flex flex-col justify-between h-full">
-    <UTable :columns="columns" :data="departments?.data" />
-    <UPagination
-      v-if="departments?.meta?.hasNext || departments?.meta?.hasPrev"
-      v-model:page="page"
-      class="bottom-10 flex justify-center mb-10"
-      :total="departments?.meta?.total"
-      :items-per-page="Number(departments?.meta?.limit)"
-      @update:page="fetchData"
+  <NuxtLayout
+    v-model="page"
+    name="table"
+    title="Управление отделами"
+    :meta="departmentsRes.meta"
+    :event-create="handleOpenModal"
+  >
+    <UTable
+      :ui="{
+        thead: 'bg-gray-50',
+      }"
+      :columns="columns"
+      :data="departmentsRes.data"
     />
-    <UButton
-      class="absolute top-2 right-2"
-      label="Добавить отдел"
-      @click="handleOpenModalCreate"
-    />
-  </div>
+  </NuxtLayout>
 </template>
 
 <style scoped></style>

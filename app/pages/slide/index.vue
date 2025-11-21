@@ -5,21 +5,31 @@ import type { Slide } from '~~/services/types/slide.type';
 import dayjs from 'dayjs';
 import { ModalsAdminSlide, UBadge, UButton } from '#components';
 
-const slideApi = useSlideApi();
-const { data: slides } = await slideApi.getAllSlides({
-  isDeleted: true,
-  limit: 20,
-  include: '',
-});
-
 const overlay = useOverlay();
+const slideApi = useSlideApi();
+
+const slidesRes = ref();
+const page = ref(1);
+
 const modal = overlay.create(ModalsAdminSlide);
 
-const handleOpen = (slide?: Slide) => {
+const handleOpenModal = (slide?: Slide) => {
   modal.open({ slide: slide });
 };
 
 const columns: TableColumn<Slide>[] = [
+  {
+    accessorKey: 'isDeleted',
+    header: 'Статус',
+    cell: ({ row }) => {
+      return h(UBadge, {
+        class: 'hover:cursor-pointer',
+        variant: 'subtle',
+        color: row.original.isDeleted ? 'warning' : 'success',
+        label: row.original.isDeleted ? 'Скрыта' : 'Опубликован',
+      });
+    },
+  },
   {
     id: 'preview',
     header: 'Изображение',
@@ -28,17 +38,6 @@ const columns: TableColumn<Slide>[] = [
         src: `http://static.infomania.ru${row.original.image.path}`,
         style: 'width:200px',
       }),
-  },
-  {
-    accessorKey: 'isDeleted',
-    header: 'Статус',
-    cell: ({ row }) => {
-      return h(UBadge, {
-        class: 'hover:cursor-pointer',
-        color: row.original.isDeleted ? 'error' : 'success',
-        label: row.original.isDeleted ? 'Скрыта' : 'Активна',
-      });
-    },
   },
   {
     accessorKey: 'image',
@@ -56,22 +55,46 @@ const columns: TableColumn<Slide>[] = [
     id: 'action',
     cell: ({ row }) =>
       h(UButton, {
-        onClick: () => handleOpen(row.original),
-        label: 'Обновить',
+        variant: 'subtle',
+        color: 'secondary',
+        icon: 'i-heroicons-pencil-square',
+        onClick: () => handleOpenModal(row.original),
       }),
   },
 ];
+
+const fetchData = async () => {
+  slidesRes.value = await slideApi.getAllSlides({
+    isDeleted: true,
+    limit: 20,
+    include: '',
+    page: page.value,
+  });
+};
+
+await fetchData();
+
+watch(page, () => {
+  fetchData();
+});
 </script>
 
 <template>
-  <div>
-    <UTable :columns="columns" :data="slides" />
-    <UButton
-      class="absolute top-2 right-2"
-      label="Создать слайд"
-      @click="handleOpen"
+  <NuxtLayout
+    v-model="page"
+    name="table"
+    title="Управление слайдами"
+    :meta="slidesRes.meta"
+    :event-create="handleOpenModal"
+  >
+    <UTable
+      :columns="columns"
+      :data="slidesRes.data"
+      :ui="{
+        thead: 'bg-gray-50',
+      }"
     />
-  </div>
+  </NuxtLayout>
 </template>
 
 <style scoped></style>

@@ -1,17 +1,23 @@
 <script setup lang="ts">
-import type { TableColumn } from '#ui/components/Table.vue';
+import type { TableColumn } from '@nuxt/ui';
+import { useSortable } from '@vueuse/integrations/useSortable.mjs';
+import { Icon, UBadge, UButton } from '#components';
 import type { NavigationItem } from '~~/services/types/navigation-item.type';
-import { Icon, ModalsAdminNavigation, UButton } from '#components';
+import { useNavigationApi } from '~~/services/api/navigation.api';
+import AdminNavigation from '~/components/Modals/AdminNavigation.vue';
 
-const data = await $fetch('http://localhost:3333/api/navigation-item', {});
-const expanded = ref({ 0: true });
+const navigationApi = useNavigationApi();
 const overlay = useOverlay();
-const modal = overlay.create(ModalsAdminNavigation);
+const modal = overlay.create(AdminNavigation);
+
+const navigationsItems = ref<NavigationItem[]>(
+  await navigationApi.getAllNavigation()
+);
 
 const columns: TableColumn<NavigationItem>[] = [
   {
     accessorKey: 'title',
-    header: '#',
+    header: 'Название',
     cell: ({ row }) => {
       return h(
         'div',
@@ -19,7 +25,7 @@ const columns: TableColumn<NavigationItem>[] = [
           style: {
             paddingLeft: `${row.depth}rem`,
           },
-          class: 'flex items-center gap-2 w-5',
+          class: 'flex items-center gap-2 font-medium',
         },
         [
           h(UButton, {
@@ -34,59 +40,86 @@ const columns: TableColumn<NavigationItem>[] = [
             },
             onClick: row.getToggleExpandedHandler(),
           }),
+          h(Icon, { name: row.original.icon, class: 'text-2xl' }),
           row.getValue('title') as string,
         ]
       );
     },
   },
-
   {
     accessorKey: 'isExternal',
     header: 'Тип ссылки',
     cell: ({ row }) =>
-      h('div', row.original.isExternal ? 'Внешняя' : 'Внутренняя'),
-  },
-  {
-    accessorKey: 'icon',
-    header: 'Иконка',
-    cell: ({ row }) =>
-      h(Icon, {
-        name: row.original.icon,
-        class: 'text-4xl text-black',
+      h(UBadge, {
+        label: row.original.isExternal ? 'Внешняя' : 'Внутренняя',
+        color: row.original.isExternal ? 'secondary' : 'success',
+        variant: 'subtle',
+        class: 'text-xs font-medium',
       }),
   },
   {
     accessorKey: 'order',
     header: 'Позиция',
+    cell: ({ row }) =>
+      h(
+        'div',
+        {
+          class: `text-center text-sm font-mono text-gray-600 bg-gray-100 rounded px-2 py-1 ${
+            row.depth > 0
+              ? 'bg-blue-100 text-blue-700 border border-blue-200'
+              : ''
+          }`,
+        },
+        row.original.order
+      ),
   },
   {
-    id: 'update',
+    id: 'actions',
     cell: ({ row }) =>
       h(UButton, {
-        label: 'Обновить',
-        onClick: () => modal.open({ id: row.original.id }),
+        onClick: () => modal.open({ navigationItem: row.original }),
+        icon: 'i-heroicons-pencil-square',
+        color: 'secondary',
+        variant: 'outline',
       }),
   },
 ];
+const handleDragItem = async () => {
+  try {
+    const updates: Array<{ id: string; order: number }> =
+      navigationsItems.value.map((item, index) => ({
+        id: item.id,
+        order: index + 1,
+      }));
 
-console.log(data);
+    await navigationApi.updateBatchOrder(updates);
+
+    navigationsItems.value = await navigationApi.getAllNavigation();
+  } catch (error) {
+    console.error('Ошибка при обновлении порядка:', error);
+  }
+};
+useSortable('.my-table-tbody', navigationsItems, {
+  animation: 150,
+});
 </script>
 
 <template>
-  <UTable
-    v-model:expanded="expanded"
-    :columns="columns"
-    :get-sub-rows="(row) => row.children"
-    :data="data"
-    class="flex-1"
-    :ui="{
-      base: 'border-separate border-spacing-0',
-      tbody: '[&>tr]:last:[&>td]:border-b-0',
-      tr: 'group',
-      td: 'empty:p-0 group-has-[td:not(:empty)]:border-b border-default p-1',
-      th: 'p-1',
-    }"
-  />
+  <div v-if="navigationsItems" class="h-full bg-gray-50 p-4">
+    <UTable
+      ref="table"
+      class="flex-1 bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden"
+      :data="navigationsItems"
+      :get-sub-rows="(row) => row.children"
+      :columns="columns"
+      :ui="{
+        thead: 'bg-gray-50 border-b border-gray-200',
+        th: 'py-3 px-4 font-semibold text-gray-900 text-sm text-left whitespace-nowrap',
+        tbody: 'divide-y divide-gray-200 my-table-tbody',
+        td: 'py-3 px-4 align-middle group-hover:bg-gray-50 transition-colors',
+        tr: 'group hover:bg-gray-50 transition-colors',
+      }"
+      @dragend="handleDragItem"
+    />
+  </div>
 </template>
-
-<style scoped></style>

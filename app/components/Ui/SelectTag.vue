@@ -13,7 +13,9 @@ const tagApi = useTagApi();
 const tags = ref();
 const tagsArr = ref(props.modelValue);
 
-const { data } = await tagApi.getAllTags();
+const { data } = await tagApi.getAllTags({
+  limit: 50,
+});
 tags.value = data;
 
 const onCreate = async (tagName: string) => {

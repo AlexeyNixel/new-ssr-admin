@@ -1,10 +1,10 @@
 export const API_ENDPOINTS = {
   posts: '/api/posts/',
-  menu: '/api/menu/',
+  navigation: '/api/navigation-item/',
   menuItem: '/api/menu-item/',
   department: '/api/departments/',
   tag: '/api/tags/',
-  event: '/api/affiche/',
+  event: '/api/event/',
   slides: '/api/main-slider/',
   file: '/api/file/',
   document: '/api/document/',

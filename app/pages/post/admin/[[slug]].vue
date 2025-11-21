@@ -21,12 +21,15 @@
           <!-- Правая боковая панель -->
           <div class="lg:w-80 flex-shrink-0 space-y-6">
             <!-- Загрузка изображения -->
-            <UFormField label="Изображение новости" class="space-y-3">
+            <UFormField
+              name="previewFileId"
+              label="Изображение новости"
+              class="space-y-3"
+            >
               <UiUploadImage
                 v-model="newPreview.id"
                 :preview="newPreview?.path"
               />
-              {{ newPreview.id }}
             </UFormField>
 
             <!-- Дата публикации -->
@@ -127,8 +130,8 @@
                 class="w-full"
               />
             </UFormField>
-
             <UFormField
+              aria-valuemax="512"
               required
               label="Краткое описание"
               class="space-y-3"
@@ -187,10 +190,31 @@ const newPreview = reactive({
 });
 
 const schema = z.object({
-  title: z.string('Обязательное поле'),
-  description: z.string('Обязательное поле'),
+  title: z
+    .string('Обязательное поле')
+    .min(1, 'Обязательное поле')
+    .transform((val) => val.trim())
+    .pipe(
+      z
+        .string()
+        .min(8, 'Должно быть минимум 8 символов')
+        .refine((val) => val.length > 0)
+    ),
+  description: z
+    .string('Обязательное поле')
+    .min(1, 'Обязательное поле')
+
+    .transform((val) => val.trim())
+    .pipe(
+      z
+        .string()
+        .min(16, 'Должно быть минимум 16 символов')
+        .max(512, 'Не должно превышать 512 символов')
+        .refine((val) => val.length > 0)
+    ),
   content: z.string('Обязательное поле'),
   departmentId: z.string('Обязательное поле'),
+  previewFileId: z.string('Обязательное поле').min(1, 'Обязательное поле'),
 });
 
 const newPost = reactive({
@@ -206,7 +230,9 @@ const newPost = reactive({
   previewFileId: undefined,
 });
 
-const { data: departments } = await departmentApi.getAllDepartments();
+const { data: departments } = await departmentApi.getAllDepartments({
+  limit: 50,
+});
 
 if (slug) {
   const { data } = await postApi.getOnePost(slug as string);
@@ -241,6 +267,8 @@ const createPost = async () => {
     publishedAt: dayjs(publishedAt.value),
   };
 
+  console.log(newData);
+
   try {
     if (slug) {
       await postApi.updatePost(slug as string, { ...newData });
@@ -255,4 +283,10 @@ const createPost = async () => {
     toast.add({ title: 'Произошла ошибка', color: 'error' });
   }
 };
+
+watch(newPreview, () => {
+  if (newPreview.id) {
+    newPost.previewFileId = newPreview.id;
+  }
+});
 </script>

@@ -10,7 +10,7 @@ interface Props {
 const props = defineProps<Props>();
 const emit = defineEmits<{ close: [boolean] }>();
 
-const isUpdate = ref(!!props.department);
+const isUpdate = ref(!!props?.department);
 
 const toast = useToast();
 const departmentApi = useDepartmentApi();
@@ -27,14 +27,18 @@ const newDepartment = ref({
 });
 
 const handleCreate = async () => {
-  await departmentApi.createDepartment(newDepartment.value);
+  console.log();
+  if (isUpdate.value) {
+    await departmentApi.updateDepartment(
+      props.department.id,
+      newDepartment.value
+    );
+  } else {
+    await departmentApi.createDepartment(newDepartment.value);
+  }
+
   toast.add({
     title: 'Отдел создан',
-  });
-
-  await departmentStore.getDepartments({
-    isDeleted: true,
-    limit: 15,
   });
 
   emit('close', false);
@@ -50,6 +54,7 @@ const handleCreate = async () => {
         class="p-3 flex flex-col gap-5"
         @submit="handleCreate"
       >
+        {{ !!department }}
         <h3 v-if="isUpdate">Обновление отдела</h3>
         <h3 v-else>Создание отдела</h3>
 

@@ -1,6 +1,10 @@
 @import 'tailwindcss';
 @import '@nuxt/ui';
 
+html {
+    scroll-behavior: smooth;
+}
+
 :root {
     --color-primary-50: #1d9fb7;
     --color-primary-100: #06434f;
