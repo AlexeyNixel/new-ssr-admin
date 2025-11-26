@@ -1,9 +1,6 @@
 import { useApi } from './index';
 import { API_ENDPOINTS } from '../endpoints';
-import type {
-  Department,
-  DepartmentResponse,
-} from '~~/services/types/department.type';
+import type { Department } from '~~/services/types/department.type';
 
 export const useDepartmentApi = () => {
   const api = useApi();

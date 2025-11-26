@@ -7,7 +7,5 @@ export const API_ENDPOINTS = {
   event: '/api/event/',
   slides: '/api/main-slider/',
   file: '/api/file/',
-  document: '/api/document/',
   book: '/api/book/',
-  video: '/api/video/',
 };

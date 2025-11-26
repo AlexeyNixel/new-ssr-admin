@@ -16,6 +16,7 @@ const modal = overlay.create(ModalsAdminDepartment);
 
 const page = ref(1);
 const departmentsRes = ref();
+const openModal = ref();
 
 const columns: TableColumn<Department>[] = [
   {
@@ -61,8 +62,13 @@ const columns: TableColumn<Department>[] = [
   },
 ];
 
-const handleOpenModal = (department?: Department) => {
-  modal.open({ department: department });
+const handleOpenModal = async (department?: Department) => {
+  const instance = modal.open({ department: department });
+  const result = await instance.result;
+
+  if (result) {
+    await fetchData();
+  }
 };
 
 const handleHideDepartment = async (department: Department) => {
@@ -91,6 +97,14 @@ await fetchData();
 watch(page, () => {
   fetchData();
 });
+
+watch(openModal, () => {
+  console.log(openModal.value);
+});
+
+useHead({
+  title: 'Управление отделами',
+});
 </script>
 
 <template>
@@ -101,6 +115,7 @@ watch(page, () => {
     :meta="departmentsRes.meta"
     :event-create="handleOpenModal"
   >
+    {{ openModal }}
     <UTable
       :ui="{
         thead: 'bg-gray-50',

@@ -103,12 +103,12 @@ const onSelect = (e: Event, row: TableRow<Post>) => {
   navigateTo(`/post/admin/${row.original.id}`);
 };
 
-watch(page, () => {
+watch([page, searchText], () => {
   fetchPost();
 });
 
-watch(searchText, () => {
-  fetchPost();
+useHead({
+  title: 'Управление постами',
 });
 </script>
 

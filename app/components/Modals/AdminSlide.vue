@@ -1,18 +1,36 @@
 <script setup lang="ts">
 import type { Slide } from '~~/services/types/slide.type';
+import { useSlideApi } from '~~/services/api/slide.api';
 
+const emit = defineEmits<{ close: [boolean] }>();
 const props = defineProps<{
   slide?: Slide;
 }>();
-const emit = defineEmits<{ close: [boolean] }>();
-const newImage = ref('');
 
-const newSlides = ref<Partial<Slide>>({
-  imageFileId: props.slide?.imageFileId,
-  postId: props.slide?.postId,
-  isDeleted: props.slide?.isDeleted,
-  slideOrder: props.slide?.slideOrder,
+const slideApi = useSlideApi();
+const toast = useToast();
+
+const newSlides = ref({
+  imageFileId: props.slide?.imageFileId || '',
+  postId: props.slide?.postId || undefined,
+  isDeleted: props.slide?.isDeleted || false,
+  slideOrder: props.slide?.slideOrder || 0,
 });
+
+const onSubmit = async () => {
+  if (!newSlides.value.postId) {
+    delete newSlides.value.postId;
+  }
+
+  if (props.slide) {
+    await slideApi.updateSlide(props.slide?.id, newSlides.value);
+  } else {
+    await slideApi.createSlide(newSlides.value);
+  }
+
+  toast.add({ title: props.slide ? 'Слайд обновлен' : 'Слайд создан' });
+  emit('close', true);
+};
 </script>
 
 <template>
@@ -39,7 +57,7 @@ const newSlides = ref<Partial<Slide>>({
           <UFormField label="Изображение слайда" name="image" class="space-y-3">
             <div class="flex flex-col items-center justify-center space-y-3">
               <UiUploadImage
-                v-model="newImage"
+                v-model="newSlides.imageFileId"
                 :preview="slide?.image?.path"
                 class="w-full"
               />
@@ -124,7 +142,7 @@ const newSlides = ref<Partial<Slide>>({
             <div class="flex flex-col sm:flex-row justify-end gap-3">
               <UButton
                 variant="outline"
-                color="gray"
+                color="neutral"
                 class="flex-1 sm:flex-none order-2 sm:order-1"
                 @click="$emit('close', false)"
               >
@@ -134,6 +152,7 @@ const newSlides = ref<Partial<Slide>>({
                 color="primary"
                 class="flex-1 sm:flex-none order-1 sm:order-2"
                 :label="slide ? 'Сохранить изменения' : 'Создать слайд'"
+                @click="onSubmit"
               />
             </div>
           </div>

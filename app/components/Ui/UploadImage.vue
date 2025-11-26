@@ -41,6 +41,7 @@ const uploadImage = async () => {
       {
         method: 'POST',
         body,
+        credentials: 'include',
       }
     )) as File;
     emit('update:modelValue', res.id);

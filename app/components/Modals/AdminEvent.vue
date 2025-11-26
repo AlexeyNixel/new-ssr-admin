@@ -1,6 +1,8 @@
 <script setup lang="ts">
 import { useEventApi } from '~~/services/api/event.api';
 import type { IEvent } from '~~/services/types/event.type';
+import { EVENT_PLACES } from '~/constants/places';
+import { EVENT_PHONES } from '~/constants/phone';
 
 const props = defineProps<{
   event?: IEvent;
@@ -82,8 +84,9 @@ const handleCancel = () => {
           <!-- Контактная информация и место -->
           <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
             <UFormField label="Контактный телефон" required>
-              <UInput
+              <USelect
                 v-model="newEvent.phone"
+                :items="EVENT_PHONES"
                 placeholder="+7 (XXX) XXX-XX-XX"
                 icon="i-heroicons-phone"
               />
@@ -103,15 +106,22 @@ const handleCancel = () => {
 
           <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
             <UFormField label="Место проведения" required>
-              <UInput
+              <USelect
                 v-model="newEvent.place"
+                :items="EVENT_PLACES"
+                value-key="key"
+                label-key="value"
                 placeholder="Укажите место проведения"
-                icon="i-heroicons-map-pin"
+                class="w-full"
               />
             </UFormField>
 
-            <UFormField label="Дата публикации" class="space-y-3">
-              <UInput v-model="newEvent.eventTime" type="datetime-local" />
+            <UFormField label="Дата публикации" class="m-0">
+              <UInput
+                v-model="newEvent.eventTime"
+                type="datetime-local"
+                class="w-full"
+              />
             </UFormField>
           </div>
 

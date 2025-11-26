@@ -90,6 +90,10 @@ await fetchData();
 watch(page, () => {
   fetchData();
 });
+
+useHead({
+  title: 'Управление событиями',
+});
 </script>
 
 <template>

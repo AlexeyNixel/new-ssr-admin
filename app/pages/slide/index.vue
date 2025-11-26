@@ -13,8 +13,13 @@ const page = ref(1);
 
 const modal = overlay.create(ModalsAdminSlide);
 
-const handleOpenModal = (slide?: Slide) => {
-  modal.open({ slide: slide });
+const handleOpenModal = async (slide?: Slide) => {
+  const instance = modal.open({ slide: slide });
+  const result = await instance.result;
+
+  if (result) {
+    await fetchData();
+  }
 };
 
 const columns: TableColumn<Slide>[] = [
@@ -76,6 +81,10 @@ await fetchData();
 
 watch(page, () => {
   fetchData();
+});
+
+useHead({
+  title: 'Управление слайдами',
 });
 </script>
 

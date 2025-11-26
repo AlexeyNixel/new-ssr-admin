@@ -4,7 +4,7 @@
       v-if="editor && config"
       :editor="editor"
       :config="config"
-      class="w-full"
+      class="w-full h-full"
     />
   </client-only>
 </template>

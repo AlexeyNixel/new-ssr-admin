@@ -14,34 +14,41 @@ const isUpdate = ref(!!props?.department);
 
 const toast = useToast();
 const departmentApi = useDepartmentApi();
-const departmentStore = useDepartmentStore();
 
 const schema = z.object({
   title: z.string('Обязательное поле'),
 });
 
 const newDepartment = ref({
-  title: props.department?.title,
-  slug: props.department?.slug,
-  isDeleted: props.department?.isDeleted,
+  title: props.department?.title || '',
+  slug: props.department?.slug || '',
+  isDeleted: props.department?.isDeleted || false,
 });
 
-const handleCreate = async () => {
-  console.log();
-  if (isUpdate.value) {
+const closeModal = () => {
+  emit('close', true);
+};
+
+const onSubmit = async () => {
+  console.log(newDepartment.value);
+  if (isUpdate.value && props.department) {
     await departmentApi.updateDepartment(
       props.department.id,
       newDepartment.value
     );
   } else {
-    await departmentApi.createDepartment(newDepartment.value);
+    const res: any = await departmentApi.createDepartment(newDepartment.value);
+
+    if (res.message) {
+      toast.add({ title: res.message, color: 'error' });
+    } else {
+      toast.add({
+        title: 'Отдел создан',
+      });
+
+      closeModal();
+    }
   }
-
-  toast.add({
-    title: 'Отдел создан',
-  });
-
-  emit('close', false);
 };
 </script>
 
@@ -52,9 +59,8 @@ const handleCreate = async () => {
         :schema="schema"
         :state="newDepartment"
         class="p-3 flex flex-col gap-5"
-        @submit="handleCreate"
+        @submit="onSubmit"
       >
-        {{ !!department }}
         <h3 v-if="isUpdate">Обновление отдела</h3>
         <h3 v-else>Создание отдела</h3>
 

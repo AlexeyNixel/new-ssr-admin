@@ -1,102 +1,116 @@
 <script setup lang="ts">
 import type { TableColumn } from '@nuxt/ui';
-import { useSortable } from '@vueuse/integrations/useSortable.mjs';
 import { Icon, UBadge, UButton } from '#components';
-import type { NavigationItem } from '~~/services/types/navigation-item.type';
-import { useNavigationApi } from '~~/services/api/navigation.api';
+import { useBookApi } from '~~/services/api/book.api';
+import dayjs from 'dayjs';
+import type { Book } from '~~/services/types/book.type';
+import AdminBook from '~/components/Modals/AdminBook.vue';
 
-const navigationApi = useNavigationApi();
-const navigationsItems = ref<NavigationItem[]>(
-  await navigationApi.getAllNavigation()
-);
+const toast = useToast();
+const bookApi = useBookApi();
+const bookRes = ref();
+const page = ref(1);
+const overlay = useOverlay();
+const modal = overlay.create(AdminBook);
 
-const columns: TableColumn<NavigationItem>[] = [
+const fetchData = async () => {
+  bookRes.value = await bookApi.getAllBook({
+    isDeleted: true,
+    limit: 20,
+    include: 'preview',
+  });
+};
+
+await fetchData();
+
+const columns: TableColumn<Book>[] = [
+  {
+    accessorKey: 'isDeleted',
+    header: 'Статус',
+    cell: ({ row }) => {
+      return h(UBadge, {
+        class: 'hover:cursor-pointer',
+        variant: 'subtle',
+        color: row.original.isDeleted ? 'warning' : 'success',
+        label: row.original.isDeleted ? 'Скрыта' : 'Опубликована',
+        onClick: () => handleHideBook(row.original),
+      });
+    },
+  },
   {
     accessorKey: 'title',
     header: 'Название',
     cell: ({ row }) => {
       return h(
         'div',
-        {
-          style: {
-            paddingLeft: `${row.depth}rem`,
-          },
-          class: 'flex items-center gap-2',
-        },
-        [
-          h(UButton, {
-            color: 'neutral',
-            variant: 'outline',
-            size: 'xs',
-            icon: row.getIsExpanded() ? 'i-lucide-minus' : 'i-lucide-plus',
-            class: !row.getCanExpand() && 'invisible',
-            ui: {
-              base: 'p-0 rounded-sm',
-              leadingIcon: 'size-4',
-            },
-            onClick: row.getToggleExpandedHandler(),
-          }),
-          h(Icon, { name: row.original.icon, class: 'text-2xl' }),
-          row.getValue('title') as string,
-        ]
+        { class: 'text-gray-900 font-medium' },
+        row.original.title
       );
     },
   },
   {
-    accessorKey: 'isExternal',
-    header: 'Тип ссылки',
-    cell: ({ row }) =>
-      h(UBadge, {
-        label: row.original.isExternal ? 'Внешняя' : 'Внутренняя',
-        color: row.original.isExternal ? 'secondary' : 'success',
-        variant: 'subtle',
-        class: 'text-xs font-medium',
-      }),
+    accessorKey: 'createdAt',
+    header: 'Дата создания',
+    cell: ({ row }) => {
+      return h('div', dayjs(row.original.createdAt).format('DD.MM.YYYY HH:mm'));
+    },
   },
   {
-    accessorKey: 'order',
-    header: 'Позиция',
-    cell: ({ row }) =>
-      h(
-        'div',
-        {
-          class: `text-center text-sm font-mono text-gray-600 bg-gray-100 rounded px-2 py-1 ${
-            row.depth > 0
-              ? 'bg-blue-100 text-blue-700 border border-blue-200'
-              : ''
-          }`,
-        },
-        row.original.order
-      ),
+    id: 'actions',
+    header: 'Действия',
+    cell: ({ row }) => {
+      return h('div', { class: 'flex items-center gap-2' }, [
+        h(UButton, {
+          icon: 'i-heroicons-eye',
+          variant: 'outline',
+          color: 'neutral',
+          size: 'xs',
+          // to: 'http://dev.infomania.ru/entry/' + row.original.slug,
+          target: '_blank',
+          title: 'Посмотреть на сайте',
+        }),
+        h(UButton, {
+          icon: 'i-heroicons-pencil-square',
+          variant: 'outline',
+          color: 'secondary',
+          size: 'xs',
+          onClick: () => handleOpenModal(row.original),
+          // to: `/post/admin/${row.original.id}`,
+          title: 'Редактировать',
+        }),
+      ]);
+    },
   },
 ];
-const handleDragItem = async () => {
-  try {
-    const updates: Array<{ id: string; order: number }> =
-      navigationsItems.value.map((item, index) => ({
-        id: item.id,
-        order: index + 1,
-      }));
 
-    await navigationApi.updateBatchOrder(updates);
+const handleHideBook = async (book: Book) => {
+  book.isDeleted = !book.isDeleted;
 
-    navigationsItems.value = await navigationApi.getAllNavigation();
-  } catch (error) {
-    console.error('Ошибка при обновлении порядка:', error);
-  }
+  await bookApi.updateBook(book.id, {
+    isDeleted: book.isDeleted,
+  });
+
+  toast.add({
+    title: book.isDeleted ? 'Книга скрыта' : 'Книга восстановлена',
+  });
 };
-useSortable('.my-table-tbody', navigationsItems, {
-  animation: 150,
-});
+const handleOpenModal = (book?: Book) => {
+  modal.open({ book });
+};
 </script>
 
 <template>
-  <div v-if="navigationsItems" class="h-full bg-gray-50 p-4">
+  <NuxtLayout
+    v-model="page"
+    :meta="bookRes.meta"
+    title="Управление книгами"
+    name="table"
+    :event-create="handleOpenModal"
+  >
     <UTable
       ref="table"
       class="flex-1 bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden"
-      :data="navigationsItems"
-      :get-sub-rows="(row) => row.children"
+      :data="bookRes.data"
       :columns="columns"
       :ui="{
         thead: 'bg-gray-50 border-b border-gray-200',
@@ -105,46 +119,8 @@ useSortable('.my-table-tbody', navigationsItems, {
         td: 'py-3 px-4 align-middle group-hover:bg-gray-50 transition-colors',
         tr: 'group hover:bg-gray-50 transition-colors',
       }"
-      @dragend="handleDragItem"
     />
-  </div>
+  </NuxtLayout>
 </template>
 
-<style scoped>
-/* Стили для drag and drop */
-.sortable-ghost {
-  opacity: 0.4;
-  background-color: #dbeafe !important;
-}
-
-.sortable-chosen {
-  background-color: #eff6ff !important;
-  transform: rotate(2deg);
-}
-
-.sortable-drag {
-  background-color: #ffffff !important;
-  box-shadow:
-    0 10px 25px -5px rgba(0, 0, 0, 0.1),
-    0 10px 10px -5px rgba(0, 0, 0, 0.04);
-  z-index: 9999;
-}
-
-/* Стили для иконки перетаскивания */
-:deep(.drag-handle) {
-  cursor: grab;
-}
-
-:deep(.drag-handle:active) {
-  cursor: grabbing;
-}
-
-/* Плавные анимации для интерактивных элементов */
-:deep(.u-table tr) {
-  transition: all 0.3s ease-in-out;
-}
-
-:deep(.u-button) {
-  transition: all 0.2s ease-in-out;
-}
-</style>
+<style scoped></style>
