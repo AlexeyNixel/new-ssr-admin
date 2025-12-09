@@ -8,4 +8,8 @@ export const API_ENDPOINTS = {
   slides: '/api/main-slider/',
   file: '/api/file/',
   book: '/api/book/',
+  collection: '/api/book-collection/',
+  uploadImage: '/api/files/upload/image',
+  uploadDocument: '/api/files/upload/document',
+  uploadExhibition: '/api/files/upload/exhibition',
 };

@@ -40,14 +40,14 @@ const columns: TableColumn<Slide>[] = [
     header: 'Изображение',
     cell: ({ row }) =>
       h('img', {
-        src: `http://static.infomania.ru${row.original.image.path}`,
+        src: `http://static.infomania.ru${row?.original?.image?.path}`,
         style: 'width:200px',
       }),
   },
   {
     accessorKey: 'image',
     header: 'Название',
-    cell: ({ row }) => h('div', row.original.image.originalName),
+    cell: ({ row }) => h('div', row.original?.image?.originalName),
   },
 
   {

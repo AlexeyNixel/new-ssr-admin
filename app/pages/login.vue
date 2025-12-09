@@ -20,7 +20,7 @@ const handleAuth = async () => {
 <template>
   <div class="flex h-full items-center justify-center">
     <div
-      class="flex flex-col items-center justify-center w-[300px] h-max bg-white rounded p-4 gap-4 shadow"
+      class="flex flex-col items-center justify-center w-[400px] h-max bg-white rounded p-4 gap-4 shadow"
       @keydown.enter="handleAuth"
     >
       <h3>Авторизация</h3>

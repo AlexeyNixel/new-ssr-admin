@@ -1,10 +1,10 @@
 <script setup lang="ts">
 import { UButton } from '#components';
 interface Props {
-  modelValue: number;
-  title: string;
-  eventCreate: Function;
-  meta: {
+  modelValue?: number;
+  title?: string;
+  eventCreate?: Function;
+  meta?: {
     limit: number;
     total: number;
     hasNext: boolean;
@@ -35,7 +35,9 @@ const handleSearch = () => {
     <div class="flex justify-between items-center">
       <div>
         <h1 class="text-gray-900">{{ title }}</h1>
-        <p class="text-gray-600 mt-1">Всего записей: {{ meta.total }}</p>
+        <p v-if="meta" class="text-gray-600 mt-1">
+          Всего записей: {{ meta.total }}
+        </p>
       </div>
 
       <UButton
@@ -60,7 +62,6 @@ const handleSearch = () => {
           class="flex-1 max-w-md"
           @keydown.enter="handleSearch"
         />
-        <div class="text-sm text-gray-500">Найдено: {{ meta.total || 0 }}</div>
       </div>
     </div>
 
@@ -71,12 +72,9 @@ const handleSearch = () => {
     </div>
 
     <div
+      v-if="meta"
       class="flex items-center justify-between mt-6 p-6 bg-white shadow-md border border-gray-200 rounded-lg overflow-hidden"
     >
-      <div class="text-sm text-gray-500">
-        Показано {{ meta.limit }} из
-        {{ meta.total }}
-      </div>
       <UPagination
         v-if="meta?.hasNext || meta?.hasPrev"
         v-model:page="page"

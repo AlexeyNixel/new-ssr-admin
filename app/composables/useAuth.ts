@@ -84,6 +84,7 @@ export const useAuth = () => {
     isTokenValid,
     login,
     checkAuth,
+    clearAuth,
     isAuthenticated,
   };
 };

@@ -1,11 +1,25 @@
 <script setup lang="ts">
 import UploadImage from '~/components/Ui/UploadImage.vue';
 import type { Book } from '~~/services/types/book.type';
+import { useBookApi } from '~~/services/api/book.api';
+import { z } from 'zod';
+import SelectCollection from '~/components/Ui/SelectCollection.vue';
 
+const emit = defineEmits(['close', 'saved']);
 const props = defineProps<{
   book?: Book;
 }>();
 
+const places = [
+  'Отдел отраслевой литературы',
+  'Отдел литературных программ (детский сектор)',
+  'Отдел литературных программ (цоколь)',
+  'Центр организации образовательных программ',
+];
+
+const toast = useToast();
+
+const bookApi = useBookApi();
 const newBook = ref({
   title: props.book?.title || '',
   description: props.book?.description || '',
@@ -15,16 +29,69 @@ const newBook = ref({
   isVideo: props.book?.isVideo || false,
   place: props.book?.place || '',
   litresLink: props.book?.litresLink || '',
+  collections: [],
 });
 
-const emit = defineEmits(['close', 'saved']);
+const schema = z.object({
+  title: z
+    .string('Обязательное поле')
+    .min(1, 'Обязательное поле')
+    .transform((val) => val.trim())
+    .pipe(
+      z
+        .string()
+        .min(8, 'Должно быть минимум 8 символов')
+        .refine((val) => val.length > 0)
+    ),
+  description: z
+    .string('Обязательное поле')
+    .min(1, 'Обязательное поле')
 
-const handleSubmit = () => {
-  console.log('Создание книги:', newBook.value);
-  emit('saved');
+    .transform((val) => val.trim())
+    .pipe(
+      z
+        .string()
+        .min(16, 'Должно быть минимум 16 символов')
+        .max(512, 'Не должно превышать 512 символов')
+        .refine((val) => val.length > 0)
+    ),
+  content: z.string('Обязательное поле'),
+  previewFileId: z.string('Обязательное поле').min(1, 'Обязательное поле'),
+  place: z
+    .string('Обязательное поле')
+    .min(1, 'Обязательное поле')
+    .transform((val) => val.trim())
+    .pipe(
+      z
+        .string()
+        .min(3, 'Должно быть минимум 3 символов')
+        .refine((val) => val.length > 0)
+    ),
+  litresLink: z
+    .string('Обязательное поле')
+    .min(1, 'Обязательное поле')
+    .transform((val) => val.trim())
+    .pipe(
+      z
+        .string()
+        .min(8, 'Должно быть минимум 8 символов')
+        .refine((val) => val.length > 0)
+    ),
+});
+
+const onSubmit = async () => {
+  if (props.book) {
+    await bookApi.updateBook(props.book.id, newBook.value);
+    toast.add({ title: 'Книга обновлена' });
+  } else {
+    await bookApi.createBook(newBook.value);
+    toast.add({ title: 'Книга создана' });
+  }
+
+  emit('close', true);
 };
 
-const handleCancel = () => {
+const handleCancel = async () => {
   emit('close');
 };
 </script>
@@ -52,11 +119,20 @@ const handleCancel = () => {
         </div>
 
         <!-- Форма -->
-        <UForm class="space-y-6">
+        <UForm
+          class="space-y-6"
+          :schema="schema"
+          :state="newBook"
+          @submit="onSubmit"
+        >
           <!-- Основная информация -->
           <div class="space-y-4">
             <div class="flex items-center justify-between gap-5">
-              <UFormField label="Обложка книги" class="space-y-3">
+              <UFormField
+                name="previewFileId"
+                label="Обложка книги"
+                class="space-y-3"
+              >
                 <UploadImage
                   v-model="newBook.previewFileId"
                   :preview="book?.preview?.path"
@@ -69,7 +145,7 @@ const handleCancel = () => {
                 </template>
               </UFormField>
               <div class="w-full h-full flex flex-col justify-between">
-                <UFormField label="Название книги" required>
+                <UFormField name="title" label="Название книги" required>
                   <UInput
                     v-model="newBook.title"
                     class="w-full"
@@ -79,7 +155,11 @@ const handleCancel = () => {
                   />
                 </UFormField>
 
-                <UFormField label="Краткое описание" required>
+                <UFormField
+                  name="description"
+                  label="Краткое описание"
+                  required
+                >
                   <UTextarea
                     v-model="newBook.description"
                     class="w-full"
@@ -90,7 +170,7 @@ const handleCancel = () => {
               </div>
             </div>
 
-            <UFormField label="Полное содержание" required>
+            <UFormField name="content" label="Полное содержание" required>
               <div
                 class="ckeditor-container border border-gray-200 rounded-lg overflow-hidden"
               >
@@ -108,21 +188,26 @@ const handleCancel = () => {
           <!-- Обложка книги -->
 
           <!-- Дополнительная информация -->
-          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <UFormField label="Место издания">
-              <UInput
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <UFormField required name="place" label="Место хранения">
+              <USelect
                 v-model="newBook.place"
-                placeholder="Город, издательство"
-                icon="i-heroicons-map-pin"
+                :items="places"
+                class="w-full"
+                placeholder="Отдел отраслевой литературы"
               />
             </UFormField>
 
-            <UFormField label="Ссылка на Litres">
+            <UFormField required name="litresLink" label="Ссылка на Litres">
               <UInput
                 v-model="newBook.litresLink"
                 placeholder="https://litres.ru/..."
                 icon="i-heroicons-shopping-cart"
+                class="w-full"
               />
+            </UFormField>
+            <UFormField required name="collection" label="Выбирите коллекцию">
+              <SelectCollection v-model="newBook.collections" />
             </UFormField>
           </div>
 
@@ -185,7 +270,7 @@ const handleCancel = () => {
             >
               Отмена
             </UButton>
-            <UButton color="primary" class="flex-1" @click="handleSubmit">
+            <UButton color="primary" class="flex-1" type="submit">
               {{ book ? 'Обновить книгу' : 'Создать книгу' }}
             </UButton>
           </div>

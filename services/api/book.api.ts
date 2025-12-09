@@ -1,5 +1,5 @@
 import { useApi } from './index';
-import type { Book, BookQuery } from '../types/book.type';
+import type { Book, BookCollection, BookQuery } from '../types/book.type';
 import { API_ENDPOINTS } from '../endpoints';
 
 export const useBookApi = () => {
@@ -16,5 +16,14 @@ export const useBookApi = () => {
 
     updateBook: (id: string, data: any) =>
       api.patch(API_ENDPOINTS.book, id, data),
+
+    getAllCollections: (params?: BookQuery) =>
+      api.get<BookCollection[]>(API_ENDPOINTS.collection, {
+        params,
+      }),
+
+    createCollection: (data: any) => api.post(API_ENDPOINTS.collection, data),
+    updateCollection: (id: string, data: any) =>
+      api.patch(API_ENDPOINTS.collection, id, data),
   };
 };

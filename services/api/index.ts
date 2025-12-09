@@ -1,16 +1,20 @@
 import { useRuntimeConfig } from 'nuxt/app';
 import type { AuthResponse } from '~/composables/useAuth';
+import type { File } from '~~/services/types/file.type';
+import type { IQuery } from '~~/services/types/query.type';
 
 export interface ApiResponse<T = any> {
   data: T;
-  meta?: {
-    page: number;
-    limit: number;
-    total: number;
-    hasPrev: boolean;
-    hasNext: boolean;
-  };
+  meta?: Meta;
   status?: number;
+}
+
+export interface Meta {
+  page: number;
+  limit: number;
+  total: number;
+  hasPrev: boolean;
+  hasNext: boolean;
 }
 
 export const useApi = () => {
@@ -19,10 +23,10 @@ export const useApi = () => {
 
   const get = async <T>(
     endpoint: string,
-    options?: any
+    options?: IQuery
   ): Promise<ApiResponse<T>> => {
     try {
-      const res: { data: any; meta: any } = await $fetch(baseApi + endpoint, {
+      const res: { data: T; meta: Meta } = await $fetch(baseApi + endpoint, {
         method: 'GET',
         credentials: 'include',
         ...options,
@@ -38,9 +42,14 @@ export const useApi = () => {
     }
   };
 
-  const getWithoutPagination = async <T>(enpoint: string): Promise<T> => {
-    return await $fetch(baseApi + enpoint, {
+  const getWithoutPagination = async <T>(
+    endpoint: string,
+    options: IQuery
+  ): Promise<T> => {
+    return await $fetch(baseApi + endpoint, {
       method: 'GET',
+      credentials: 'include',
+      ...options,
     });
   };
 
@@ -49,6 +58,22 @@ export const useApi = () => {
       method: 'POST',
       credentials: 'include',
       body: { ...data },
+    });
+  };
+
+  const postFile = async (endpoint: string, body: any): Promise<File> => {
+    return await $fetch(baseApi + endpoint, {
+      method: 'POST',
+      credentials: 'include',
+      body,
+    });
+  };
+
+  const postMany = async (endpoint: string, data: any) => {
+    return await $fetch(baseApi + endpoint, {
+      method: 'POST',
+      credentials: 'include',
+      body: { data },
     });
   };
 
@@ -104,6 +129,8 @@ export const useApi = () => {
     getOne,
     login,
     post,
+    postMany,
+    postFile,
     patch,
   };
 };

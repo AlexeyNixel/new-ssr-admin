@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import UploadExhibition from '~/components/Ui/UploadExhibition.vue';
+
 const navLinks = [
   {
     label: 'Посты',
@@ -26,12 +28,18 @@ const navLinks = [
     icon: 'i-heroicons:book-open',
   },
   {
+    label: 'Сборники книг',
+    link: '/collection',
+    icon: 'i-hugeicons-books-01',
+  },
+  {
     label: 'Навигация',
     link: '/navigation',
     icon: 'i-heroicons:bars-arrow-down',
   },
 ];
 const cookies = useCookie('user_data');
+const authApi = useAuth();
 const user = computed(() => {
   return {
     name: cookies.value?.name || '',
@@ -41,16 +49,16 @@ const user = computed(() => {
   };
 });
 
+const isAuth = ref(authApi.isAuthenticated);
+
 const handleLogout = () => {
-  console.log('Logout clicked');
-  // Логика выхода
+  authApi.clearAuth();
+  navigateTo('/login');
 };
-const activeLink = ref('');
 </script>
 
 <template>
   <div class="h-screen sticky top-0 bg-gray-900 text-white flex flex-col">
-    <!-- Логотип -->
     <div class="p-6 border-b border-gray-700">
       <NuxtLink to="/" class="flex items-center gap-3 group">
         <div
@@ -89,16 +97,15 @@ const activeLink = ref('');
         />
         <span class="font-medium">{{ link.label }}</span>
 
-        <!-- Индикатор активного пункта -->
         <div
           v-if="$route.path.startsWith(link.link)"
           class="ml-auto w-2 h-2 bg-white rounded-full"
         />
       </NuxtLink>
-    </nav>
 
-    <!-- Пользователь и выход -->
-    <div class="p-4 border-t border-gray-700">
+      <UploadExhibition />
+    </nav>
+    <div v-if="isAuth" class="p-4 border-t border-gray-700">
       <div class="flex items-center gap-3 mb-4 p-3 rounded-lg bg-gray-800">
         <Icon :name="user.avatar" class="text-2xl text-gray-400" />
         <div class="flex-1 min-w-0">
@@ -109,9 +116,9 @@ const activeLink = ref('');
       </div>
 
       <UButton
-        color="gray"
+        color="neutral"
         variant="outline"
-        class="w-full justify-center"
+        class="w-full justify-center cursor-pointer"
         @click="handleLogout"
       >
         <Icon name="i-heroicons-arrow-left-on-rectangle" class="text-lg mr-2" />
@@ -121,21 +128,4 @@ const activeLink = ref('');
   </div>
 </template>
 
-<style scoped>
-@import '~/assets/css/main.css';
-.router-link-active {
-  @apply bg-white/10 shadow-lg shadow-blue-500/20 border border-white/20;
-}
-
-/* Плавные переходы для всех интерактивных элементов */
-nav a {
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-/* Улучшение производительности анимаций */
-* {
-  transform: translateZ(0);
-  backface-visibility: hidden;
-  perspective: 1000;
-}
-</style>
+<style scoped></style>

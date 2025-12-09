@@ -10,6 +10,6 @@ export const useNavigationApi = () => {
       api.getWithoutPagination<NavigationItem[]>(API_ENDPOINTS.navigation),
 
     updateBatchOrder: (data: [{ id: string; order: number }]) =>
-      api.post(API_ENDPOINTS.navigation + 'batch-update', data),
+      api.postMany(API_ENDPOINTS.navigation + 'batch-update', data),
   };
 };

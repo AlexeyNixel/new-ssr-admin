@@ -77,6 +77,10 @@
               <UiSelectTag v-model="newPost.tags" />
             </UFormField>
 
+            <UFormField label="Загрузить документ">
+              <UploadDocument />
+            </UFormField>
+
             <!-- Настройки -->
             <div class="space-y-3">
               <label
@@ -175,6 +179,7 @@ import { usePostApi } from '~~/services/api/post.api';
 import { useDepartmentApi } from '~~/services/api/department.api';
 import { CalendarDate } from '@internationalized/date';
 import type { Tag } from '~~/services/types/tag.type';
+import UploadDocument from '~/components/Ui/UploadDocument.vue';
 
 const route = useRoute();
 const toast = useToast();

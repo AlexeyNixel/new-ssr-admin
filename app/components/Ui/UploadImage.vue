@@ -16,7 +16,10 @@
     />
   </UFileUpload>
 </template>
+
 <script setup lang="ts">
+import { useUploadApi } from '~~/services/api/upload.api';
+
 interface Props {
   modelValue: string;
   preview?: string;
@@ -24,6 +27,8 @@ interface Props {
 
 const props = defineProps<Props>();
 const emit = defineEmits(['update:modelValue']);
+
+const uploadApi = useUploadApi();
 
 const fileUpload = ref();
 const newPreview = ref({
@@ -36,17 +41,10 @@ const uploadImage = async () => {
     const body = new FormData();
     body.append('file', fileUpload.value);
 
-    const res: File = (await $fetch(
-      'http://localhost:3333/api/files/upload/image',
-      {
-        method: 'POST',
-        body,
-        credentials: 'include',
-      }
-    )) as File;
-    emit('update:modelValue', res.id);
-    newPreview.value.id = res.id;
-    newPreview.value.path = res.path;
+    const result = await uploadApi.uploadImage(body);
+    emit('update:modelValue', result.id);
+    newPreview.value.id = result.id;
+    newPreview.value.path = result.path;
   }
 };
 </script>

@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import type { TableColumn } from '@nuxt/ui';
-import { Icon, UBadge, UButton } from '#components';
+import { UBadge, UButton } from '#components';
 import { useBookApi } from '~~/services/api/book.api';
 import dayjs from 'dayjs';
 import type { Book } from '~~/services/types/book.type';
@@ -94,8 +94,15 @@ const handleHideBook = async (book: Book) => {
     title: book.isDeleted ? 'Книга скрыта' : 'Книга восстановлена',
   });
 };
-const handleOpenModal = (book?: Book) => {
-  modal.open({ book });
+
+const handleOpenModal = async (book?: Book) => {
+  const instance = modal.open({ book });
+
+  const result = await instance.result;
+
+  if (result) {
+    await fetchData();
+  }
 };
 </script>
 
