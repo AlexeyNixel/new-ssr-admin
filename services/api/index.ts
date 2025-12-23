@@ -95,12 +95,13 @@ export const useApi = () => {
     password: string;
   }): Promise<AuthResponse> => {
     try {
-      return await $fetch(baseApi + '/api/auth/login', {
+      const { data } = await useFetch(baseApi + '/api/auth/login', {
         method: 'POST',
         body: {
           ...user,
         },
       });
+      return data.value;
     } catch {
       throw new Error();
     }
