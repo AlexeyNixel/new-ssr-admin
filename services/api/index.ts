@@ -97,6 +97,10 @@ export const useApi = () => {
     try {
       const { data } = await useFetch(baseApi + '/api/auth/login', {
         method: 'POST',
+        credentials: 'include',
+        headers: {
+          'Content-Type': 'application/json',
+        },
         body: {
           ...user,
         },
