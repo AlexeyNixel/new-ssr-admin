@@ -12,6 +12,7 @@ export default defineNuxtConfig({
   ssr: false,
   ui: {
     colorMode: false,
+    fonts: false,
   },
   runtimeConfig: {
     public: {
