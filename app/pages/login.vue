@@ -1,18 +1,32 @@
 <script setup lang="ts">
 const auth = useAuth();
 
+const toast = useToast();
 const username = ref('');
 const password = ref('');
+const isShowPassword = ref(false);
 
 const isAuth = ref(true);
 
+const swapPassword = () => {
+  isShowPassword.value = !isShowPassword.value;
+};
+
 const handleAuth = async () => {
   try {
-    await auth.login(username.value, password.value);
-    navigateTo('/');
+    const result = await auth.login(username.value, password.value);
+    if (result?.access_token) {
+      navigateTo('/');
+    } else {
+      toast.add({
+        title: 'Неправильные данные пользователя',
+        color: 'error',
+      });
+      isAuth.value = false;
+      return false;
+    }
   } catch {
-    isAuth.value = false;
-    return false;
+    console.log('error');
   }
 };
 </script>
@@ -25,15 +39,28 @@ const handleAuth = async () => {
     >
       <h3>Авторизация</h3>
 
-      <span v-if="!isAuth">Неправильный логин или пароль</span>
+      <span v-if="!isAuth" class="text-red-600"
+        >Неправильный логин или пароль</span
+      >
 
       <UInput v-model="username" class="w-full" placeholder="Логин" />
       <UInput
         v-model="password"
-        type="password"
+        :type="isShowPassword ? 'text' : 'password'"
         class="w-full"
         placeholder="Пароль"
-      />
+      >
+        <template #trailing>
+          <UButton
+            color="neutral"
+            variant="link"
+            size="sm"
+            icon="i-mdi-eye-outline"
+            aria-label="Clear input"
+            @click="swapPassword"
+          />
+        </template>
+      </UInput>
       <UButton class="w-full" @click="handleAuth"> Войти </UButton>
     </div>
   </div>

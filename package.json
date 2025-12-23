@@ -10,6 +10,7 @@
     "postinstall": "nuxt prepare"
   },
   "dependencies": {
+    "@ckeditor/ckeditor5-emoji": "^47.3.0",
     "@ckeditor/ckeditor5-vue": "^7.3.0",
     "@nuxt/eslint": "^1.9.0",
     "@nuxt/ui": "^4.2.0",

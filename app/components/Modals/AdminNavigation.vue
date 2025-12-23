@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import type { NavigationItem } from '~~/services/types/navigation-item.type';
+import { useNavigationApi } from '~~/services/api/navigation.api';
 
 interface Props {
   navigationItem?: NavigationItem;
@@ -12,16 +13,21 @@ interface SelectItem {
 
 const props = defineProps<Props>();
 
+const navigationApi = useNavigationApi();
+
 const newNavigationItem = ref({
   title: '',
   description: '',
-  url: '',
+  to: '',
   slug: '',
   icon: '',
   order: 0,
   isExternal: false,
-  targer: '',
+  target: '',
+  parentId: '',
 });
+
+const navItems = await navigationApi.getAllNavigationWithoutTree();
 
 if (props.navigationItem) {
   Object.keys(newNavigationItem.value).forEach((key: string) => {
@@ -29,7 +35,7 @@ if (props.navigationItem) {
   });
 }
 
-const icon = ref('');
+const search = ref('');
 const items = ref<SelectItem[]>([
   {
     label: 'В новой вкладке',
@@ -40,6 +46,19 @@ const items = ref<SelectItem[]>([
     value: '_self',
   },
 ]);
+
+const onSubmit = async () => {
+  console.log(newNavigationItem.value);
+  if (props.navigationItem) {
+    await navigationApi.update(
+      props.navigationItem.id,
+      newNavigationItem.value
+    );
+    console.log(newNavigationItem.value);
+  } else {
+    await navigationApi.create(newNavigationItem.value);
+  }
+};
 </script>
 
 <template>
@@ -49,11 +68,11 @@ const items = ref<SelectItem[]>([
         <!-- Заголовок -->
         <div class="mb-6">
           <h3 class="text-xl font-semibold text-gray-900 dark:text-white">
-            {{ navigationItem.id ? 'Обновить запись' : 'Создать запись' }}
+            {{ navigationItem?.id ? 'Обновить запись' : 'Создать запись' }}
           </h3>
           <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
             {{
-              navigationItem.id
+              navigationItem?.id
                 ? 'Внесите изменения в существующую запись'
                 : 'Заполните все обязательные поля для создания новой записи'
             }}
@@ -61,7 +80,7 @@ const items = ref<SelectItem[]>([
         </div>
 
         <!-- Форма -->
-        <UForm class="space-y-6">
+        <UForm class="space-y-6" :on-submit="onSubmit">
           <!-- Основные поля -->
           <div class="space-y-4">
             <UFormField label="Название" name="title" required>
@@ -84,8 +103,21 @@ const items = ref<SelectItem[]>([
 
             <UFormField label="Ссылка" name="link" required>
               <UInput
-                v-model="newNavigationItem.slug"
+                v-model="newNavigationItem.to"
                 placeholder="https://example.com"
+                class="w-full"
+                icon="i-heroicons-link"
+              />
+            </UFormField>
+
+            <UFormField label="Родительский элемент" name="link" required>
+              <USelectMenu
+                v-model="newNavigationItem.parentId"
+                v-model:search-term="search"
+                :items="navItems"
+                label-key="title"
+                value-key="id"
+                placeholder="Выберите родительский элемент если он есть"
                 class="w-full"
                 icon="i-heroicons-link"
               />
@@ -145,8 +177,8 @@ const items = ref<SelectItem[]>([
               <UButton variant="outline" color="neutral" class="px-6">
                 Отмена
               </UButton>
-              <UButton color="primary" class="px-6">
-                {{ id ? 'Обновить' : 'Создать' }}
+              <UButton color="primary" class="px-6" type="submit">
+                {{ navigationItem?.id ? 'Обновить' : 'Создать' }}
               </UButton>
             </div>
           </div>

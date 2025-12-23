@@ -99,13 +99,24 @@ const handleDragItem = async () => {
     console.error('Ошибка при обновлении порядка:', error);
   }
 };
+
+const handleOpenModal = async () => {
+  const instance = modal.open({});
+
+  const result = await instance.result;
+};
+
 useSortable('.my-table-tbody', navigationsItems, {
   animation: 150,
 });
 </script>
 
 <template>
-  <div v-if="navigationsItems" class="h-full bg-gray-50 p-4">
+  <NuxtLayout
+    name="table"
+    title="Управление навигацией"
+    :event-create="handleOpenModal"
+  >
     <UTable
       ref="table"
       class="flex-1 bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden"
@@ -121,5 +132,5 @@ useSortable('.my-table-tbody', navigationsItems, {
       }"
       @dragend="handleDragItem"
     />
-  </div>
+  </NuxtLayout>
 </template>

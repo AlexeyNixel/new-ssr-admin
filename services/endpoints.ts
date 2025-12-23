@@ -1,5 +1,6 @@
 export const API_ENDPOINTS = {
   posts: '/api/posts/',
+  page: '/api/page/',
   navigation: '/api/navigation-item/',
   menuItem: '/api/menu-item/',
   department: '/api/departments/',

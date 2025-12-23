@@ -23,7 +23,9 @@ export const useApi = () => {
 
   const get = async <T>(
     endpoint: string,
-    options?: IQuery
+    options?: {
+      params: IQuery;
+    }
   ): Promise<ApiResponse<T>> => {
     try {
       const res: { data: T; meta: Meta } = await $fetch(baseApi + endpoint, {
@@ -44,7 +46,7 @@ export const useApi = () => {
 
   const getWithoutPagination = async <T>(
     endpoint: string,
-    options: IQuery
+    options?: IQuery
   ): Promise<T> => {
     return await $fetch(baseApi + endpoint, {
       method: 'GET',
@@ -107,7 +109,7 @@ export const useApi = () => {
   const getOne = async <T>(
     endpoint: string,
     slug: string,
-    options: any
+    options?: any
   ): Promise<ApiResponse<T>> => {
     try {
       const res: any = await $fetch(baseApi + endpoint + slug, {

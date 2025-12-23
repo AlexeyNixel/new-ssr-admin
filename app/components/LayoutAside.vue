@@ -8,6 +8,16 @@ const navLinks = [
     icon: 'i-heroicons-newspaper',
   },
   {
+    label: 'Страницы',
+    link: '/page',
+    icon: 'i-heroicons-newspaper',
+  },
+  {
+    label: 'Тэги',
+    link: '/tag',
+    icon: 'i-mdi-tag-outline',
+  },
+  {
     label: 'Отделы',
     link: '/department',
     icon: 'i-heroicons-user-group',

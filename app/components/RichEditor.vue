@@ -60,6 +60,7 @@ import {
   TodoList,
   Underline,
   Undo,
+  Emoji,
 } from 'ckeditor5';
 
 import 'ckeditor5/ckeditor5.css';
@@ -102,6 +103,7 @@ const config = computed(() => {
         '|',
         'bulletedList',
         'numberedList',
+        'emoji',
       ],
       shouldNotGroupWhenFull: false,
     },
@@ -151,6 +153,7 @@ const config = computed(() => {
       TodoList,
       Underline,
       Undo,
+      Emoji,
     ],
     fontSize: {
       options: [10, 12, 14, 'default', 18, 20, 22],
