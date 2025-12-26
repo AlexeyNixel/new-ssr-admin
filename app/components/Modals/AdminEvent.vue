@@ -49,7 +49,7 @@ const handleCancel = () => {
 </script>
 
 <template>
-  <UModal title="события" description="События">
+  <UModal :dismissible="false" title="события" description="События">
     <template #content>
       <div class="p-6">
         Заголовок
@@ -170,19 +170,3 @@ const handleCancel = () => {
     </template>
   </UModal>
 </template>
-
-<style scoped>
-/* Плавные переходы */
-:deep(.u-input) {
-  transition: all 0.2s ease-in-out;
-}
-
-:deep(.u-button) {
-  transition: all 0.2s ease-in-out;
-}
-
-/* Кастомные стили для полей ввода */
-:deep(input[type='datetime-local']) {
-  color-scheme: light;
-}
-</style>

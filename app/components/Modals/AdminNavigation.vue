@@ -62,7 +62,7 @@ const onSubmit = async () => {
 </script>
 
 <template>
-  <UModal>
+  <UModal :dismissible="false">
     <template #content>
       <div class="p-6">
         <!-- Заголовок -->

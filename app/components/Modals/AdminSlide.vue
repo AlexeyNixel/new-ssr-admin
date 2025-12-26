@@ -34,7 +34,11 @@ const onSubmit = async () => {
 </script>
 
 <template>
-  <UModal title="Создание слайда" description="Отсутствует">
+  <UModal
+    :dismissible="false"
+    title="Создание слайда"
+    description="Отсутствует"
+  >
     <template #content>
       <div class="p-6">
         <!-- Заголовок -->

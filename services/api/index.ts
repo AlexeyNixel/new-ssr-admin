@@ -95,7 +95,7 @@ export const useApi = () => {
     password: string;
   }): Promise<AuthResponse> => {
     try {
-      const { data } = await useFetch(baseApi + '/api/auth/login', {
+      const data = await $fetch(baseApi + '/api/auth/login', {
         method: 'POST',
         credentials: 'include',
         headers: {
@@ -105,7 +105,8 @@ export const useApi = () => {
           ...user,
         },
       });
-      return data.value;
+      console.log(data);
+      return data;
     } catch {
       throw new Error();
     }

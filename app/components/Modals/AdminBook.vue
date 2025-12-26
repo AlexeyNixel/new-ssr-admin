@@ -100,6 +100,7 @@ const handleCancel = async () => {
   <UModal
     title="Обновление"
     description="Книги"
+    :dismissible="false"
     :ui="{ content: 'sm:max-w-4xl' }"
   >
     <template #content>
@@ -279,73 +280,3 @@ const handleCancel = async () => {
     </template>
   </UModal>
 </template>
-
-<style scoped>
-/* Контейнер для CKEditor с ограничением высоты и скроллом */
-.ckeditor-container {
-  max-height: 400px;
-  min-height: 200px;
-}
-
-/* Стили для CKEditor внутри модалки */
-:deep(.ck.ck-editor) {
-  max-width: 100%;
-}
-
-:deep(.ck.ck-editor__editable) {
-  min-height: 200px;
-  max-height: 350px;
-  overflow-y: auto;
-  border: none !important;
-  border-radius: 0 !important;
-}
-
-:deep(.ck.ck-toolbar) {
-  border: none !important;
-  border-bottom: 1px solid #e5e7eb !important;
-  border-radius: 0 !important;
-  background: #f9fafb !important;
-}
-
-/* Убираем тени и бордеры у редактора */
-:deep(.ck.ck-editor__main) {
-  border: none !important;
-}
-
-:deep(.ck.ck-content) {
-  border: none !important;
-  padding: 1rem !important;
-}
-
-/* Адаптивность для мобильных */
-@media (max-width: 640px) {
-  .ckeditor-container {
-    max-height: 300px;
-    min-height: 150px;
-  }
-
-  :deep(.ck.ck-editor__editable) {
-    min-height: 150px;
-    max-height: 250px;
-  }
-
-  :deep(.ck.ck-toolbar__items) {
-    flex-wrap: wrap;
-    gap: 0.25rem;
-  }
-
-  :deep(.ck.ck-toolbar .ck-toolbar__separator) {
-    display: none;
-  }
-}
-
-/* Плавные переходы для всех элементов */
-:deep(.u-input),
-:deep(.u-textarea) {
-  transition: all 0.2s ease-in-out;
-}
-
-:deep(.u-button) {
-  transition: all 0.2s ease-in-out;
-}
-</style>
