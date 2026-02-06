@@ -98,9 +98,6 @@ export const useApi = () => {
       const data = await $fetch(baseApi + '/api/auth/login', {
         method: 'POST',
         credentials: 'include',
-        headers: {
-          'Content-Type': 'application/json',
-        },
         body: {
           ...user,
         },
