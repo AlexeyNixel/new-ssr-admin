@@ -16,7 +16,7 @@ export default defineNuxtConfig({
   },
   runtimeConfig: {
     public: {
-      apiBaseUrl: process.env.API_BASE_URL || 'http://api2.infomania.ru',
+      apiBaseUrl: process.env.NUXT_PUBLIC_API_BASE,
     },
   },
 });
