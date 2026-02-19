@@ -64,6 +64,7 @@ export const useApi = () => {
   };
 
   const postFile = async (endpoint: string, body: any): Promise<File> => {
+    console.log(baseApi);
     return await $fetch(baseApi + endpoint, {
       method: 'POST',
       credentials: 'include',
@@ -102,7 +103,6 @@ export const useApi = () => {
           ...user,
         },
       });
-      console.log(data);
       return data;
     } catch {
       throw new Error();

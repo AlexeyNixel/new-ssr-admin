@@ -28,7 +28,7 @@ class UploadAdapter {
     );
 
     return new Promise((resolve, reject) => {
-      fetch(`http://localhost:3333/api/files/upload/image`, {
+      fetch(`http://localhost:3300/api/files/upload/image`, {
         method: 'POST',
         credentials: 'include',
         body: data,

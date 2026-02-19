@@ -14,10 +14,37 @@ export default defineNuxtConfig({
     colorMode: false,
     fonts: false,
   },
+  vite: {
+    server: {
+      proxy: {
+        '/site': {
+          target: 'http://192.168.0.41:10001',
+          changeOrigin: true,
+        },
+        '/dev': {
+          target: 'http://192.168.0.41:10001/',
+          changeOrigin: true,
+        },
+        '/media': {
+          target: 'http://192.168.0.41:10001/site',
+          changeOrigin: true,
+        },
+      },
+    },
+    optimizeDeps: {
+      include: [
+        '@nuxt/ui > prosemirror-state',
+        '@nuxt/ui > prosemirror-transform',
+        '@nuxt/ui > prosemirror-model',
+        '@nuxt/ui > prosemirror-view',
+        '@nuxt/ui > prosemirror-gapcursor',
+        '@nuxt/ui > prosemirror-tables',
+      ],
+    },
+  },
   runtimeConfig: {
     public: {
-      apiBaseUrl:
-        process.env.NUXT_PUBLIC_API_BASE || 'http://api2.infomania.ru',
+      apiBaseUrl: process.env.NUXT_PUBLIC_API_BASE || 'http://localhost:3300',
     },
   },
 });

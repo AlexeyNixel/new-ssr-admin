@@ -158,12 +158,11 @@
             </UFormField>
 
             <UFormField
-              required
               label="Содержание новости"
               class="space-y-3"
               name="content"
             >
-              <rich-editor v-model="newPost.content" />
+              <EditorCustom v-model="newPost.content" />
             </UFormField>
           </div>
         </div>
@@ -180,6 +179,7 @@ import { useDepartmentApi } from '~~/services/api/department.api';
 import { CalendarDate } from '@internationalized/date';
 import type { Tag } from '~~/services/types/tag.type';
 import UploadDocument from '~/components/Ui/UploadDocument.vue';
+import EditorCustom from '~/components/Editor/EditorCustom.vue';
 
 const route = useRoute();
 const toast = useToast();

@@ -53,7 +53,7 @@ const onSubmit = async () => {
         </UFormField>
 
         <UFormField label="Основной контент">
-          <rich-editor v-model="newPage.content" />
+          <EditorCustom v-model="newPage.content" />
         </UFormField>
 
         <UButton type="submit">{{ page ? 'Обновить' : 'Создать' }}</UButton>
