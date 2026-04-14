@@ -4,7 +4,7 @@ import { Icon, UBadge, UButton } from '#components';
 import type { NavigationItem } from '~~/services/types/navigation-item.type';
 import { useNavigationApi } from '~~/services/api/navigation.api';
 import AdminNavigation from '~/components/Modals/AdminNavigation.vue';
-import { useSortable } from '@vueuse/integrations';
+import { useSortable } from '@vueuse/integrations/useSortable';
 
 const navigationApi = useNavigationApi();
 const overlay = useOverlay();

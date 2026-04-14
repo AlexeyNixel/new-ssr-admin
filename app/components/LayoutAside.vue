@@ -3,6 +3,11 @@ import UploadExhibition from '~/components/Ui/UploadExhibition.vue';
 
 const navLinks = [
   {
+    label: 'Уведомления',
+    link: '/notification',
+    icon: 'i-heroicons-newspaper',
+  },
+  {
     label: 'Посты',
     link: '/post',
     icon: 'i-heroicons-newspaper',
