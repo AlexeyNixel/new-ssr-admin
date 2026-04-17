@@ -376,18 +376,13 @@ const customHandlers = {
     :extensions="extensions"
     content-type="html"
     placeholder="Вводите, / для команд"
+    class="border border-accented rounded-lg"
     :ui="{
       base: 'p-4 sm:p-4',
       content: 'max-w-3xl mx-auto',
     }"
   >
-    <!--    <UButton-->
-    <!--      @click="editor.chain().focus().setDetails().run()"-->
-    <!--      :disabled="!editor.can().setDetails()"-->
-    <!--    >-->
-    <!--      Set details-->
-    <!--    </UButton>-->
-    <UButton @click="addIframe(editor)"> Set iframe </UButton>
+    <!--    <UButton @click="addIframe(editor)"> Set iframe </UButton>-->
     <UEditorToolbar :editor="editor" :items="items">
       <template #link>
         <EditorLinkPopover :editor="editor" auto-open />

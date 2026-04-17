@@ -103,7 +103,7 @@ watch(openModal, () => {
 });
 
 useHead({
-  title: 'Управление отделами',
+  title: 'НОМБ | Отделы',
 });
 </script>
 

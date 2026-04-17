@@ -108,7 +108,7 @@ watch([page, searchText], () => {
 });
 
 useHead({
-  title: 'Управление постами',
+  title: 'НОМБ | Посты',
 });
 </script>
 

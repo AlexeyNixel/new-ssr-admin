@@ -37,6 +37,10 @@ await fetchData();
 watch(page, async () => {
   await fetchData();
 });
+
+useHead({
+  title: 'НОМБ | Тэги',
+});
 </script>
 
 <style scoped></style>

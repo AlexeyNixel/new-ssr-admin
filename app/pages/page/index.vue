@@ -16,13 +16,10 @@ import type { TableColumn } from '#ui/components/Table.vue';
 import type { Page } from '~~/services/types/page.type';
 import { UBadge, UButton } from '#components';
 import type { ApiResponse } from '~~/services/api';
-import AdminPage from '~/components/Modals/AdminPage.vue';
 
 const pageApi = usePageApi();
 const page = ref(1);
 const pageResult = ref<ApiResponse<Page[]>>();
-const overlay = useOverlay();
-const modal = overlay.create(AdminPage);
 
 const columns: TableColumn<Page>[] = [
   {
@@ -80,5 +77,9 @@ await fetchData();
 
 watch(page, () => {
   fetchData();
+});
+
+useHead({
+  title: 'НОМБ | Страницы',
 });
 </script>

@@ -84,7 +84,7 @@ watch(page, () => {
 });
 
 useHead({
-  title: 'Управление слайдами',
+  title: 'НОМБ | Слайды',
 });
 </script>
 

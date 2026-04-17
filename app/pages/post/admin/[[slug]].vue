@@ -245,12 +245,10 @@ if (slug) {
     newPreview.path = data.preview.path;
   }
 
-  const now = new Date(data.publishedAt);
-
   publishedAt.value = new CalendarDate(
-    now.getFullYear(),
-    now.getMonth() + 1,
-    now.getDate()
+    +dayjs(data.publishedAt).year(),
+    dayjs(data.publishedAt).month() + 1,
+    dayjs(data.publishedAt).date()
   );
 
   Object.keys(newPost).forEach((key) => {
@@ -271,8 +269,6 @@ const createPost = async () => {
     previewFileId: newPreview.id || newPost.previewFileId,
     publishedAt: dayjs(publishedAt.value),
   };
-
-  console.log(newData);
 
   try {
     if (slug) {

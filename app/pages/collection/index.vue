@@ -41,6 +41,10 @@ const formatDate = (dateString: string) => {
 watch(page, async () => {
   await fetchData();
 });
+
+useHead({
+  title: 'НОМБ | Сборники книг',
+});
 </script>
 
 <template>

@@ -92,7 +92,7 @@ watch(page, () => {
 });
 
 useHead({
-  title: 'Управление событиями',
+  title: 'НОМБ | События',
 });
 </script>
 

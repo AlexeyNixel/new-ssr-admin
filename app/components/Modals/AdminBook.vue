@@ -90,107 +90,78 @@ const onSubmit = async () => {
 
   emit('close', true);
 };
-
-const handleCancel = async () => {
-  emit('close');
-};
 </script>
 
 <template>
   <UModal
-    title="Обновление"
-    description="Книги"
+    :title="book ? 'Редактирование книги' : 'Создание книги'"
+    :description="
+      book
+        ? 'Внесите изменения в информацию о книге'
+        : 'Заполните информацию о новой книге'
+    "
     :dismissible="false"
-    :ui="{ content: 'sm:max-w-4xl' }"
+    :ui="{ content: 'sm:max-w-5xl' }"
   >
-    <template #content>
-      <div class="p-6">
-        <!-- Заголовок -->
-        <div class="mb-6">
-          <h1 class="text-2xl font-bold text-gray-900">
-            {{ book ? 'Редактирование книги' : 'Создание книги' }}
-          </h1>
-          <p class="text-gray-600 mt-1 text-sm">
-            {{
-              book
-                ? 'Внесите изменения в информацию о книге'
-                : 'Заполните информацию о новой книге'
-            }}
-          </p>
-        </div>
-
-        <!-- Форма -->
+    <template #body>
+      <div class="flex flex-col w-full">
         <UForm
-          class="space-y-6"
           :schema="schema"
           :state="newBook"
+          class="space-y-5"
           @submit="onSubmit"
         >
-          <!-- Основная информация -->
-          <div class="space-y-4">
-            <div class="flex items-center justify-between gap-5">
-              <UFormField
-                name="previewFileId"
-                label="Обложка книги"
-                class="space-y-3"
-              >
+          <div class="flex flex-col md:flex-row gap-6">
+            <div class="md:w-1/3">
+              <UFormField label="Обложка книги">
                 <UploadImage
                   v-model="newBook.previewFileId"
                   :preview="book?.preview?.path"
                   class="w-full"
                 />
-                <template #help>
-                  <p class="text-xs text-gray-500">
-                    Рекомендуемый размер: 600×900px • Форматы: JPG, PNG, WebP
-                  </p>
-                </template>
+                <p class="text-xs text-neutral-500 dark:text-neutral-400">
+                  Рекомендуемый размер: 600×900px • Форматы: JPG, PNG, WebP
+                </p>
               </UFormField>
-              <div class="w-full h-full flex flex-col justify-between">
-                <UFormField name="title" label="Название книги" required>
-                  <UInput
-                    v-model="newBook.title"
-                    class="w-full"
-                    placeholder="Введите название книги"
-                    icon="i-heroicons-bookmark"
-                    size="lg"
-                  />
-                </UFormField>
-
-                <UFormField
-                  name="description"
-                  label="Краткое описание"
-                  required
-                >
-                  <UTextarea
-                    v-model="newBook.description"
-                    class="w-full"
-                    placeholder="Опишите краткое содержание книги..."
-                    :rows="3"
-                  />
-                </UFormField>
-              </div>
             </div>
 
-            <UFormField name="content" label="Полное содержание" required>
-              <div
-                class="ckeditor-container border border-gray-200 rounded-lg overflow-hidden"
-              >
-                <rich-editor v-model="newBook.content" class="w-full" />
-              </div>
-              <template #help>
-                <p class="text-xs text-gray-500 mt-2">
-                  Используйте редактор для форматирования текста. Редактор
-                  автоматически подстраивается под размеры модального окна.
-                </p>
-              </template>
-            </UFormField>
+            <div class="md:w-2/3 space-y-5">
+              <UFormField name="title" label="Название книги" required>
+                <UInput
+                  v-model="newBook.title"
+                  class="w-full"
+                  placeholder="Введите название книги"
+                  icon="i-heroicons-bookmark"
+                  size="md"
+                />
+              </UFormField>
+
+              <UFormField name="description" label="Краткое описание" required>
+                <UTextarea
+                  v-model="newBook.description"
+                  class="w-full"
+                  placeholder="Опишите краткое содержание книги..."
+                  :rows="3"
+                  size="md"
+                />
+              </UFormField>
+            </div>
           </div>
 
-          <!-- Обложка книги -->
+          <UFormField name="content" label="Полное содержание" required>
+            <div
+              class="border border-neutral-200 dark:border-neutral-700 rounded-lg overflow-hidden"
+            >
+              <EditorCustom v-model="newBook.content" class="w-full" />
+            </div>
+            <p class="text-xs text-neutral-500 dark:text-neutral-400">
+              Используйте редактор для форматирования текста. Редактор
+              автоматически подстраивается под размеры модального окна.
+            </p>
+          </UFormField>
 
-          <!-- Дополнительная информация -->
-          <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <UFormField required name="place" label="Место хранения">
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-5">
+            <UFormField name="place" label="Место хранения" required>
               <USelect
                 v-model="newBook.place"
                 :items="places"
@@ -199,7 +170,7 @@ const handleCancel = async () => {
               />
             </UFormField>
 
-            <UFormField required name="litresLink" label="Ссылка на Litres">
+            <UFormField name="litresLink" label="Ссылка на Litres" required>
               <UInput
                 v-model="newBook.litresLink"
                 placeholder="https://litres.ru/..."
@@ -207,71 +178,86 @@ const handleCancel = async () => {
                 class="w-full"
               />
             </UFormField>
-            <UFormField required name="collection" label="Выбирите коллекцию">
+
+            <UFormField name="collection" label="Выберите коллекцию" required>
               <SelectCollection v-model="newBook.collections" />
             </UFormField>
           </div>
 
-          <!-- Настройки -->
-          <div class="space-y-4">
+          <UFormField label="Настройки книги">
             <div
-              class="p-4 bg-gray-50 rounded-lg border border-gray-200 space-y-4"
+              class="p-4 bg-neutral-50 dark:bg-neutral-800/50 rounded-xl border border-neutral-200 dark:border-neutral-700 space-y-4"
             >
-              <UFormField label="Настройки книги">
-                <div class="space-y-3">
-                  <div class="flex items-center justify-between">
-                    <div class="space-y-1">
-                      <p class="text-sm font-medium text-gray-900">
-                        Статус книги
-                      </p>
-                      <p class="text-xs text-gray-500">
-                        {{
-                          newBook.isDeleted
-                            ? 'Скрыта от пользователей'
-                            : 'Видна всем пользователям'
-                        }}
-                      </p>
-                    </div>
-                    <USwitch
-                      v-model="newBook.isDeleted"
-                      :label="newBook.isDeleted ? 'Скрыта' : 'Активна'"
-                    />
-                  </div>
-
-                  <div class="flex items-center justify-between">
-                    <div class="space-y-1">
-                      <p class="text-sm font-medium text-gray-900">
-                        Тип контента
-                      </p>
-                      <p class="text-xs text-gray-500">
-                        {{
-                          newBook.isVideo ? 'Видео-материал' : 'Текстовая книга'
-                        }}
-                      </p>
-                    </div>
-                    <USwitch
-                      v-model="newBook.isVideo"
-                      :label="newBook.isVideo ? 'Видео' : 'Книга'"
-                    />
-                  </div>
+              <div class="flex items-center justify-between">
+                <div class="flex items-center gap-2">
+                  <UIcon
+                    :name="
+                      newBook.isDeleted
+                        ? 'i-heroicons-eye-slash-20-solid'
+                        : 'i-heroicons-eye-20-solid'
+                    "
+                    class="w-4 h-4"
+                    :class="
+                      newBook.isDeleted ? 'text-neutral-500' : 'text-green-500'
+                    "
+                  />
+                  <p
+                    class="text-sm font-medium text-neutral-900 dark:text-white"
+                  >
+                    Статус книги
+                  </p>
                 </div>
-              </UFormField>
-            </div>
-          </div>
+                <USwitch v-model="newBook.isDeleted" />
+              </div>
+              <p class="text-xs text-neutral-500 dark:text-neutral-400">
+                {{
+                  newBook.isDeleted
+                    ? 'Скрыта от пользователей'
+                    : 'Видна всем пользователям'
+                }}
+              </p>
 
-          <!-- Кнопки действий -->
+              <div class="flex items-center justify-between pt-2">
+                <div class="flex items-center gap-2">
+                  <UIcon
+                    :name="
+                      newBook.isVideo
+                        ? 'i-heroicons-video-camera-20-solid'
+                        : 'i-heroicons-book-open-20-solid'
+                    "
+                    class="w-4 h-4"
+                    :class="
+                      newBook.isVideo ? 'text-blue-500' : 'text-purple-500'
+                    "
+                  />
+                  <p
+                    class="text-sm font-medium text-neutral-900 dark:text-white"
+                  >
+                    Тип контента
+                  </p>
+                </div>
+                <USwitch v-model="newBook.isVideo" />
+              </div>
+              <p class="text-xs text-neutral-500 dark:text-neutral-400">
+                {{ newBook.isVideo ? 'Видео-материал' : 'Текстовая книга' }}
+              </p>
+            </div>
+          </UFormField>
+
           <div
-            class="flex flex-col sm:flex-row gap-3 pt-6 border-t border-gray-200"
+            class="flex items-center justify-end gap-3 pt-4 mt-2 border-t border-neutral-200 dark:border-neutral-700"
           >
             <UButton
-              variant="outline"
-              color="neutral"
-              class="flex-1"
-              @click="handleCancel"
+              type="submit"
+              color="primary"
+              size="md"
+              class="min-w-[160px]"
+              :icon="
+                book
+                  ? 'i-heroicons-pencil-square-20-solid'
+                  : 'i-heroicons-plus-20-solid'
+              "
             >
-              Отмена
-            </UButton>
-            <UButton color="primary" class="flex-1" type="submit">
               {{ book ? 'Обновить книгу' : 'Создать книгу' }}
             </UButton>
           </div>

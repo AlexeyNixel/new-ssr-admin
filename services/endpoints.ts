@@ -1,5 +1,5 @@
 export const API_ENDPOINTS = {
-  notification: '/api/notification',
+  notification: '/api/notification/',
   posts: '/api/posts/',
   page: '/api/page/',
   navigation: '/api/navigation-item/',
@@ -11,7 +11,7 @@ export const API_ENDPOINTS = {
   file: '/api/file/',
   book: '/api/book/',
   collection: '/api/book-collection/',
-  uploadImage: '/api/files/upload/image',
-  uploadDocument: '/api/files/upload/document',
-  uploadExhibition: '/api/files/upload/exhibition',
+  uploadImage: '/api/files/upload/image/',
+  uploadDocument: '/api/files/upload/document/',
+  uploadExhibition: '/api/files/upload/exhibition/',
 };

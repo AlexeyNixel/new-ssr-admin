@@ -35,35 +35,58 @@ const closeModal = () => {
 </script>
 
 <template>
-  <UModal title="Админка сборников" description="нет">
-    <template #content>
-      <UForm class="flex flex-col gap-5 p-5" @submit="onSubmit">
-        <h1>
-          {{ collection ? 'Обновление записи' : 'Создание записи' }}
-        </h1>
-        <UFormField label="Название">
-          <UInput
-            v-model="newCollection.label"
-            placeholder="Введите название"
-            class="w-full"
-          />
-        </UFormField>
-        <UFormField label="Изображение">
-          <UploadImage
-            v-model="newCollection.previewFileId"
-            :preview="collection?.preview?.path"
-          />
-        </UFormField>
+  <UModal
+    :title="collection ? 'Редактирование сборника' : 'Создание сборника'"
+    :description="
+      collection
+        ? 'Внесите изменения в сборник'
+        : 'Заполните информацию для нового сборника'
+    "
+    :dismissible="false"
+  >
+    <template #body>
+      <div class="flex flex-col w-full">
+        <UForm class="space-y-5" @submit="onSubmit">
+          <UFormField label="Название" required>
+            <UInput
+              v-model="newCollection.label"
+              placeholder="Введите название сборника"
+              icon="i-heroicons-folder-20-solid"
+              size="md"
+              class="w-full"
+            />
+          </UFormField>
 
-        <div class="flex justify-end gap-5">
-          <UButton color="neutral" @click="closeModal">Отмена</UButton>
-          <UButton color="secondary" type="submit">
-            {{ collection ? 'Обновить' : 'Создать' }}
-          </UButton>
-        </div>
-      </UForm>
+          <UFormField label="Изображение">
+            <UploadImage
+              v-model="newCollection.previewFileId"
+              :preview="collection?.preview?.path"
+              class="w-full"
+            />
+            <p class="text-xs text-neutral-500 dark:text-neutral-400">
+              Рекомендуемый размер: 600×600px • Форматы: JPG, PNG, WebP
+            </p>
+          </UFormField>
+
+          <div
+            class="flex items-center justify-end gap-3 pt-4 mt-2 border-t border-neutral-200 dark:border-neutral-700"
+          >
+            <UButton
+              type="submit"
+              color="primary"
+              size="md"
+              class="min-w-[120px]"
+              :icon="
+                collection
+                  ? 'i-heroicons-pencil-square-20-solid'
+                  : 'i-heroicons-plus-20-solid'
+              "
+            >
+              {{ collection ? 'Обновить' : 'Создать' }}
+            </UButton>
+          </div>
+        </UForm>
+      </div>
     </template>
   </UModal>
 </template>
-
-<style scoped></style>

@@ -62,70 +62,71 @@ const onSubmit = async () => {
 </script>
 
 <template>
-  <UModal :dismissible="false">
-    <template #content>
-      <div class="p-6">
-        <!-- Заголовок -->
-        <div class="mb-6">
-          <h3 class="text-xl font-semibold text-gray-900 dark:text-white">
-            {{ navigationItem?.id ? 'Обновить запись' : 'Создать запись' }}
-          </h3>
-          <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
-            {{
-              navigationItem?.id
-                ? 'Внесите изменения в существующую запись'
-                : 'Заполните все обязательные поля для создания новой записи'
-            }}
-          </p>
-        </div>
-
-        <!-- Форма -->
-        <UForm class="space-y-6" :on-submit="onSubmit">
+  <UModal
+    :title="
+      navigationItem?.id
+        ? 'Редактирование записи навигации'
+        : 'Создание записи навигации'
+    "
+    :description="
+      navigationItem?.id
+        ? 'Внесите изменения в существующую запись'
+        : 'Заполните все обязательные поля для создания новой записи'
+    "
+    :dismissible="false"
+  >
+    <template #body>
+      <div class="flex flex-col w-full">
+        <UForm class="space-y-5" @submit="onSubmit">
           <!-- Основные поля -->
-          <div class="space-y-4">
-            <UFormField label="Название" name="title" required>
-              <UInput
-                v-model="newNavigationItem.title"
-                placeholder="Введите название записи"
-                class="w-full"
-                size="lg"
-              />
-            </UFormField>
+          <UFormField label="Название" name="title" required>
+            <UInput
+              v-model="newNavigationItem.title"
+              placeholder="Введите название записи"
+              icon="i-heroicons-text-20-solid"
+              size="md"
+              class="w-full"
+            />
+          </UFormField>
 
-            <UFormField label="Описание" name="description" required>
-              <UTextarea
-                v-model="newNavigationItem.description"
-                placeholder="Введите описание записи"
-                class="w-full"
-                :rows="3"
-              />
-            </UFormField>
+          <UFormField label="Описание" name="description" required>
+            <UTextarea
+              v-model="newNavigationItem.description"
+              placeholder="Введите описание записи"
+              class="w-full"
+              :rows="3"
+              size="md"
+            />
+          </UFormField>
 
-            <UFormField label="Ссылка" name="link" required>
-              <UInput
-                v-model="newNavigationItem.to"
-                placeholder="https://example.com"
-                class="w-full"
-                icon="i-heroicons-link"
-              />
-            </UFormField>
+          <UFormField label="Ссылка" name="link" required>
+            <UInput
+              v-model="newNavigationItem.to"
+              placeholder="https://example.com"
+              class="w-full"
+              icon="i-heroicons-link"
+              size="md"
+            />
+          </UFormField>
 
-            <UFormField label="Родительский элемент" name="link" required>
-              <USelectMenu
-                v-model="newNavigationItem.parentId"
-                v-model:search-term="search"
-                :items="navItems"
-                label-key="title"
-                value-key="id"
-                placeholder="Выберите родительский элемент если он есть"
-                class="w-full"
-                icon="i-heroicons-link"
-              />
-            </UFormField>
-          </div>
+          <UFormField label="Родительский элемент" name="parentId">
+            <USelectMenu
+              v-model="newNavigationItem.parentId"
+              v-model:search-term="search"
+              :items="navItems"
+              label-key="title"
+              value-key="id"
+              placeholder="Выберите родительский элемент если он есть"
+              class="w-full"
+              icon="i-heroicons-folder-20-solid"
+            />
+            <p class="text-xs text-neutral-500 dark:text-neutral-400">
+              Если элемент является корневым, оставьте поле пустым
+            </p>
+          </UFormField>
 
           <!-- Группа полей в строку -->
-          <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-5">
             <!-- Тип открытия ссылки -->
             <UFormField label="Тип открытия ссылки" name="target" required>
               <USelect
@@ -137,57 +138,71 @@ const onSubmit = async () => {
             </UFormField>
 
             <!-- Иконка -->
-            <UFormField label="Иконка" name="icon" required>
+            <UFormField label="Иконка" name="icon">
               <div class="space-y-2">
-                <div
-                  class="flex items-center gap-3 p-2 bg-gray-50 dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700"
-                >
-                  <Icon
-                    :name="newNavigationItem.icon"
-                    class="text-lg text-gray-600 dark:text-gray-300"
-                  />
+                <div class="flex items-center gap-2">
+                  <div
+                    class="p-2 bg-neutral-50 dark:bg-neutral-800 rounded-lg border border-neutral-200 dark:border-neutral-700"
+                  >
+                    <Icon
+                      :name="
+                        newNavigationItem.icon ||
+                        'i-heroicons-question-mark-circle-20-solid'
+                      "
+                      class="text-lg text-neutral-600 dark:text-neutral-300"
+                    />
+                  </div>
                   <UInput
                     v-model="newNavigationItem.icon"
-                    placeholder="icon-name"
-                    class="flex-1 border-0 bg-transparent focus:ring-0 p-0"
+                    placeholder="i-heroicons-home"
+                    class="flex-1"
+                    size="md"
                   />
                 </div>
-                <p class="text-xs text-gray-500 dark:text-gray-400">
-                  Введите название иконки из Iconify
+                <p class="text-xs text-neutral-500 dark:text-neutral-400">
+                  Введите название иконки из Iconify (например:
+                  i-heroicons-home)
                 </p>
               </div>
             </UFormField>
 
             <!-- Позиция -->
-            <UFormField label="Позиция" name="position" required>
+            <UFormField label="Позиция" name="position">
               <UInput
                 v-model="newNavigationItem.order"
                 type="number"
                 placeholder="0"
                 min="0"
                 class="w-full"
+                icon="i-heroicons-bars-3-20-solid"
+                size="md"
               />
+              <p class="text-xs text-neutral-500 dark:text-neutral-400">
+                Чем меньше число, тем выше в списке
+              </p>
             </UFormField>
           </div>
 
-          <!-- Разделитель -->
-          <div class="border-t border-gray-200 dark:border-gray-700 pt-6">
-            <!-- Кнопки действий -->
-            <div class="flex justify-end gap-3">
-              <UButton variant="outline" color="neutral" class="px-6">
-                Отмена
-              </UButton>
-              <UButton color="primary" class="px-6" type="submit">
-                {{ navigationItem?.id ? 'Обновить' : 'Создать' }}
-              </UButton>
-            </div>
+          <!-- Кнопки действий -->
+          <div
+            class="flex items-center justify-end gap-3 pt-4 mt-2 border-t border-neutral-200 dark:border-neutral-700"
+          >
+            <UButton
+              type="submit"
+              color="primary"
+              size="md"
+              class="min-w-[120px]"
+              :icon="
+                navigationItem?.id
+                  ? 'i-heroicons-pencil-square-20-solid'
+                  : 'i-heroicons-plus-20-solid'
+              "
+            >
+              {{ navigationItem?.id ? 'Обновить' : 'Создать' }}
+            </UButton>
           </div>
         </UForm>
       </div>
     </template>
   </UModal>
 </template>
-
-<style scoped>
-/* Дополнительные кастомные стили если нужно */
-</style>

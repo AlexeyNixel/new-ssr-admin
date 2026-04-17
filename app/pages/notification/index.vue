@@ -20,8 +20,14 @@ const columns: TableColumn<Notification>[] = [
       return h(UBadge, {
         class: 'hover:cursor-pointer',
         variant: 'subtle',
-        color: row.original.isDeleted ? 'warning' : 'success',
-        label: row.original.isDeleted ? 'Скрыта' : 'Опубликована',
+        color:
+          new Date().toISOString() > row.original.endTime
+            ? 'warning'
+            : 'success',
+        label:
+          new Date().toISOString() > row.original.endTime
+            ? 'Истекло'
+            : 'Опубликовано',
       });
     },
   },
@@ -90,14 +96,21 @@ const handleOpenModal = async (notification?: Notification) => {
   const instance = modal.open({ notification });
 
   const result = await instance.result;
-
-  if (result) await fetchData();
+  if (result) {
+    console.log(123);
+    await fetchData();
+    console.log(notifications.value.data);
+  }
 };
 
 await fetchData();
 
 watch(page, () => {
   fetchData();
+});
+
+useHead({
+  title: 'НОМБ | Уведомления',
 });
 </script>
 
@@ -107,6 +120,7 @@ watch(page, () => {
     :meta="notifications.meta"
     title="Управление уведомлениями"
     name="table"
+    :event-create="() => handleOpenModal()"
   >
     <UTable
       ref="table"

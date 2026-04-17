@@ -11,7 +11,7 @@ const overlay = useOverlay();
 const modal = overlay.create(AdminNavigation);
 
 const navigationsItems = ref<NavigationItem[]>(
-  await navigationApi.getAllNavigation()
+  await navigationApi.getAllNavigation({ withoutDate: true })
 );
 
 const columns: TableColumn<NavigationItem>[] = [
@@ -102,12 +102,15 @@ const handleDragItem = async () => {
 
 const handleOpenModal = async () => {
   const instance = modal.open({});
-
-  const result = await instance.result;
+  await instance.result;
 };
 
 useSortable('.my-table-tbody', navigationsItems, {
   animation: 150,
+});
+
+useHead({
+  title: 'НОМБ | Навигация',
 });
 </script>
 

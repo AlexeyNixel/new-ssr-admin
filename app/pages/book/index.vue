@@ -104,6 +104,10 @@ const handleOpenModal = async (book?: Book) => {
     await fetchData();
   }
 };
+
+useHead({
+  title: 'НОМБ | Книги',
+});
 </script>
 
 <template>

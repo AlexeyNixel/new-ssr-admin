@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import type { Slide } from '~~/services/types/slide.type';
 import { useSlideApi } from '~~/services/api/slide.api';
+import { slideSchema } from '~/schemas/slide.schema';
 
 const emit = defineEmits<{ close: [boolean] }>();
 const props = defineProps<{
@@ -10,11 +11,14 @@ const props = defineProps<{
 const slideApi = useSlideApi();
 const toast = useToast();
 
+const schema = slideSchema;
+
 const newSlides = ref({
   imageFileId: props.slide?.imageFileId || '',
   postId: props.slide?.postId || undefined,
   isDeleted: props.slide?.isDeleted || false,
   slideOrder: props.slide?.slideOrder || 0,
+  url: props.slide?.url || '',
 });
 
 const onSubmit = async () => {
@@ -36,66 +40,52 @@ const onSubmit = async () => {
 <template>
   <UModal
     :dismissible="false"
-    title="Создание слайда"
-    description="Отсутствует"
+    :title="slide ? 'Редактирование слайда' : 'Создание слайда'"
+    :description="
+      slide
+        ? 'Внесите изменения в существующий слайд'
+        : 'Заполните информацию для нового слайда'
+    "
   >
-    <template #content>
-      <div class="p-6">
-        <!-- Заголовок -->
-        <div class="mb-6">
-          <h1 class="text-2xl font-bold text-gray-900 dark:text-white">
-            {{ slide ? 'Редактирование слайда' : 'Создание слайда' }}
-          </h1>
-          <p class="mt-2 text-sm text-gray-600 dark:text-gray-400">
-            {{
-              slide
-                ? 'Внесите изменения в существующий слайд'
-                : 'Заполните информацию для нового слайда'
-            }}
-          </p>
-        </div>
-
+    <template #body>
+      <div class="flex flex-col w-full">
         <!-- Форма -->
-        <UForm class="space-y-6">
+        <UForm
+          :schema="schema"
+          :state="newSlides"
+          class="space-y-5"
+          @submit="onSubmit"
+        >
           <!-- Загрузка изображения -->
-          <UFormField label="Изображение слайда" name="image" class="space-y-3">
-            <div class="flex flex-col items-center justify-center space-y-3">
-              <UiUploadImage
-                v-model="newSlides.imageFileId"
-                :preview="slide?.image?.path"
-                class="w-full"
-              />
-              <p class="text-xs text-gray-500 dark:text-gray-400 text-center">
-                Рекомендуемый размер: 1920×1080px • Максимальный вес: 5MB
-              </p>
-            </div>
+          <UFormField name="imageFileId" label="Изображение слайда">
+            <UiUploadImage
+              v-model="newSlides.imageFileId"
+              :preview="slide?.image?.path"
+              class="w-full"
+            />
+            <p class="text-xs text-neutral-500 dark:text-neutral-400">
+              Рекомендуемое соотношение: 2:1 (1800x900) • Максимальный вес: 5MB
+            </p>
           </UFormField>
 
           <!-- Группа полей в строку -->
-          <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
             <!-- Привязанная новость -->
-            <UFormField
-              label="Привязанная новость"
-              name="postId"
-              class="space-y-2"
-            >
+            <UFormField name="postId" label="Привязанная новость">
               <UInput
                 v-model="newSlides.postId"
                 placeholder="Введите ID новости"
                 icon="i-heroicons-newspaper"
                 class="w-full"
+                size="md"
               />
-              <p class="text-xs text-gray-500 dark:text-gray-400">
+              <p class="text-xs text-neutral-500 dark:text-neutral-400">
                 Укажите идентификатор связанной новости
               </p>
             </UFormField>
 
             <!-- Порядок слайда -->
-            <UFormField
-              label="Порядок отображения"
-              name="slideOrder"
-              class="space-y-2"
-            >
+            <UFormField label="Порядок отображения">
               <UInput
                 v-model="newSlides.slideOrder"
                 type="number"
@@ -103,33 +93,53 @@ const onSubmit = async () => {
                 min="0"
                 icon="i-heroicons-list-bullet"
                 class="w-full"
+                size="md"
               />
-              <p class="text-xs text-gray-500 dark:text-gray-400">
+              <p class="text-xs text-neutral-500 dark:text-neutral-400">
                 Чем меньше число, тем выше в списке
               </p>
             </UFormField>
           </div>
 
-          <!-- Статус -->
-          <div
-            class="p-4 bg-gray-50 dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700"
-          >
-            <UFormField
-              label="Статус слайда"
-              name="isDeleted"
-              class="space-y-3"
+          <!-- Внешняя ссылка (новое поле) -->
+          <UFormField name="url" label="Внешняя ссылка">
+            <UInput
+              v-model="newSlides.url"
+              placeholder="https://example.com"
+              icon="i-heroicons-link-20-solid"
+              class="w-full"
+              size="md"
+            />
+            <p class="text-xs text-neutral-500 dark:text-neutral-400">
+              Если указана, при клике на слайд будет переход на внешний сайт.
+              Приоритет выше, чем у привязанной новости
+            </p>
+          </UFormField>
+
+          <!-- Статус слайда -->
+          <UFormField label="Статус слайда">
+            <div
+              class="p-4 bg-neutral-50 dark:bg-neutral-800/50 rounded-xl border border-neutral-200 dark:border-neutral-700"
             >
               <div class="flex items-center justify-between">
-                <div class="space-y-1">
-                  <p class="text-sm font-medium text-gray-900 dark:text-white">
-                    {{ newSlides.isDeleted ? 'Скрыт' : 'Активен' }}
-                  </p>
-                  <p class="text-xs text-gray-500 dark:text-gray-400">
-                    {{
+                <div class="flex items-center gap-2">
+                  <UIcon
+                    :name="
                       newSlides.isDeleted
-                        ? 'Слайд скрыт из публичного доступа'
-                        : 'Слайд отображается на сайте'
-                    }}
+                        ? 'i-heroicons-eye-slash-20-solid'
+                        : 'i-heroicons-eye-20-solid'
+                    "
+                    class="w-4 h-4"
+                    :class="
+                      newSlides.isDeleted
+                        ? 'text-neutral-500'
+                        : 'text-green-500'
+                    "
+                  />
+                  <p
+                    class="text-sm font-medium text-neutral-900 dark:text-white"
+                  >
+                    {{ newSlides.isDeleted ? 'Слайд скрыт' : 'Слайд активен' }}
                   </p>
                 </div>
                 <UCheckbox
@@ -138,27 +148,34 @@ const onSubmit = async () => {
                   color="primary"
                 />
               </div>
-            </UFormField>
-          </div>
-
-          <!-- Разделитель и кнопки -->
-          <div class="border-t border-gray-200 dark:border-gray-700 pt-6">
-            <div class="flex flex-col sm:flex-row justify-end gap-3">
-              <UButton
-                variant="outline"
-                color="neutral"
-                class="flex-1 sm:flex-none order-2 sm:order-1"
-                @click="$emit('close', false)"
-              >
-                Отмена
-              </UButton>
-              <UButton
-                color="primary"
-                class="flex-1 sm:flex-none order-1 sm:order-2"
-                :label="slide ? 'Сохранить изменения' : 'Создать слайд'"
-                @click="onSubmit"
-              />
             </div>
+            <p class="text-xs text-neutral-500 dark:text-neutral-400">
+              {{
+                newSlides.isDeleted
+                  ? 'Слайд скрыт из публичного доступа'
+                  : 'Слайд отображается на сайте'
+              }}
+            </p>
+          </UFormField>
+
+          <!-- Кнопки действий -->
+          <div
+            class="flex items-center justify-end gap-3 pt-4 mt-2 border-t border-neutral-200 dark:border-neutral-700"
+          >
+            <UButton
+              type="submit"
+              color="primary"
+              size="md"
+              class="min-w-[160px]"
+              :loading="isLoading"
+              :icon="
+                slide
+                  ? 'i-heroicons-pencil-square-20-solid'
+                  : 'i-heroicons-plus-20-solid'
+              "
+            >
+              {{ slide ? 'Сохранить изменения' : 'Создать слайд' }}
+            </UButton>
           </div>
         </UForm>
       </div>

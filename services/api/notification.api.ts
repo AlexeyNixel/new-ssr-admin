@@ -8,5 +8,8 @@ export const useNotificationApi = () => {
   return {
     getAllNotifications: (params?: any) =>
       api.get<Notification[]>(API_ENDPOINTS.notification, { params }),
+    create: (data: any) => api.post(API_ENDPOINTS.notification, data),
+    update: (id: string, data: any) =>
+      api.patch(API_ENDPOINTS.notification, id, data),
   };
 };
