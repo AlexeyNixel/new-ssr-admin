@@ -312,7 +312,6 @@ const addIframe = (editor: Editor) => {
   const parser = new DOMParser();
   const doc = parser.parseFromString(iframe, 'text/html');
   const iframeElement = doc.body.firstChild as HTMLIFrameElement;
-  console.log(iframeElement.width, iframeElement.height);
 
   editor
     .chain()
@@ -382,6 +381,18 @@ const customHandlers = {
       content: 'max-w-3xl mx-auto',
     }"
   >
+    <button
+      @click="editor.chain().focus().setDetails().run()"
+      :disabled="!editor.can().setDetails()"
+    >
+      Set details
+    </button>
+    <button
+      @click="editor.chain().focus().unsetDetails().run()"
+      :disabled="!editor.can().unsetDetails()"
+    >
+      Unset details
+    </button>
     <!--    <UButton @click="addIframe(editor)"> Set iframe </UButton>-->
     <UEditorToolbar :editor="editor" :items="items">
       <template #link>

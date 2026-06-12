@@ -14,4 +14,5 @@ export const API_ENDPOINTS = {
   uploadImage: '/api/files/upload/image/',
   uploadDocument: '/api/files/upload/document/',
   uploadExhibition: '/api/files/upload/exhibition/',
+  clubs: '/api/clubs/',
 };

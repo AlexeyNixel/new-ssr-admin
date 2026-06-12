@@ -89,6 +89,7 @@ const fetchData = async () => {
   notifications.value = await notificationApi.getAllNotifications({
     limit: 15,
     page: page.value,
+    isDeleted: true,
   });
 };
 
@@ -97,9 +98,7 @@ const handleOpenModal = async (notification?: Notification) => {
 
   const result = await instance.result;
   if (result) {
-    console.log(123);
     await fetchData();
-    console.log(notifications.value.data);
   }
 };
 

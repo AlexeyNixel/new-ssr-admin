@@ -52,6 +52,11 @@ const navLinks = [
     link: '/navigation',
     icon: 'i-heroicons:bars-arrow-down',
   },
+  {
+    label: 'Клубы',
+    link: '/club',
+    icon: 'iconoir:community',
+  },
 ];
 const cookies = useCookie('user_data');
 const authApi = useAuth();
