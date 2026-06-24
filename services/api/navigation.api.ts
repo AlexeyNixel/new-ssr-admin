@@ -6,7 +6,7 @@ export const useNavigationApi = () => {
   const api = useApi();
 
   return {
-    getAllNavigation: async () =>
+    getAllNavigation: async (params?: { withoutDate?: boolean }) =>
       api.getWithoutPagination<NavigationItem[]>(API_ENDPOINTS.navigation),
 
     getAllNavigationWithoutTree: async () =>
@@ -14,13 +14,13 @@ export const useNavigationApi = () => {
         API_ENDPOINTS.navigation + 'untree'
       ),
 
-    create: async (data: any): Promise<void> =>
-      api.post(API_ENDPOINTS.navigation, { ...data }),
+    create: async (data: Partial<NavigationItem>): Promise<unknown> =>
+      api.post(API_ENDPOINTS.navigation, data),
 
-    update: (id: string, data: any) =>
+    update: (id: string, data: Partial<NavigationItem>) =>
       api.patch(API_ENDPOINTS.navigation, id, data),
 
-    updateBatchOrder: (data: [{ id: string; order: number }]) =>
+    updateBatchOrder: (data: { id: string; order: number }[]) =>
       api.postMany(API_ENDPOINTS.navigation + 'batch-update', data),
   };
 };

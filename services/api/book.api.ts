@@ -10,20 +10,18 @@ export const useBookApi = () => {
       api.get<Book[]>(API_ENDPOINTS.book, { params }),
 
     getOneBook: (id: string, params?: BookQuery) =>
-      api.getOne<BookQuery>(API_ENDPOINTS.book, id, { params }),
+      api.getOne<Book>(API_ENDPOINTS.book, id, { params }),
 
-    createBook: (data: any) => api.post(API_ENDPOINTS.book, data),
+    createBook: (data: Partial<Book>) => api.post(API_ENDPOINTS.book, data),
 
-    updateBook: (id: string, data: any) =>
+    updateBook: (id: string, data: Partial<Book>) =>
       api.patch(API_ENDPOINTS.book, id, data),
 
     getAllCollections: (params?: BookQuery) =>
-      api.get<BookCollection[]>(API_ENDPOINTS.collection, {
-        params,
-      }),
+      api.get<BookCollection[]>(API_ENDPOINTS.collection, { params }),
 
-    createCollection: (data: any) => api.post(API_ENDPOINTS.collection, data),
-    updateCollection: (id: string, data: any) =>
+    createCollection: (data: Partial<BookCollection>) => api.post(API_ENDPOINTS.collection, data),
+    updateCollection: (id: string, data: Partial<BookCollection>) =>
       api.patch(API_ENDPOINTS.collection, id, data),
   };
 };

@@ -15,6 +15,8 @@
 
 <script setup lang="ts">
 import { useBookApi } from '~~/services/api/book.api';
+import type { BookCollection } from '~~/services/types/book.type';
+import type { File as ApiFile } from '~~/services/types/file.type';
 
 const emit = defineEmits(['update:modelValue']);
 const props = defineProps<{
@@ -32,26 +34,27 @@ const { data } = await bookApi.getAllCollections();
 collections.value = data;
 
 const onCreate = async (label: string) => {
-  let result: File;
   const input = document.createElement('input');
   input.type = 'file';
 
-  input.onchange = async (e: any) => {
-    const image = e.target.files[0];
-    const body = new FormData();
+  input.onchange = async (e: Event) => {
+    const image = (e.target as HTMLInputElement).files?.[0];
+    if (!image) return;
 
+    const body = new FormData();
     body.append('file', image);
-    result = (await $fetch('http://localhost:3333/api/files/upload/image', {
+
+    const result = (await $fetch('http://localhost:3333/api/files/upload/image', {
       method: 'POST',
       body,
       credentials: 'include',
-    })) as File;
+    })) as ApiFile;
 
     if (result) {
-      const collection = await bookApi.createCollection({
+      const collection = (await bookApi.createCollection({
         label: label,
         previewFileId: result.id,
-      });
+      })) as BookCollection;
 
       collectionsRes.value.push(collection.id);
       collections.value.push(collection);

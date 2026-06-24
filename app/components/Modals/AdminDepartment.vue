@@ -34,9 +34,9 @@ const onSubmit = async () => {
       newDepartment.value
     );
   } else {
-    const res: any = await departmentApi.createDepartment(newDepartment.value);
+    const res = await departmentApi.createDepartment(newDepartment.value) as { message?: string } | null;
 
-    if (res.message) {
+    if (res?.message) {
       toast.add({ title: res.message, color: 'error' });
     } else {
       toast.add({
