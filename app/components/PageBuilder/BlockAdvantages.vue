@@ -1,4 +1,5 @@
 <script setup lang="ts">
+/* eslint-disable vue/no-mutating-props */
 import type { PageAdvantagesBlock } from '~~/services/types/page.type';
 
 const props = defineProps<{

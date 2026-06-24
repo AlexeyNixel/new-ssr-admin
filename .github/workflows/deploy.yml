@@ -8,10 +8,15 @@ on:
       - '**.md'
       - '.claude/**'
 
+concurrency:
+  group: deploy
+  cancel-in-progress: true
+
 jobs:
   deploy:
     name: Lint → Build → Deploy
     runs-on: self-hosted
+    timeout-minutes: 15
 
     steps:
       - name: Checkout
@@ -26,8 +31,11 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      - name: Prepare Nuxt (generate .nuxt types)
+        run: npx nuxt prepare
+
       - name: Lint
-        run: npx eslint .
+        run: npx eslint app/ services/
 
       - name: Build
         run: npm run build

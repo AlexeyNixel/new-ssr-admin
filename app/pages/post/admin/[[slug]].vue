@@ -257,7 +257,7 @@ if (slug) {
         newPost.tags.push(tag.id);
       });
     } else {
-      //@ts-expect-error
+      // @ts-expect-error -- dynamic key assignment on Post object with discriminated union fields
       newPost[key] = data[key];
     }
   });

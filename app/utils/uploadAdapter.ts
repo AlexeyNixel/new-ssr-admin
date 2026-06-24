@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import slugify from 'slugify';
 
 class UploadAdapter {

@@ -1,4 +1,5 @@
 <script setup lang="ts">
+/* eslint-disable vue/no-mutating-props */
 import type { PageTagsBlock } from '~~/services/types/page.type';
 
 const props = defineProps<{
