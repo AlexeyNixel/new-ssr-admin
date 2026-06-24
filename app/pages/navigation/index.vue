@@ -18,33 +18,23 @@ const columns: TableColumn<NavigationItem>[] = [
   {
     accessorKey: 'title',
     header: 'Название',
-    cell: ({ row }) => {
-      return h(
-        'div',
-        {
-          style: {
-            paddingLeft: `${row.depth}rem`,
-          },
-          class: 'flex items-center gap-2 font-medium',
-        },
-        [
-          h(UButton, {
-            color: 'neutral',
-            variant: 'outline',
-            size: 'xs',
-            icon: row.getIsExpanded() ? 'i-lucide-minus' : 'i-lucide-plus',
-            class: !row.getCanExpand() && 'invisible',
-            ui: {
-              base: 'p-0 rounded-sm',
-              leadingIcon: 'size-4',
-            },
-            onClick: row.getToggleExpandedHandler(),
-          }),
-          h(Icon, { name: row.original.icon, class: 'text-2xl' }),
-          row.getValue('title') as string,
-        ]
-      );
-    },
+    cell: ({ row }) =>
+      h('div', {
+        style: { paddingLeft: `${row.depth}rem` },
+        class: 'flex items-center gap-2 font-medium',
+      }, [
+        h(UButton, {
+          color: 'neutral',
+          variant: 'outline',
+          size: 'xs',
+          icon: row.getIsExpanded() ? 'i-lucide-minus' : 'i-lucide-plus',
+          class: !row.getCanExpand() && 'invisible',
+          ui: { base: 'p-0 rounded-sm', leadingIcon: 'size-4' },
+          onClick: row.getToggleExpandedHandler(),
+        }),
+        h(Icon, { name: row.original.icon, class: 'text-xl text-neutral-500' }),
+        row.getValue('title') as string,
+      ]),
   },
   {
     accessorKey: 'isExternal',
@@ -54,46 +44,38 @@ const columns: TableColumn<NavigationItem>[] = [
         label: row.original.isExternal ? 'Внешняя' : 'Внутренняя',
         color: row.original.isExternal ? 'secondary' : 'success',
         variant: 'subtle',
-        class: 'text-xs font-medium',
       }),
   },
   {
     accessorKey: 'order',
     header: 'Позиция',
     cell: ({ row }) =>
-      h(
-        'div',
-        {
-          class: `text-center text-sm font-mono text-gray-600 bg-gray-100 rounded px-2 py-1 ${
-            row.depth > 0
-              ? 'bg-blue-100 text-blue-700 border border-blue-200'
-              : ''
-          }`,
-        },
-        row.original.order
-      ),
+      h('div', {
+        class: 'text-sm font-mono text-neutral-500',
+      }, row.original.order),
   },
   {
     id: 'actions',
+    header: 'Действия',
     cell: ({ row }) =>
       h(UButton, {
-        onClick: () => modal.open({ navigationItem: row.original }),
         icon: 'i-heroicons-pencil-square',
-        color: 'secondary',
         variant: 'outline',
+        color: 'secondary',
+        size: 'xs',
+        label: 'Редактировать',
+        onClick: () => modal.open({ navigationItem: row.original }),
       }),
   },
 ];
+
 const handleDragItem = async () => {
   try {
-    const updates: Array<{ id: string; order: number }> =
-      navigationsItems.value.map((item, index) => ({
-        id: item.id,
-        order: index + 1,
-      }));
-
+    const updates = navigationsItems.value.map((item, index) => ({
+      id: item.id,
+      order: index + 1,
+    }));
     await navigationApi.updateBatchOrder(updates);
-
     navigationsItems.value = await navigationApi.getAllNavigation();
   } catch (error) {
     console.error('Ошибка при обновлении порядка:', error);
@@ -105,13 +87,9 @@ const handleOpenModal = async () => {
   await instance.result;
 };
 
-useSortable('.my-table-tbody', navigationsItems, {
-  animation: 150,
-});
+useSortable('.my-table-tbody', navigationsItems, { animation: 150 });
 
-useHead({
-  title: 'НОМБ | Навигация',
-});
+useHead({ title: 'НОМБ | Навигация' });
 </script>
 
 <template>
@@ -122,16 +100,12 @@ useHead({
   >
     <UTable
       ref="table"
-      class="flex-1 bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden"
       :data="navigationsItems"
       :get-sub-rows="(row) => row.children"
       :columns="columns"
       :ui="{
-        thead: 'bg-gray-50 border-b border-gray-200',
-        th: 'py-3 px-4 font-semibold text-gray-900 text-sm text-left whitespace-nowrap',
-        tbody: 'divide-y divide-gray-200 my-table-tbody',
-        td: 'py-3 px-4 align-middle group-hover:bg-gray-50 transition-colors',
-        tr: 'group hover:bg-gray-50 transition-colors',
+        thead: 'bg-neutral-50 dark:bg-neutral-800/50',
+        tbody: 'my-table-tbody',
       }"
       @dragend="handleDragItem"
     />

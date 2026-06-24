@@ -17,272 +17,184 @@ const tableToolbar: EditorToolbarItem[][] = [
   [
     {
       kind: 'addColumnBefore',
-      icon: 'wordpress:table-column-before',
+      icon: 'i-lucide-table-columns-split',
+      tooltip: { text: 'Добавить столбец слева' },
     },
     {
       kind: 'addColumnAfter',
-      icon: 'wordpress:table-column-after',
+      icon: 'i-lucide-between-horizontal-end',
+      tooltip: { text: 'Добавить столбец справа' },
+    },
+    {
+      kind: 'deleteColumn',
+      icon: 'i-lucide-between-horizontal-start',
+      tooltip: { text: 'Удалить столбец' },
     },
   ],
   [
     {
       kind: 'addRowBefore',
-      icon: 'wordpress:table-row-before',
+      icon: 'i-lucide-between-vertical-end',
+      tooltip: { text: 'Добавить строку выше' },
     },
     {
       kind: 'addRowAfter',
-      icon: 'wordpress:table-row-after',
+      icon: 'i-lucide-between-vertical-start',
+      tooltip: { text: 'Добавить строку ниже' },
+    },
+    {
+      kind: 'deleteRow',
+      icon: 'i-lucide-rows-3',
+      tooltip: { text: 'Удалить строку' },
+    },
+  ],
+  [
+    {
+      kind: 'deleteTable',
+      icon: 'i-lucide-table-2',
+      tooltip: { text: 'Удалить таблицу' },
     },
   ],
 ];
 
 const items: EditorToolbarItem[][] = [
-  // History controls
   [
     {
       kind: 'undo',
       icon: 'i-lucide-undo',
-      tooltip: { text: 'Undo' },
+      tooltip: { text: 'Отменить' },
+    },
+    {
+      kind: 'redo',
+      icon: 'i-lucide-redo',
+      tooltip: { text: 'Повторить' },
     },
   ],
   [
     {
       icon: 'i-lucide-heading',
-      tooltip: { text: 'Headings' },
-      content: {
-        align: 'start',
-      },
+      tooltip: { text: 'Заголовки' },
+      content: { align: 'start' },
       items: [
-        {
-          kind: 'heading',
-          level: 1,
-          icon: 'i-lucide-heading-1',
-          label: 'Heading 1',
-        },
-        {
-          kind: 'heading',
-          level: 2,
-          icon: 'i-lucide-heading-2',
-          label: 'Heading 2',
-        },
-        {
-          kind: 'heading',
-          level: 3,
-          icon: 'i-lucide-heading-3',
-          label: 'Heading 3',
-        },
-        {
-          kind: 'heading',
-          level: 4,
-          icon: 'i-lucide-heading-4',
-          label: 'Heading 4',
-        },
+        { kind: 'heading', level: 1, icon: 'i-lucide-heading-1', label: 'Заголовок 1' },
+        { kind: 'heading', level: 2, icon: 'i-lucide-heading-2', label: 'Заголовок 2' },
+        { kind: 'heading', level: 3, icon: 'i-lucide-heading-3', label: 'Заголовок 3' },
+        { kind: 'heading', level: 4, icon: 'i-lucide-heading-4', label: 'Заголовок 4' },
       ],
     },
     {
       kind: 'mark',
       mark: 'bold',
       icon: 'i-lucide-bold',
-      tooltip: { text: 'Bold' },
+      tooltip: { text: 'Жирный' },
     },
     {
       kind: 'mark',
       mark: 'italic',
       icon: 'i-lucide-italic',
-      tooltip: { text: 'Italic' },
+      tooltip: { text: 'Курсив' },
     },
     {
       kind: 'mark',
       mark: 'underline',
       icon: 'i-lucide-underline',
-      tooltip: { text: 'Underline' },
-    },
-  ],
-  [
-    {
-      icon: 'i-lucide-align-justify',
-      tooltip: { text: 'Text Align' },
-      content: {
-        align: 'end',
-      },
-      items: [
-        {
-          kind: 'textAlign',
-          align: 'left',
-          icon: 'i-lucide-align-left',
-          label: 'Align Left',
-        },
-        {
-          kind: 'textAlign',
-          align: 'center',
-          icon: 'i-lucide-align-center',
-          label: 'Align Center',
-        },
-        {
-          kind: 'textAlign',
-          align: 'right',
-          icon: 'i-lucide-align-right',
-          label: 'Align Right',
-        },
-        {
-          kind: 'textAlign',
-          align: 'justify',
-          icon: 'i-lucide-align-justify',
-          label: 'Align Justify',
-        },
-      ],
-    },
-    {
-      icon: 'i-lucide-list',
-      tooltip: { text: 'Lists' },
-      content: {
-        align: 'start',
-      },
-      items: [
-        {
-          kind: 'bulletList',
-          icon: 'i-lucide-list',
-          label: 'Bullet List',
-        },
-        {
-          kind: 'orderedList',
-          icon: 'i-lucide-list-ordered',
-          label: 'Ordered List',
-        },
-      ],
-    },
-    {
-      kind: 'blockquote',
-      icon: 'i-lucide-text-quote',
-      tooltip: { text: 'Blockquote' },
-    },
-    {
-      kind: 'horizontalRule',
-      icon: 'i-lucide-separator-horizontal',
-      tooltip: { text: 'Horizontal Rule' },
-    },
-  ],
-  [
-    {
-      slot: 'link' as const,
-    },
-    {
-      kind: 'insertTable',
-      icon: 'material-symbols:image-outline',
-      tooltip: { text: 'Вставить таблицу' },
-    },
-    {
-      kind: 'imageUpload',
-      icon: 'material-symbols:image-outline',
-      tooltip: { text: 'Загрузить изображение' },
-    },
-  ],
-];
-const bubbleToolBar = [
-  [
-    {
-      kind: 'mark',
-      mark: 'bold',
-      icon: 'i-lucide-bold',
-      tooltip: { text: 'Bold' },
-    },
-    {
-      kind: 'mark',
-      mark: 'italic',
-      icon: 'i-lucide-italic',
-      tooltip: { text: 'Italic' },
-    },
-    {
-      kind: 'mark',
-      mark: 'underline',
-      icon: 'i-lucide-underline',
-      tooltip: { text: 'Underline' },
+      tooltip: { text: 'Подчёркнутый' },
     },
     {
       kind: 'mark',
       mark: 'strike',
       icon: 'i-lucide-strikethrough',
-      tooltip: { text: 'Strikethrough' },
-    },
-    {
-      kind: 'mark',
-      mark: 'code',
-      icon: 'i-lucide-code',
-      tooltip: { text: 'Code' },
+      tooltip: { text: 'Зачёркнутый' },
     },
   ],
   [
     {
-      icon: 'i-lucide-heading',
-      tooltip: { text: 'Headings' },
-      content: {
-        align: 'start',
-      },
+      icon: 'i-lucide-align-justify',
+      tooltip: { text: 'Выравнивание' },
+      content: { align: 'start' },
       items: [
-        {
-          kind: 'heading',
-          level: 1,
-          icon: 'i-lucide-heading-1',
-          label: 'Heading 1',
-        },
-        {
-          kind: 'heading',
-          level: 2,
-          icon: 'i-lucide-heading-2',
-          label: 'Heading 2',
-        },
-        {
-          kind: 'heading',
-          level: 3,
-          icon: 'i-lucide-heading-3',
-          label: 'Heading 3',
-        },
-        {
-          kind: 'heading',
-          level: 4,
-          icon: 'i-lucide-heading-4',
-          label: 'Heading 4',
-        },
+        { kind: 'textAlign', align: 'left', icon: 'i-lucide-align-left', label: 'По левому краю' },
+        { kind: 'textAlign', align: 'center', icon: 'i-lucide-align-center', label: 'По центру' },
+        { kind: 'textAlign', align: 'right', icon: 'i-lucide-align-right', label: 'По правому краю' },
+        { kind: 'textAlign', align: 'justify', icon: 'i-lucide-align-justify', label: 'По ширине' },
       ],
     },
     {
       icon: 'i-lucide-list',
-      tooltip: { text: 'Lists' },
-      content: {
-        align: 'start',
-      },
+      tooltip: { text: 'Списки' },
+      content: { align: 'start' },
       items: [
-        {
-          kind: 'bulletList',
-          icon: 'i-lucide-list',
-          label: 'Bullet List',
-        },
-        {
-          kind: 'orderedList',
-          icon: 'i-lucide-list-ordered',
-          label: 'Ordered List',
-        },
+        { kind: 'bulletList', icon: 'i-lucide-list', label: 'Маркированный список' },
+        { kind: 'orderedList', icon: 'i-lucide-list-ordered', label: 'Нумерованный список' },
       ],
     },
     {
       kind: 'blockquote',
       icon: 'i-lucide-text-quote',
-      tooltip: { text: 'Blockquote' },
+      tooltip: { text: 'Цитата' },
     },
     {
       kind: 'horizontalRule',
       icon: 'i-lucide-separator-horizontal',
-      tooltip: { text: 'Horizontal Rule' },
+      tooltip: { text: 'Горизонтальный разделитель' },
     },
   ],
+  [
+    { slot: 'link' as const },
+    {
+      kind: 'insertTable',
+      icon: 'i-lucide-table',
+      tooltip: { text: 'Вставить таблицу' },
+    },
+    {
+      kind: 'imageUpload',
+      icon: 'i-lucide-image',
+      tooltip: { text: 'Загрузить изображение' },
+    },
+    { slot: 'details' as const },
+    { slot: 'iframe' as const },
+  ],
 ];
+
+const bubbleToolBar: EditorToolbarItem[][] = [
+  [
+    { kind: 'mark', mark: 'bold', icon: 'i-lucide-bold', tooltip: { text: 'Жирный' } },
+    { kind: 'mark', mark: 'italic', icon: 'i-lucide-italic', tooltip: { text: 'Курсив' } },
+    { kind: 'mark', mark: 'underline', icon: 'i-lucide-underline', tooltip: { text: 'Подчёркнутый' } },
+    { kind: 'mark', mark: 'strike', icon: 'i-lucide-strikethrough', tooltip: { text: 'Зачёркнутый' } },
+    { kind: 'mark', mark: 'code', icon: 'i-lucide-code', tooltip: { text: 'Код' } },
+  ],
+  [
+    {
+      icon: 'i-lucide-heading',
+      tooltip: { text: 'Заголовки' },
+      content: { align: 'start' },
+      items: [
+        { kind: 'heading', level: 1, icon: 'i-lucide-heading-1', label: 'Заголовок 1' },
+        { kind: 'heading', level: 2, icon: 'i-lucide-heading-2', label: 'Заголовок 2' },
+        { kind: 'heading', level: 3, icon: 'i-lucide-heading-3', label: 'Заголовок 3' },
+        { kind: 'heading', level: 4, icon: 'i-lucide-heading-4', label: 'Заголовок 4' },
+      ],
+    },
+    {
+      icon: 'i-lucide-list',
+      tooltip: { text: 'Списки' },
+      content: { align: 'start' },
+      items: [
+        { kind: 'bulletList', icon: 'i-lucide-list', label: 'Маркированный список' },
+        { kind: 'orderedList', icon: 'i-lucide-list-ordered', label: 'Нумерованный список' },
+      ],
+    },
+    { kind: 'blockquote', icon: 'i-lucide-text-quote', tooltip: { text: 'Цитата' } },
+    { kind: 'horizontalRule', icon: 'i-lucide-separator-horizontal', tooltip: { text: 'Разделитель' } },
+  ],
+];
+
 const extensions = [
   Iframe,
   Details.configure({
     persist: true,
-    HTMLAttributes: {
-      class: 'details',
-    },
+    HTMLAttributes: { class: 'details' },
   }),
   DetailsSummary,
   DetailsContent,
@@ -294,7 +206,7 @@ const extensions = [
   Image.configure({
     resize: {
       enabled: true,
-      directions: ['top', 'bottom', 'left', 'right'], // can be any direction or diagonal combination
+      directions: ['top', 'bottom', 'left', 'right'],
       minWidth: 50,
       minHeight: 50,
       alwaysPreserveAspectRatio: true,
@@ -303,34 +215,24 @@ const extensions = [
 ];
 
 const addIframe = (editor: Editor) => {
-  const iframe = window.prompt('URL');
+  const input = window.prompt('Вставьте код iframe или URL');
+  if (!input) return;
 
-  if (!iframe) {
-    return 'элемент не найден';
+  let src = input;
+  if (input.trim().startsWith('<')) {
+    const parser = new DOMParser();
+    const doc = parser.parseFromString(input, 'text/html');
+    const el = doc.body.firstChild as HTMLIFrameElement;
+    src = el?.src || input;
   }
 
-  const parser = new DOMParser();
-  const doc = parser.parseFromString(iframe, 'text/html');
-  const iframeElement = doc.body.firstChild as HTMLIFrameElement;
-
-  editor
-    .chain()
-    .focus()
-    .setIframe({
-      src: iframeElement?.src,
-      name: iframeElement?.name || '',
-      width: iframeElement?.width || '100%',
-      height: iframeElement?.height || '100%',
-    })
-    .run();
+  editor.chain().focus().setIframe({ src }).run();
 };
 
 const customHandlers = {
   imageUpload: {
-    canExecute: (editor: Editor) =>
-      editor.can().insertContent({ type: 'imageUpload' }),
-    execute: (editor: Editor) =>
-      editor.chain().focus().insertContent({ type: 'imageUpload' }),
+    canExecute: (editor: Editor) => editor.can().insertImageUpload(),
+    execute: (editor: Editor) => editor.chain().focus().insertImageUpload(),
     isActive: (editor: Editor) => editor.isActive('imageUpload'),
     isDisabled: undefined,
   },
@@ -338,32 +240,43 @@ const customHandlers = {
     canExecute: (editor: Editor) =>
       editor.can().insertTable({ rows: 3, cols: 3, withHeaderRow: true }),
     execute: (editor: Editor) =>
-      editor
-        .chain()
-        .focus()
-        .insertTable({ rows: 3, cols: 3, withHeaderRow: true }),
-    isActive: (editor: Editor) => editor.isActive('insertTable'),
+      editor.chain().focus().insertTable({ rows: 3, cols: 3, withHeaderRow: true }),
+    isActive: () => false,
   },
   addColumnAfter: {
     canExecute: (editor: Editor) => editor.can().addColumnAfter(),
     execute: (editor: Editor) => editor.chain().focus().addColumnAfter(),
-    isActive: (editor: Editor) => editor.isActive('addColumnAfter'),
+    isActive: () => false,
   },
   addColumnBefore: {
     canExecute: (editor: Editor) => editor.can().addColumnBefore(),
     execute: (editor: Editor) => editor.chain().focus().addColumnBefore(),
-    isActive: (editor: Editor) => editor.isActive('addColumnBefore'),
+    isActive: () => false,
   },
-
+  deleteColumn: {
+    canExecute: (editor: Editor) => editor.can().deleteColumn(),
+    execute: (editor: Editor) => editor.chain().focus().deleteColumn(),
+    isActive: () => false,
+  },
   addRowAfter: {
     canExecute: (editor: Editor) => editor.can().addRowAfter(),
     execute: (editor: Editor) => editor.chain().focus().addRowAfter(),
-    isActive: (editor: Editor) => editor.isActive('addRowAfter'),
+    isActive: () => false,
   },
   addRowBefore: {
     canExecute: (editor: Editor) => editor.can().addRowBefore(),
     execute: (editor: Editor) => editor.chain().focus().addRowBefore(),
-    isActive: (editor: Editor) => editor.isActive('addRowBefore'),
+    isActive: () => false,
+  },
+  deleteRow: {
+    canExecute: (editor: Editor) => editor.can().deleteRow(),
+    execute: (editor: Editor) => editor.chain().focus().deleteRow(),
+    isActive: () => false,
+  },
+  deleteTable: {
+    canExecute: (editor: Editor) => editor.can().deleteTable(),
+    execute: (editor: Editor) => editor.chain().focus().deleteTable(),
+    isActive: () => false,
   },
 } satisfies EditorCustomHandlers;
 </script>
@@ -374,41 +287,58 @@ const customHandlers = {
     :handlers="customHandlers"
     :extensions="extensions"
     content-type="html"
-    placeholder="Вводите, / для команд"
+    placeholder="Введите текст, / для команд"
     class="border border-accented rounded-lg"
     :ui="{
       base: 'p-4 sm:p-4',
       content: 'max-w-3xl mx-auto',
     }"
   >
-    <button
-      @click="editor.chain().focus().setDetails().run()"
-      :disabled="!editor.can().setDetails()"
-    >
-      Set details
-    </button>
-    <button
-      @click="editor.chain().focus().unsetDetails().run()"
-      :disabled="!editor.can().unsetDetails()"
-    >
-      Unset details
-    </button>
-    <!--    <UButton @click="addIframe(editor)"> Set iframe </UButton>-->
     <UEditorToolbar :editor="editor" :items="items">
       <template #link>
         <EditorLinkPopover :editor="editor" auto-open />
       </template>
+
+      <template #details>
+        <UTooltip :text="editor.isActive('details') ? 'Убрать блок «Подробнее»' : 'Блок «Подробнее»'">
+          <UButton
+            icon="i-lucide-chevrons-up-down"
+            color="neutral"
+            active-color="primary"
+            variant="ghost"
+            active-variant="soft"
+            size="sm"
+            :active="editor.isActive('details')"
+            :disabled="!editor.can().setDetails() && !editor.can().unsetDetails()"
+            @click="
+              editor.isActive('details')
+                ? editor.chain().focus().unsetDetails().run()
+                : editor.chain().focus().setDetails().run()
+            "
+          />
+        </UTooltip>
+      </template>
+
+      <template #iframe>
+        <UTooltip text="Вставить iframe">
+          <UButton
+            icon="i-lucide-monitor-play"
+            color="neutral"
+            variant="ghost"
+            size="sm"
+            @click="addIframe(editor)"
+          />
+        </UTooltip>
+      </template>
     </UEditorToolbar>
+
     <UEditorToolbar :editor="editor" :items="bubbleToolBar" layout="bubble" />
+
     <UEditorToolbar
       :editor="editor"
       :items="tableToolbar"
       layout="bubble"
-      :should-show="
-        ({ editor, view }) => {
-          return editor.isActive('table') && view.hasFocus();
-        }
-      "
+      :should-show="({ editor, view }) => editor.isActive('table') && view.hasFocus()"
     />
   </UEditor>
 </template>

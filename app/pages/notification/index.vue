@@ -4,84 +4,85 @@ import type { TableColumn } from '@nuxt/ui';
 import type { Notification } from '~~/services/types/notification.type';
 import { UBadge, UButton } from '#components';
 import AdminNotification from '~/components/Modals/AdminNotification.vue';
+import dayjs from 'dayjs';
+
+const TYPE_LABELS: Record<Notification['type'], { label: string; color: 'error' | 'warning' | 'success' }> = {
+  error: { label: 'Ошибка', color: 'error' },
+  warning: { label: 'Предупреждение', color: 'warning' },
+  success: { label: 'Успех', color: 'success' },
+};
 
 const notificationApi = useNotificationApi();
 const overlay = useOverlay();
-
 const modal = overlay.create(AdminNotification);
 const notifications = ref();
 const page = ref(1);
 
+const isExpired = (endTime: string) => new Date().toISOString() > endTime;
+
 const columns: TableColumn<Notification>[] = [
   {
-    accessorKey: 'isDeleted',
+    id: 'status',
     header: 'Статус',
-    cell: ({ row }) => {
-      return h(UBadge, {
-        class: 'hover:cursor-pointer',
-        variant: 'subtle',
-        color:
-          new Date().toISOString() > row.original.endTime
-            ? 'warning'
-            : 'success',
-        label:
-          new Date().toISOString() > row.original.endTime
-            ? 'Истекло'
-            : 'Опубликовано',
-      });
-    },
+    cell: ({ row }) =>
+      h('div', { class: 'flex flex-col gap-1' }, [
+        h(UBadge, {
+          variant: 'subtle',
+          color: isExpired(row.original.endTime) ? 'neutral' : 'success',
+          label: isExpired(row.original.endTime) ? 'Истекло' : 'Активно',
+        }),
+        h(UBadge, {
+          variant: 'subtle',
+          color: TYPE_LABELS[row.original.type]?.color ?? 'neutral',
+          label: TYPE_LABELS[row.original.type]?.label ?? row.original.type,
+          class: 'w-max',
+        }),
+      ]),
   },
   {
     accessorKey: 'title',
     header: 'Название',
-    cell: ({ row }) => {
-      return h(
-        'div',
-        { class: 'text-gray-900 font-medium' },
-        row.original.title
-      );
-    },
+    cell: ({ row }) =>
+      h('div', { class: 'space-y-0.5' }, [
+        h('p', { class: 'font-medium' }, row.original.title),
+        row.original.description
+          ? h('p', { class: 'text-xs text-neutral-400 max-w-xs' },
+              row.original.description.length > 80
+                ? row.original.description.slice(0, 80) + '…'
+                : row.original.description
+            )
+          : null,
+      ]),
   },
   {
-    accessorKey: 'description',
-    header: 'Описание',
-  },
-  {
-    accessorKey: 'type',
-    header: 'Тип',
-    cell: ({ row }) => {
-      return h(
-        'div',
-        { class: `text-${row.original.type} font-medium` },
-        row.original.type
-      );
-    },
+    id: 'period',
+    header: 'Период показа',
+    cell: ({ row }) =>
+      h('div', { class: 'text-sm text-neutral-500 whitespace-nowrap space-y-0.5' }, [
+        h('div', { class: 'flex items-center gap-1' }, [
+          h('span', { class: 'text-xs text-neutral-400' }, 'С'),
+          h('span', dayjs(row.original.startTime).format('DD.MM.YYYY HH:mm')),
+        ]),
+        h('div', { class: 'flex items-center gap-1' }, [
+          h('span', { class: 'text-xs text-neutral-400' }, 'До'),
+          h('span', {
+            class: isExpired(row.original.endTime) ? 'text-red-500' : '',
+          }, dayjs(row.original.endTime).format('DD.MM.YYYY HH:mm')),
+        ]),
+      ]),
   },
   {
     id: 'actions',
     header: 'Действия',
-    cell: ({ row }) => {
-      return h('div', { class: 'flex items-center gap-2' }, [
-        h(UButton, {
-          icon: 'i-heroicons-eye',
-          variant: 'outline',
-          color: 'neutral',
-          size: 'xs',
-          // to: 'http://dev.infomania.ru/entry/' + row.original.slug,
-          target: '_blank',
-          title: 'Посмотреть на сайте',
-        }),
-        h(UButton, {
-          icon: 'i-heroicons-pencil-square',
-          variant: 'outline',
-          color: 'secondary',
-          size: 'xs',
-          onClick: () => handleOpenModal(row.original),
-          // to: `/post/admin/${row.original.id}`,
-          title: 'Редактировать',
-        }),
-      ]);
-    },
+    cell: ({ row }) =>
+      h(UButton, {
+        icon: 'i-heroicons-pencil-square',
+        variant: 'outline',
+        color: 'secondary',
+        size: 'xs',
+        label: 'Редактировать',
+        onClick: () => handleOpenModal(row.original),
+      }),
   },
 ];
 
@@ -95,22 +96,15 @@ const fetchData = async () => {
 
 const handleOpenModal = async (notification?: Notification) => {
   const instance = modal.open({ notification });
-
   const result = await instance.result;
-  if (result) {
-    await fetchData();
-  }
+  if (result) await fetchData();
 };
 
 await fetchData();
 
-watch(page, () => {
-  fetchData();
-});
+watch(page, () => fetchData());
 
-useHead({
-  title: 'НОМБ | Уведомления',
-});
+useHead({ title: 'НОМБ | Уведомления' });
 </script>
 
 <template>
@@ -122,19 +116,9 @@ useHead({
     :event-create="() => handleOpenModal()"
   >
     <UTable
-      ref="table"
-      class="flex-1 bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden"
       :data="notifications.data"
       :columns="columns"
-      :ui="{
-        thead: 'bg-gray-50 border-b border-gray-200',
-        th: 'py-3 px-4 font-semibold text-gray-900 text-sm text-left whitespace-nowrap',
-        tbody: 'divide-y divide-gray-200 my-table-tbody',
-        td: 'py-3 px-4 align-middle group-hover:bg-gray-50 transition-colors',
-        tr: 'group hover:bg-gray-50 transition-colors',
-      }"
+      :ui="{ thead: 'bg-neutral-50 dark:bg-neutral-800/50' }"
     />
   </NuxtLayout>
 </template>
-
-<style scoped></style>

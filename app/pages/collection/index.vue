@@ -2,12 +2,12 @@
 import type { BookCollection } from '~~/services/types/book-collection.type';
 import { useBookApi } from '~~/services/api/book.api';
 import AdminCollection from '~/components/Modals/AdminCollection.vue';
+import dayjs from 'dayjs';
 
 const overlay = useOverlay();
 const modal = overlay.create(AdminCollection);
 const bookApi = useBookApi();
 const collectionsRes = ref();
-
 const page = ref(1);
 
 const fetchData = async () => {
@@ -19,32 +19,16 @@ const fetchData = async () => {
 };
 
 const handleOpenModal = async (collection?: BookCollection) => {
-  const instance = modal.open({ collection: collection });
+  const instance = modal.open({ collection });
   const result = await instance.result;
-
-  if (result) {
-    await fetchData();
-  }
+  if (result) await fetchData();
 };
 
 await fetchData();
 
-// Форматирование даты
-const formatDate = (dateString: string) => {
-  return new Date(dateString).toLocaleDateString('ru-RU', {
-    day: 'numeric',
-    month: 'short',
-    year: 'numeric',
-  });
-};
+watch(page, () => fetchData());
 
-watch(page, async () => {
-  await fetchData();
-});
-
-useHead({
-  title: 'НОМБ | Сборники книг',
-});
+useHead({ title: 'НОМБ | Сборники книг' });
 </script>
 
 <template>
@@ -55,17 +39,17 @@ useHead({
     :meta="collectionsRes.meta"
     :event-create="() => handleOpenModal()"
   >
-    <div class="min-h-full bg-gray-50 p-6">
+    <div class="p-6">
       <div
         v-if="collectionsRes.data.length > 0"
-        class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6"
+        class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4"
       >
         <UCard
           v-for="collection in collectionsRes.data"
           :key="collection.id"
-          class="overflow-hidden hover:shadow-lg transition-shadow duration-300 group h-full flex flex-col"
+          class="overflow-hidden hover:shadow-lg transition-shadow duration-200 group"
         >
-          <div class="relative h-48 overflow-hidden bg-gray-100">
+          <div class="relative h-44 -mx-4 -mt-4 mb-4 overflow-hidden bg-neutral-100 dark:bg-neutral-800">
             <img
               v-if="collection.preview"
               :src="'http://static.infomania.ru' + collection.preview.path"
@@ -73,65 +57,44 @@ useHead({
               class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
             />
             <div v-else class="w-full h-full flex items-center justify-center">
-              <Icon
-                name="i-heroicons-book-open"
-                class="text-4xl text-gray-400"
-              />
+              <UIcon name="i-heroicons-book-open" class="w-10 h-10 text-neutral-300" />
             </div>
-
             <UBadge
-              :label="collection.isDeleted ? 'Черновик' : 'Опубликовано'"
-              :color="collection.isDeleted ? 'neutral' : 'success'"
+              :label="collection.isDeleted ? 'Скрыто' : 'Опубликовано'"
+              :color="collection.isDeleted ? 'warning' : 'success'"
               variant="subtle"
               size="sm"
-              class="absolute top-3 right-3"
+              class="absolute top-2 right-2"
             />
           </div>
 
-          <div class="space-y-3">
-            <h3
-              class="font-bold text-gray-900 text-lg line-clamp-2 min-h-[3.5rem]"
-            >
-              {{ collection.label }}
-            </h3>
+          <p class="font-semibold line-clamp-2 min-h-[2.5rem]">
+            {{ collection.label }}
+          </p>
 
-            <div
-              class="flex items-center justify-between text-sm text-gray-600"
-            >
-              <div class="flex items-center gap-2">
-                <Icon
-                  name="i-heroicons-calendar"
-                  class="w-4 h-4 flex-shrink-0"
-                />
-                <span>{{ formatDate(collection.createdAt) }}</span>
-              </div>
-            </div>
-          </div>
+          <p class="text-xs text-neutral-400 mt-1">
+            {{ dayjs(collection.createdAt).format('DD.MM.YYYY') }}
+          </p>
 
           <template #footer>
             <div class="flex gap-2 justify-end">
               <UButton
-                icon="i-heroicons-eye"
-                color="success"
-                variant="outline"
-                size="sm"
-                class=""
-                :to="`/collection/${collection.id}`"
-              />
-              <UButton
-                icon="i-heroicons-pencil"
+                icon="i-heroicons-pencil-square"
                 color="secondary"
                 variant="outline"
                 size="sm"
-                class=""
+                label="Редактировать"
                 @click="handleOpenModal(collection)"
               />
             </div>
           </template>
         </UCard>
       </div>
+
+      <div v-else class="py-16 text-center text-neutral-400">
+        <UIcon name="i-heroicons-book-open" class="w-12 h-12 mx-auto mb-3 opacity-40" />
+        <p>Подборок пока нет</p>
+      </div>
     </div>
   </NuxtLayout>
 </template>
-
-<style scoped></style>
