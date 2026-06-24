@@ -1,0 +1,41 @@
+name: CI/CD
+
+on:
+  push:
+    branches: [master]
+    paths-ignore:
+      - 'reports/**'
+      - '**.md'
+      - '.claude/**'
+
+jobs:
+  deploy:
+    name: Lint → Build → Deploy
+    runs-on: self-hosted
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Lint
+        run: npx eslint .
+
+      - name: Build
+        run: npm run build
+        env:
+          NUXT_PUBLIC_API_BASE: ${{ secrets.NUXT_PUBLIC_API_BASE }}
+
+      - name: Deploy to production
+        run: |
+          rm -rf /var/www/frontend-admin/.output
+          cp -r .output /var/www/frontend-admin/.output
+          pm2 restart frontend-admin-2.0
