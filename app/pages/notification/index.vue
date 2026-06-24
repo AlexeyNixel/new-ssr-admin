@@ -90,7 +90,6 @@ const fetchData = async () => {
   notifications.value = await notificationApi.getAllNotifications({
     limit: 15,
     page: page.value,
-    isDeleted: true,
   });
 };
 
