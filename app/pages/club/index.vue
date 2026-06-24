@@ -8,48 +8,76 @@ import AdminClub from '~/components/Modals/AdminClub.vue';
 const clubApi = useClubApi();
 const page = ref(1);
 const overlay = useOverlay();
-const modal = overlay.create(AdminClub)
+const modal = overlay.create(AdminClub);
 
-const clubs = await clubApi.getAllClubs({
-  include: 'preview',
-  limit: 20,
-});
+const clubsRes = ref();
+
+const fetchData = async () => {
+  clubsRes.value = await clubApi.getAllClubs({
+    include: 'preview',
+    limit: 20,
+  });
+};
+
+await fetchData();
+
+const handleOpenModal = async (club?: Club) => {
+  const instance = modal.open({ club });
+  const result = await instance.result;
+  if (result) {
+    await fetchData();
+  }
+};
 
 const columns: TableColumn<Club>[] = [
-  // {
-  //   accessorKey: 'isDeleted',
-  //   header: 'Статус',
-  //   cell: ({ row }) => {
-  //     return h(UBadge, {
-  //       class: 'hover:cursor-pointer w-max',
-  //       variant: 'subtle',
-  //       color: row.original.isDeleted ? 'warning' : 'success',
-  //       label: row.original.isDeleted ? 'Скрыта' : 'Опубликована',
-  //       onClick: () => handleHideDepartment(row.original),
-  //     });
-  //   },
-  // },
+  {
+    id: 'preview',
+    header: 'Фото',
+    cell: ({ row }) => {
+      if (!row.original?.preview?.path) return h('div', { class: 'w-16 h-16 rounded-lg bg-neutral-100 dark:bg-neutral-800 flex items-center justify-center text-neutral-400 text-xs' }, 'Нет фото');
+      return h('img', {
+        src: `http://static.infomania.ru${row.original.preview.path}`,
+        class: 'w-16 h-16 object-cover rounded-lg',
+        alt: row.original.name,
+      });
+    },
+  },
   {
     accessorKey: 'name',
     header: 'Название',
+    cell: ({ row }) =>
+      h('p', { class: 'font-medium' }, row.original.name),
+  },
+  {
+    id: 'worktime',
+    header: 'Время работы',
+    cell: ({ row }) =>
+      h('div', { class: 'text-sm text-neutral-500 dark:text-neutral-400' }, row.original.worktime || '—'),
+  },
+  {
+    id: 'member',
+    header: 'Участники',
+    cell: ({ row }) =>
+      h('div', { class: 'text-sm text-neutral-500 dark:text-neutral-400' }, row.original.member || '—'),
   },
   {
     id: 'actions',
-    accessorKey: 'Действия',
-    cell: ({ row }) => {
-      return h('div', { class: 'flex items-center gap-2' }, [
-        h(UButton, {
-          icon: 'i-heroicons-pencil-square',
-          variant: 'outline',
-          color: 'secondary',
-          size: 'xs',
-          onClick: () => modal.open({club: row.original}),
-          label: 'Редактировать',
-        }),
-      ]);
-    },
+    header: 'Действия',
+    cell: ({ row }) =>
+      h(UButton, {
+        icon: 'i-heroicons-pencil-square',
+        variant: 'outline',
+        color: 'secondary',
+        size: 'xs',
+        label: 'Редактировать',
+        onClick: () => handleOpenModal(row.original),
+      }),
   },
 ];
+
+useHead({
+  title: 'НОМБ | Клубы',
+});
 </script>
 
 <template>
@@ -57,9 +85,14 @@ const columns: TableColumn<Club>[] = [
     v-model="page"
     name="table"
     title="Управление клубами"
-    :meta="clubs.meta"
+    :meta="clubsRes.meta"
+    :event-create="handleOpenModal"
   >
-    <UTable :data="clubs.data" :columns="columns" />
+    <UTable
+      :data="clubsRes.data"
+      :columns="columns"
+      :ui="{ thead: 'bg-neutral-50 dark:bg-neutral-800/50' }"
+    />
   </NuxtLayout>
 </template>
 

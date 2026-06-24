@@ -15,45 +15,48 @@ const columns: TableColumn<Post>[] = [
   {
     accessorKey: 'isDeleted',
     header: 'Статус',
-    cell: ({ row }) => {
-      return h(UBadge, {
-        class: 'hover:cursor-pointer',
-        color: row.original.isDeleted ? 'warning' : 'success',
-        variant: 'subtle',
-        label: row.original.isDeleted ? 'Скрыта' : 'Опубликована',
-        onClick: () => handleHidePost(row.original),
-      });
-    },
+    cell: ({ row }) =>
+      h('div', { class: 'flex flex-col gap-1' }, [
+        h(UBadge, {
+          class: 'cursor-pointer w-max',
+          color: row.original.isDeleted ? 'warning' : 'success',
+          variant: 'subtle',
+          label: row.original.isDeleted ? 'Скрыто' : 'Опубликовано',
+          onClick: () => handleToggleVisibility(row.original),
+        }),
+        row.original.isPinned
+          ? h(UBadge, { variant: 'subtle', color: 'info', label: 'Закреплён', class: 'w-max' })
+          : null,
+      ]),
   },
   {
     accessorKey: 'title',
     header: 'Название',
-    cell: ({ row }) => {
-      return h(
-        'div',
-        { class: 'font-medium text-gray-900 text-wrap' },
-        row.original.title.length > 150
-          ? row.original.title.substring(0, 150) + '...'
-          : row.original.title
-      );
-    },
+    cell: ({ row }) =>
+      h('div', { class: 'space-y-0.5' }, [
+        h('p', { class: 'font-medium' },
+          row.original.title.length > 100
+            ? row.original.title.slice(0, 100) + '…'
+            : row.original.title
+        ),
+        row.original.department
+          ? h('span', { class: 'text-xs text-neutral-400' }, row.original.department.title)
+          : null,
+      ]),
   },
   {
     accessorKey: 'createdAt',
     header: 'Дата создания',
-    cell: ({ row }) => {
-      return h(
-        'div',
-        { class: 'text-gray-500 text-sm' },
+    cell: ({ row }) =>
+      h('div', { class: 'text-sm text-neutral-500 whitespace-nowrap' },
         dayjs(row.original.createdAt).format('DD.MM.YYYY HH:mm')
-      );
-    },
+      ),
   },
   {
     id: 'actions',
     header: 'Действия',
-    cell: ({ row }) => {
-      return h('div', { class: 'flex items-center gap-2' }, [
+    cell: ({ row }) =>
+      h('div', { class: 'flex items-center gap-2' }, [
         h(UButton, {
           icon: 'i-heroicons-eye',
           variant: 'outline',
@@ -71,8 +74,7 @@ const columns: TableColumn<Post>[] = [
           to: `/post/admin/${row.original.id}`,
           title: 'Редактировать',
         }),
-      ]);
-    },
+      ]),
   },
 ];
 
@@ -88,28 +90,22 @@ const fetchPost = async () => {
 
 await fetchPost();
 
-const handleHidePost = async (post: Post) => {
+const handleToggleVisibility = async (post: Post) => {
   post.isDeleted = !post.isDeleted;
-
   await postApi.updatePost(post.id, { isDeleted: post.isDeleted });
-
   toast.add({
     title: post.isDeleted ? 'Пост скрыт' : 'Пост восстановлен',
     color: post.isDeleted ? 'warning' : 'success',
   });
 };
 
-const onSelect = (e: Event, row: TableRow<Post>) => {
+const onSelect = (_: Event, row: TableRow<Post>) => {
   navigateTo(`/post/admin/${row.original.id}`);
 };
 
-watch([page, searchText], () => {
-  fetchPost();
-});
+watch([page, searchText], () => fetchPost());
 
-useHead({
-  title: 'НОМБ | Посты',
-});
+useHead({ title: 'НОМБ | Посты' });
 </script>
 
 <template>
@@ -124,12 +120,7 @@ useHead({
     <UTable
       :columns="columns"
       :data="postsRes.data"
-      :ui="{
-        thead: 'bg-gray-50',
-        th: 'py-3 font-semibold text-gray-900',
-        td: 'py-4',
-        tr: 'hover:bg-gray-50 cursor-pointer border-b border-gray-100 last:border-b-0',
-      }"
+      :ui="{ thead: 'bg-neutral-50 dark:bg-neutral-800/50' }"
       @select="onSelect"
     />
   </NuxtLayout>

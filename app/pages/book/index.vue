@@ -17,6 +17,7 @@ const fetchData = async () => {
   bookRes.value = await bookApi.getAllBook({
     isDeleted: true,
     limit: 20,
+    page: page.value,
     include: 'preview',
   });
 };
@@ -27,87 +28,80 @@ const columns: TableColumn<Book>[] = [
   {
     accessorKey: 'isDeleted',
     header: 'Статус',
+    cell: ({ row }) =>
+      h('div', { class: 'flex flex-col gap-1' }, [
+        h(UBadge, {
+          class: 'cursor-pointer w-max',
+          variant: 'subtle',
+          color: row.original.isDeleted ? 'warning' : 'success',
+          label: row.original.isDeleted ? 'Скрыто' : 'Опубликовано',
+          onClick: () => handleToggleVisibility(row.original),
+        }),
+        row.original.isVideo
+          ? h(UBadge, { variant: 'subtle', color: 'secondary', label: 'Видео', class: 'w-max' })
+          : null,
+      ]),
+  },
+  {
+    id: 'preview',
+    header: 'Обложка',
     cell: ({ row }) => {
-      return h(UBadge, {
-        class: 'hover:cursor-pointer',
-        variant: 'subtle',
-        color: row.original.isDeleted ? 'warning' : 'success',
-        label: row.original.isDeleted ? 'Скрыта' : 'Опубликована',
-        onClick: () => handleHideBook(row.original),
+      if (!row.original.preview?.path)
+        return h('div', { class: 'w-10 h-14 rounded bg-neutral-100 dark:bg-neutral-800' });
+      return h('img', {
+        src: `http://static.infomania.ru${row.original.preview.path}`,
+        class: 'w-10 h-14 object-cover rounded',
+        alt: row.original.title,
       });
     },
   },
   {
     accessorKey: 'title',
     header: 'Название',
-    cell: ({ row }) => {
-      return h(
-        'div',
-        { class: 'text-gray-900 font-medium' },
-        row.original.title
-      );
-    },
+    cell: ({ row }) =>
+      h('p', { class: 'font-medium max-w-xs' }, row.original.title),
   },
   {
     accessorKey: 'createdAt',
-    header: 'Дата создания',
-    cell: ({ row }) => {
-      return h('div', dayjs(row.original.createdAt).format('DD.MM.YYYY HH:mm'));
-    },
+    header: 'Дата добавления',
+    cell: ({ row }) =>
+      h('div', { class: 'text-sm text-neutral-500 whitespace-nowrap' },
+        dayjs(row.original.createdAt).format('DD.MM.YYYY')
+      ),
   },
   {
     id: 'actions',
     header: 'Действия',
-    cell: ({ row }) => {
-      return h('div', { class: 'flex items-center gap-2' }, [
-        h(UButton, {
-          icon: 'i-heroicons-eye',
-          variant: 'outline',
-          color: 'neutral',
-          size: 'xs',
-          // to: 'http://dev.infomania.ru/entry/' + row.original.slug,
-          target: '_blank',
-          title: 'Посмотреть на сайте',
-        }),
-        h(UButton, {
-          icon: 'i-heroicons-pencil-square',
-          variant: 'outline',
-          color: 'secondary',
-          size: 'xs',
-          onClick: () => handleOpenModal(row.original),
-          // to: `/post/admin/${row.original.id}`,
-          title: 'Редактировать',
-        }),
-      ]);
-    },
+    cell: ({ row }) =>
+      h(UButton, {
+        icon: 'i-heroicons-pencil-square',
+        variant: 'outline',
+        color: 'secondary',
+        size: 'xs',
+        label: 'Редактировать',
+        onClick: () => handleOpenModal(row.original),
+      }),
   },
 ];
 
-const handleHideBook = async (book: Book) => {
+const handleToggleVisibility = async (book: Book) => {
   book.isDeleted = !book.isDeleted;
-
-  await bookApi.updateBook(book.id, {
-    isDeleted: book.isDeleted,
-  });
-
+  await bookApi.updateBook(book.id, { isDeleted: book.isDeleted });
   toast.add({
     title: book.isDeleted ? 'Книга скрыта' : 'Книга восстановлена',
+    color: book.isDeleted ? 'warning' : 'success',
   });
 };
 
 const handleOpenModal = async (book?: Book) => {
   const instance = modal.open({ book });
-
   const result = await instance.result;
-
-  if (result) {
-    await fetchData();
-  }
+  if (result) await fetchData();
 };
 
-useHead({
-  title: 'НОМБ | Книги',
-});
+watch(page, () => fetchData());
+
+useHead({ title: 'НОМБ | Книги' });
 </script>
 
 <template>
@@ -119,19 +113,9 @@ useHead({
     :event-create="handleOpenModal"
   >
     <UTable
-      ref="table"
-      class="flex-1 bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden"
       :data="bookRes.data"
       :columns="columns"
-      :ui="{
-        thead: 'bg-gray-50 border-b border-gray-200',
-        th: 'py-3 px-4 font-semibold text-gray-900 text-sm text-left whitespace-nowrap',
-        tbody: 'divide-y divide-gray-200 my-table-tbody',
-        td: 'py-3 px-4 align-middle group-hover:bg-gray-50 transition-colors',
-        tr: 'group hover:bg-gray-50 transition-colors',
-      }"
+      :ui="{ thead: 'bg-neutral-50 dark:bg-neutral-800/50' }"
     />
   </NuxtLayout>
 </template>
-
-<style scoped></style>

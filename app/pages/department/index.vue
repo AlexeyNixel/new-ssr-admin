@@ -5,106 +5,88 @@ import type { Department } from '~~/services/types/department.type';
 import type { TableColumn } from '#ui/components/Table.vue';
 import { useDepartmentApi } from '~~/services/api/department.api';
 
-const limit = 9;
-const isDeleted = true;
-
 const toast = useToast();
 const overlay = useOverlay();
 const departmentApi = useDepartmentApi();
-
 const modal = overlay.create(ModalsAdminDepartment);
 
 const page = ref(1);
 const departmentsRes = ref();
-const openModal = ref();
 
 const columns: TableColumn<Department>[] = [
   {
     accessorKey: 'isDeleted',
     header: 'Статус',
-    cell: ({ row }) => {
-      return h(UBadge, {
-        class: 'hover:cursor-pointer',
+    cell: ({ row }) =>
+      h(UBadge, {
+        class: 'cursor-pointer',
         variant: 'subtle',
         color: row.original.isDeleted ? 'warning' : 'success',
-        label: row.original.isDeleted ? 'Скрыта' : 'Опубликована',
-        onClick: () => handleHideDepartment(row.original),
-      });
-    },
+        label: row.original.isDeleted ? 'Скрыто' : 'Опубликовано',
+        onClick: () => handleToggleVisibility(row.original),
+      }),
   },
   {
     accessorKey: 'title',
     header: 'Название',
     cell: ({ row }) =>
-      h('div', { class: 'text-gray-900 font-medium' }, row.original.title),
+      h('p', { class: 'font-medium' }, row.original.title),
   },
   {
     accessorKey: 'slug',
     header: 'Slug',
+    cell: ({ row }) =>
+      h('code', { class: 'text-xs bg-neutral-100 dark:bg-neutral-800 px-1.5 py-0.5 rounded' }, row.original.slug || '—'),
   },
   {
     accessorKey: 'createdAt',
     header: 'Дата создания',
-    cell: ({ row }) => {
-      return h('div', dayjs(row.original.createdAt).format('DD.MM.YYYY HH:mm'));
-    },
+    cell: ({ row }) =>
+      h('div', { class: 'text-sm text-neutral-500' }, dayjs(row.original.createdAt).format('DD.MM.YYYY')),
   },
   {
     id: 'actions',
-    cell: ({ row }) => {
-      return h(UButton, {
-        variant: 'subtle',
-        color: 'secondary',
+    header: 'Действия',
+    cell: ({ row }) =>
+      h(UButton, {
         icon: 'i-heroicons-pencil-square',
+        variant: 'outline',
+        color: 'secondary',
+        size: 'xs',
+        label: 'Редактировать',
         onClick: () => handleOpenModal(row.original),
-      });
-    },
+      }),
   },
 ];
 
 const handleOpenModal = async (department?: Department) => {
-  const instance = modal.open({ department: department });
+  const instance = modal.open({ department });
   const result = await instance.result;
-
-  if (result) {
-    await fetchData();
-  }
+  if (result) await fetchData();
 };
 
-const handleHideDepartment = async (department: Department) => {
+const handleToggleVisibility = async (department: Department) => {
   department.isDeleted = !department.isDeleted;
-
-  await departmentApi.updateDepartment(department.id, {
-    isDeleted: department.isDeleted,
-  });
-
+  await departmentApi.updateDepartment(department.id, { isDeleted: department.isDeleted });
   toast.add({
     title: department.isDeleted ? 'Отдел скрыт' : 'Отдел восстановлен',
-    color: 'success',
+    color: department.isDeleted ? 'warning' : 'success',
   });
 };
 
 const fetchData = async () => {
   departmentsRes.value = await departmentApi.getAllDepartments({
-    isDeleted,
-    limit,
+    isDeleted: true,
+    limit: 20,
     page: page.value,
   });
 };
 
 await fetchData();
 
-watch(page, () => {
-  fetchData();
-});
+watch(page, () => fetchData());
 
-watch(openModal, () => {
-  console.log(openModal.value);
-});
-
-useHead({
-  title: 'НОМБ | Отделы',
-});
+useHead({ title: 'НОМБ | Отделы' });
 </script>
 
 <template>
@@ -115,15 +97,10 @@ useHead({
     :meta="departmentsRes.meta"
     :event-create="handleOpenModal"
   >
-    {{ openModal }}
     <UTable
-      :ui="{
-        thead: 'bg-gray-50',
-      }"
       :columns="columns"
       :data="departmentsRes.data"
+      :ui="{ thead: 'bg-neutral-50 dark:bg-neutral-800/50' }"
     />
   </NuxtLayout>
 </template>
-
-<style scoped></style>
