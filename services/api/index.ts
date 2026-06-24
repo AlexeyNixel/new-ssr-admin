@@ -3,7 +3,7 @@ import type { AuthResponse } from '~/composables/useAuth';
 import type { File } from '~~/services/types/file.type';
 import type { IQuery } from '~~/services/types/query.type';
 
-export interface ApiResponse<T = any> {
+export interface ApiResponse<T = unknown> {
   data: T;
   meta?: Meta;
   status?: number;
@@ -24,7 +24,7 @@ export const useApi = () => {
   const get = async <T>(
     endpoint: string,
     options?: {
-      params: IQuery;
+      params?: IQuery;
     }
   ): Promise<ApiResponse<T>> => {
     try {
@@ -55,38 +55,36 @@ export const useApi = () => {
     });
   };
 
-  const post = async (endpoint: string, data: any) => {
-    return await $fetch(baseApi + endpoint, {
+  const post = async <T extends object>(endpoint: string, data: T): Promise<unknown> => {
+    return await $fetch<unknown>(baseApi + endpoint, {
       method: 'POST',
       credentials: 'include',
-      body: { ...data },
+      body: data,
     });
   };
 
-  const postFile = async (endpoint: string, body: any): Promise<File> => {
+  const postFile = async (endpoint: string, body: FormData): Promise<File> => {
     console.log(baseApi);
-    return await $fetch(baseApi + endpoint, {
+    return await $fetch<File>(baseApi + endpoint, {
       method: 'POST',
       credentials: 'include',
       body,
     });
   };
 
-  const postMany = async (endpoint: string, data: any) => {
-    return await $fetch(baseApi + endpoint, {
+  const postMany = async <T extends object>(endpoint: string, data: T[]): Promise<unknown> => {
+    return await $fetch<unknown>(baseApi + endpoint, {
       method: 'POST',
       credentials: 'include',
       body: { data },
     });
   };
 
-  const patch = async (endpoint: string, id: string, data: any) => {
-    const res = await $fetch(baseApi + endpoint + id, {
+  const patch = async <T extends object>(endpoint: string, id: string, data: T): Promise<unknown> => {
+    const res = await $fetch<{ data: unknown }>(baseApi + endpoint + id, {
       method: 'PATCH',
       credentials: 'include',
-      body: {
-        ...data,
-      },
+      body: data,
     });
     return res.data;
   };
@@ -112,20 +110,16 @@ export const useApi = () => {
   const getOne = async <T>(
     endpoint: string,
     slug: string,
-    options?: any
+    options?: { params?: IQuery }
   ): Promise<ApiResponse<T>> => {
-    try {
-      const res: any = await $fetch(baseApi + endpoint + slug, {
-        method: 'GET',
-        ...options,
-      });
-      return {
-        data: res,
-        status: 200,
-      };
-    } catch (e) {
-      throw e;
-    }
+    const res = await $fetch<T>(baseApi + endpoint + slug, {
+      method: 'GET',
+      ...options,
+    });
+    return {
+      data: res,
+      status: 200,
+    };
   };
 
   return {
