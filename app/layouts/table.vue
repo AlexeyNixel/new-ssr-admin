@@ -3,7 +3,7 @@ import { UButton } from '#components';
 interface Props {
   modelValue?: number;
   title?: string;
-  eventCreate?: Function;
+  eventCreate?: () => void;
   meta?: {
     limit: number;
     total: number;

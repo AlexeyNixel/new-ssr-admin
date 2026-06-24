@@ -6,7 +6,7 @@ export const useNavigationApi = () => {
   const api = useApi();
 
   return {
-    getAllNavigation: async (params?: { withoutDate?: boolean }) =>
+    getAllNavigation: async (_params?: { withoutDate?: boolean }) =>
       api.getWithoutPagination<NavigationItem[]>(API_ENDPOINTS.navigation),
 
     getAllNavigationWithoutTree: async () =>

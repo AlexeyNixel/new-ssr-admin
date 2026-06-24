@@ -224,10 +224,6 @@ const createNotification = async () => {
   }
 };
 
-const handleCancel = () => {
-  emit('close', true);
-};
-
 watch([startTime, endTime], () => {
   newNotification.value.startTime = dayjs(startTime.value).toISOString();
   newNotification.value.endTime = dayjs(endTime.value).toISOString();
