@@ -19,7 +19,7 @@ const newMapPoint = ref<Partial<IMapPoint>>({
   title: props.mapPoint?.title || '',
   description: props.mapPoint?.description || '',
   content: props.mapPoint?.content || '',
-  image: props.mapPoint?.image || '',
+  imageFileId: props.mapPoint?.imageFileId || '',
   lat: props.mapPoint?.lat,
   lng: props.mapPoint?.lng,
   preset: props.mapPoint?.preset || '',
@@ -46,7 +46,9 @@ const onSubmit = async () => {
 
 <template>
   <UModal
-    :title="isUpdate ? 'Редактирование точки на карте' : 'Создание точки на карте'"
+    :title="
+      isUpdate ? 'Редактирование точки на карте' : 'Создание точки на карте'
+    "
     :description="
       isUpdate
         ? 'Внесите изменения в информацию о точке'
@@ -64,8 +66,8 @@ const onSubmit = async () => {
         >
           <UFormField name="image" label="Изображение точки">
             <UiUploadImage
-              v-model="newMapPoint.image!"
-              :preview="props.mapPoint?.image"
+              v-model="newMapPoint.imageFileId!"
+              :preview="props.mapPoint?.imageFileId"
               class="w-full"
             />
           </UFormField>
