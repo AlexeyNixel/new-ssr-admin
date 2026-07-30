@@ -15,4 +15,5 @@ export const API_ENDPOINTS = {
   uploadDocument: '/api/files/upload/document/',
   uploadExhibition: '/api/files/upload/exhibition/',
   clubs: '/api/clubs/',
+  mapPoint: '/api/map-point/',
 };

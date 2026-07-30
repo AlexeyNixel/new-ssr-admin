@@ -57,6 +57,11 @@ const navLinks = [
     link: '/club',
     icon: 'iconoir:community',
   },
+  {
+    label: 'Точки на карте',
+    link: '/map-point',
+    icon: 'i-heroicons-map-pin',
+  },
 ];
 const cookies = useCookie('user_data');
 const authApi = useAuth();
