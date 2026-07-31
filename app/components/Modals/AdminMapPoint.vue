@@ -82,7 +82,7 @@ const onSubmit = async () => {
             />
           </UFormField>
 
-          <UFormField name="description" label="Краткое описание">
+          <UFormField name="description" label="Введите место">
             <UTextarea
               v-model="newMapPoint.description"
               placeholder="Введите место"
