@@ -15,6 +15,8 @@ const isUpdate = !!props.mapPoint;
 const isLoading = ref(false);
 const schema = mapPointSchema;
 
+const position = ref<string>();
+
 const newMapPoint = ref<Partial<IMapPoint>>({
   title: props.mapPoint?.title || '',
   description: props.mapPoint?.description || '',
@@ -28,6 +30,14 @@ const newMapPoint = ref<Partial<IMapPoint>>({
 
 const onSubmit = async () => {
   isLoading.value = true;
+
+  console.log(position.value?.split(', '));
+
+  if (position.value) {
+    newMapPoint.value.lat = Number(position.value?.split(', ')[0]);
+    newMapPoint.value.lng = Number(position.value?.split(', ')[1]);
+  }
+
   try {
     if (isUpdate && props.mapPoint) {
       await mapPointApi.updateMapPoint(props.mapPoint.id, newMapPoint.value);
@@ -72,6 +82,15 @@ const onSubmit = async () => {
             />
           </UFormField>
 
+          <UFormField name="description" label="Краткое описание">
+            <UTextarea
+              v-model="newMapPoint.description"
+              placeholder="Введите место"
+              :rows="3"
+              class="w-full"
+            />
+          </UFormField>
+
           <UFormField required name="title" label="Название">
             <UInput
               v-model="newMapPoint.title"
@@ -82,42 +101,19 @@ const onSubmit = async () => {
             />
           </UFormField>
 
-          <UFormField name="description" label="Краткое описание">
-            <UTextarea
-              v-model="newMapPoint.description"
-              placeholder="Введите краткое описание"
-              :rows="3"
-              class="w-full"
-            />
-          </UFormField>
-
           <UFormField name="content" label="Подробное содержание">
             <EditorCustom v-model="newMapPoint.content" />
           </UFormField>
 
-          <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
-            <UFormField required name="lat" label="Широта (lat)">
-              <UInput
-                v-model="newMapPoint.lat"
-                type="number"
-                step="any"
-                placeholder="55.751244"
-                icon="i-heroicons-globe-alt-20-solid"
-                class="w-full"
-              />
-            </UFormField>
-
-            <UFormField required name="lng" label="Долгота (lng)">
-              <UInput
-                v-model="newMapPoint.lng"
-                type="number"
-                step="any"
-                placeholder="37.618423"
-                icon="i-heroicons-globe-alt-20-solid"
-                class="w-full"
-              />
-            </UFormField>
-          </div>
+          <UFormField required name="lng" label="Позиция">
+            <UInput
+              v-model="position"
+              step="any"
+              placeholder="37.618423"
+              icon="i-heroicons-globe-alt-20-solid"
+              class="w-full"
+            />
+          </UFormField>
 
           <UFormField name="preset" label="Пресет иконки">
             <UInput
@@ -164,9 +160,9 @@ const onSubmit = async () => {
             </div>
             <p class="text-xs text-neutral-500 dark:text-neutral-400">
               {{
-                newMapPoint.isDeleted
-                  ? 'Точка не отображается на карте'
-                  : 'Точка видна всем пользователям'
+                !newMapPoint.isDeleted
+                  ? 'Точка видна всем пользователям'
+                  : 'Точка не отображается на карте'
               }}
             </p>
           </UFormField>
