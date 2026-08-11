@@ -31,6 +31,11 @@ const columns: TableColumn<IMapPoint>[] = [
       h('p', { class: 'font-medium max-w-xs' }, row.original.title),
   },
   {
+    accessorKey: 'description',
+    header: 'Место',
+    cell: ({ row }) => h('p', { class: ' max-w-xs' }, row.original.description),
+  },
+  {
     accessorKey: 'lat',
     header: 'Координаты',
     cell: ({ row }) =>
@@ -38,16 +43,6 @@ const columns: TableColumn<IMapPoint>[] = [
         'div',
         { class: 'text-sm text-neutral-500 whitespace-nowrap' },
         `${row.original.lat}, ${row.original.lng}`
-      ),
-  },
-  {
-    accessorKey: 'preset',
-    header: 'Пресет',
-    cell: ({ row }) =>
-      h(
-        'code',
-        { class: 'text-xs bg-neutral-100 dark:bg-neutral-800 px-1.5 py-0.5 rounded' },
-        row.original.preset || '—'
       ),
   },
   {
@@ -67,7 +62,9 @@ const columns: TableColumn<IMapPoint>[] = [
 
 const handleToggleVisibility = async (mapPoint: IMapPoint) => {
   mapPoint.isDeleted = !mapPoint.isDeleted;
-  await mapPointApi.updateMapPoint(mapPoint.id, { isDeleted: mapPoint.isDeleted });
+  await mapPointApi.updateMapPoint(mapPoint.id, {
+    isDeleted: mapPoint.isDeleted,
+  });
   toast.add({
     title: mapPoint.isDeleted ? 'Точка скрыта' : 'Точка восстановлена',
     color: mapPoint.isDeleted ? 'warning' : 'success',

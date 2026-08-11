@@ -21,7 +21,7 @@ const newMapPoint = ref<Partial<IMapPoint>>({
   title: props.mapPoint?.title || '',
   description: props.mapPoint?.description || '',
   content: props.mapPoint?.content || '',
-  imageFileId: props.mapPoint?.imageFileId || '',
+  imageFileId: props.mapPoint?.imageFileId || null,
   lat: props.mapPoint?.lat,
   lng: props.mapPoint?.lng,
   preset: props.mapPoint?.preset || '',
@@ -82,11 +82,11 @@ const onSubmit = async () => {
             />
           </UFormField>
 
-          <UFormField name="description" label="Введите место">
-            <UTextarea
+          <UFormField name="description" label="Введите адрес">
+            <UInput
               v-model="newMapPoint.description"
-              placeholder="Введите место"
-              :rows="3"
+              placeholder="г. Новосибирск, Красный проспект 26"
+              icon="i-heroicons-map-pin-20-solid"
               class="w-full"
             />
           </UFormField>
@@ -95,8 +95,7 @@ const onSubmit = async () => {
             <UInput
               v-model="newMapPoint.title"
               class="w-full"
-              placeholder="Например: Центральная библиотека"
-              icon="i-heroicons-map-pin-20-solid"
+              placeholder="Например: НОМБ"
               size="md"
             />
           </UFormField>
@@ -128,44 +127,44 @@ const onSubmit = async () => {
             </p>
           </UFormField>
 
-          <UFormField label="Статус точки">
-            <div
-              class="p-4 bg-neutral-50 dark:bg-neutral-800/50 rounded-xl border border-neutral-200 dark:border-neutral-700"
-            >
-              <div class="flex items-center justify-between">
-                <div class="flex items-center gap-2">
-                  <UIcon
-                    :name="
-                      newMapPoint.isDeleted
-                        ? 'i-heroicons-eye-slash-20-solid'
-                        : 'i-heroicons-eye-20-solid'
-                    "
-                    class="w-4 h-4"
-                    :class="
-                      newMapPoint.isDeleted
-                        ? 'text-neutral-500'
-                        : 'text-green-500'
-                    "
-                  />
-                  <p
-                    class="text-sm font-medium text-neutral-900 dark:text-white"
-                  >
-                    {{
-                      newMapPoint.isDeleted ? 'Точка скрыта' : 'Точка активна'
-                    }}
-                  </p>
-                </div>
-                <USwitch v-model="newMapPoint.isDeleted" />
-              </div>
-            </div>
-            <p class="text-xs text-neutral-500 dark:text-neutral-400">
-              {{
-                !newMapPoint.isDeleted
-                  ? 'Точка видна всем пользователям'
-                  : 'Точка не отображается на карте'
-              }}
-            </p>
-          </UFormField>
+          <!--          <UFormField label="Статус точки">-->
+          <!--            <div-->
+          <!--              class="p-4 bg-neutral-50 dark:bg-neutral-800/50 rounded-xl border border-neutral-200 dark:border-neutral-700"-->
+          <!--            >-->
+          <!--              <div class="flex items-center justify-between">-->
+          <!--                <div class="flex items-center gap-2">-->
+          <!--                  <UIcon-->
+          <!--                    :name="-->
+          <!--                      newMapPoint.isDeleted-->
+          <!--                        ? 'i-heroicons-eye-slash-20-solid'-->
+          <!--                        : 'i-heroicons-eye-20-solid'-->
+          <!--                    "-->
+          <!--                    class="w-4 h-4"-->
+          <!--                    :class="-->
+          <!--                      newMapPoint.isDeleted-->
+          <!--                        ? 'text-neutral-500'-->
+          <!--                        : 'text-green-500'-->
+          <!--                    "-->
+          <!--                  />-->
+          <!--                  <p-->
+          <!--                    class="text-sm font-medium text-neutral-900 dark:text-white"-->
+          <!--                  >-->
+          <!--                    {{-->
+          <!--                      newMapPoint.isDeleted ? 'Точка скрыта' : 'Точка активна'-->
+          <!--                    }}-->
+          <!--                  </p>-->
+          <!--                </div>-->
+          <!--                <USwitch v-model="newMapPoint.isDeleted" />-->
+          <!--              </div>-->
+          <!--            </div>-->
+          <!--            <p class="text-xs text-neutral-500 dark:text-neutral-400">-->
+          <!--              {{-->
+          <!--                !newMapPoint.isDeleted-->
+          <!--                  ? 'Точка видна всем пользователям'-->
+          <!--                  : 'Точка не отображается на карте'-->
+          <!--              }}-->
+          <!--            </p>-->
+          <!--          </UFormField>-->
 
           <div
             class="flex items-center justify-end gap-3 pt-4 mt-2 border-t border-neutral-200 dark:border-neutral-700"
