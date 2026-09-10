@@ -95,6 +95,11 @@ const handleOpenModal = async (event?: IEvent) => {
   if (result) await fetchData();
 };
 
+useModalRouteOpener({
+  modal,
+  onClosed: () => fetchData(),
+});
+
 const fetchData = async () => {
   eventsRes.value = await eventApi.getAllEvents({
     isDeleted: true,

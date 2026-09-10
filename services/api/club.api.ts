@@ -8,6 +8,10 @@ export const useClubApi = () => {
   return {
     getAllClubs: (params: ClubParams) =>
       api.get<Club[]>(API_ENDPOINTS.clubs, { params }),
+    getOneClub: (id: string) =>
+      api.getById<Club>(API_ENDPOINTS.clubs, id, {
+        params: { include: 'preview' },
+      }),
     createClub: (data: Partial<Club>) =>
       api.post(API_ENDPOINTS.clubs, data),
     updateClub: (id: string, data: Partial<Club>) =>

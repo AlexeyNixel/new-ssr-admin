@@ -18,6 +18,11 @@ const handleOpenModal = async (slide?: Slide) => {
   if (result) await fetchData();
 };
 
+useModalRouteOpener({
+  modal,
+  onClosed: () => fetchData(),
+});
+
 const columns: TableColumn<Slide>[] = [
   {
     accessorKey: 'isDeleted',

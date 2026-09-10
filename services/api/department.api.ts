@@ -10,6 +10,9 @@ export const useDepartmentApi = () => {
     getAllDepartments: (params?: IQuery) =>
       api.get<Department[]>(API_ENDPOINTS.department, { params }),
 
+    getOneDepartment: (id: string) =>
+      api.getById<Department>(API_ENDPOINTS.department, id),
+
     createDepartment: (data: Partial<Department>) => api.post(API_ENDPOINTS.department, data),
     updateDepartment: (id: string, data: Partial<Department>) =>
       api.patch(API_ENDPOINTS.department, id, data),

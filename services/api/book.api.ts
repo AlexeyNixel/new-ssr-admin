@@ -9,8 +9,8 @@ export const useBookApi = () => {
     getAllBook: (params?: BookQuery) =>
       api.get<Book[]>(API_ENDPOINTS.book, { params }),
 
-    getOneBook: (id: string, params?: BookQuery) =>
-      api.getOne<Book>(API_ENDPOINTS.book, id, { params }),
+    getOneBook: (id: string) =>
+      api.getById<Book>(API_ENDPOINTS.book, id, { params: { include: 'preview' } }),
 
     createBook: (data: Partial<Book>) => api.post(API_ENDPOINTS.book, data),
 
@@ -19,6 +19,11 @@ export const useBookApi = () => {
 
     getAllCollections: (params?: BookQuery) =>
       api.get<BookCollection[]>(API_ENDPOINTS.collection, { params }),
+
+    getOneCollection: (id: string) =>
+      api.getById<BookCollection>(API_ENDPOINTS.collection, id, {
+        params: { include: 'preview' },
+      }),
 
     createCollection: (data: Partial<BookCollection>) => api.post(API_ENDPOINTS.collection, data),
     updateCollection: (id: string, data: Partial<BookCollection>) =>

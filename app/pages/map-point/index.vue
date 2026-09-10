@@ -77,6 +77,11 @@ const handleOpenModal = async (mapPoint?: IMapPoint) => {
   if (result) await fetchData();
 };
 
+useModalRouteOpener({
+  modal,
+  onClosed: () => fetchData(),
+});
+
 const fetchData = async () => {
   mapPointsRes.value = await mapPointApi.getAllMapPoints({
     isDeleted: true,

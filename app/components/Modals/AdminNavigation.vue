@@ -12,8 +12,16 @@ interface SelectItem {
 }
 
 const props = defineProps<Props>();
+const emit = defineEmits<{ close: [boolean] }>();
 
 const navigationApi = useNavigationApi();
+const toast = useToast();
+
+const { entity: navigationItem, pending, notFound } = useModalEntity({
+  prop: props.navigationItem,
+  fetchById: (id) => navigationApi.getOneNavigation(id),
+});
+const isUpdate = computed(() => !!navigationItem.value);
 
 const newNavigationItem = ref({
   title: '',
@@ -29,11 +37,17 @@ const newNavigationItem = ref({
 
 const navItems = await navigationApi.getAllNavigationWithoutTree();
 
-if (props.navigationItem) {
-  Object.keys(newNavigationItem.value).forEach((key: string) => {
-    newNavigationItem.value[key] = props.navigationItem[key];
-  });
-}
+watch(
+  navigationItem,
+  (value) => {
+    if (!value) return;
+    const source = value as unknown as Record<string, unknown>;
+    Object.keys(newNavigationItem.value).forEach((key) => {
+      (newNavigationItem.value as Record<string, unknown>)[key] = source[key];
+    });
+  },
+  { immediate: true }
+);
 
 const search = ref('');
 const items = ref<SelectItem[]>([
@@ -48,35 +62,47 @@ const items = ref<SelectItem[]>([
 ]);
 
 const onSubmit = async () => {
-  console.log(newNavigationItem.value);
-  if (props.navigationItem) {
-    await navigationApi.update(
-      props.navigationItem.id,
-      newNavigationItem.value
-    );
-    console.log(newNavigationItem.value);
+  if (isUpdate.value && navigationItem.value) {
+    await navigationApi.update(navigationItem.value.id, newNavigationItem.value);
   } else {
     await navigationApi.create(newNavigationItem.value);
   }
+
+  toast.add({ title: isUpdate.value ? 'Запись обновлена' : 'Запись создана' });
+  emit('close', true);
 };
 </script>
 
 <template>
   <UModal
     :title="
-      navigationItem?.id
+      isUpdate
         ? 'Редактирование записи навигации'
         : 'Создание записи навигации'
     "
     :description="
-      navigationItem?.id
+      isUpdate
         ? 'Внесите изменения в существующую запись'
         : 'Заполните все обязательные поля для создания новой записи'
     "
     :dismissible="false"
   >
     <template #body>
-      <div class="flex flex-col w-full">
+      <div v-if="pending" class="flex items-center justify-center py-12">
+        <UIcon
+          name="i-heroicons-arrow-path"
+          class="w-6 h-6 animate-spin text-neutral-400"
+        />
+      </div>
+
+      <div
+        v-else-if="notFound"
+        class="py-12 text-center text-neutral-500 dark:text-neutral-400"
+      >
+        Запись не найдена
+      </div>
+
+      <div v-else class="flex flex-col w-full">
         <UForm class="space-y-5" @submit="onSubmit">
           <!-- Основные поля -->
           <UFormField label="Название" name="title" required>
@@ -193,12 +219,12 @@ const onSubmit = async () => {
               size="md"
               class="min-w-[120px]"
               :icon="
-                navigationItem?.id
+                isUpdate
                   ? 'i-heroicons-pencil-square-20-solid'
                   : 'i-heroicons-plus-20-solid'
               "
             >
-              {{ navigationItem?.id ? 'Обновить' : 'Создать' }}
+              {{ isUpdate ? 'Обновить' : 'Создать' }}
             </UButton>
           </div>
         </UForm>

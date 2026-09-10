@@ -14,6 +14,16 @@ const navigationsItems = ref<NavigationItem[]>(
   await navigationApi.getAllNavigation({ withoutDate: true })
 );
 
+const reloadNavigation = async () => {
+  navigationsItems.value = await navigationApi.getAllNavigation();
+};
+
+const openModal = async (navigationItem?: NavigationItem) => {
+  const instance = modal.open(navigationItem ? { navigationItem } : {});
+  const result = await instance.result;
+  if (result) await reloadNavigation();
+};
+
 const columns: TableColumn<NavigationItem>[] = [
   {
     accessorKey: 'title',
@@ -64,7 +74,7 @@ const columns: TableColumn<NavigationItem>[] = [
         color: 'secondary',
         size: 'xs',
         label: 'Редактировать',
-        onClick: () => modal.open({ navigationItem: row.original }),
+        onClick: () => openModal(row.original),
       }),
   },
 ];
@@ -82,10 +92,12 @@ const handleDragItem = async () => {
   }
 };
 
-const handleOpenModal = async () => {
-  const instance = modal.open({});
-  await instance.result;
-};
+const handleOpenModal = () => openModal();
+
+useModalRouteOpener({
+  modal,
+  onClosed: () => reloadNavigation(),
+});
 
 useSortable('.my-table-tbody', navigationsItems, { animation: 150 });
 

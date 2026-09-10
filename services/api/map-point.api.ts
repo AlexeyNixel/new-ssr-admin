@@ -8,6 +8,8 @@ export const useMapPointApi = () => {
   return {
     getAllMapPoints: (params?: MapPointQuery) =>
       api.get<IMapPoint[]>(API_ENDPOINTS.mapPoint, { params }),
+    getOneMapPoint: (id: string) =>
+      api.getById<IMapPoint>(API_ENDPOINTS.mapPoint, id),
     updateMapPoint: (id: string, data: Partial<IMapPoint>) =>
       api.patch(API_ENDPOINTS.mapPoint, id, data),
     createMapPoint: (data: Partial<IMapPoint>) =>

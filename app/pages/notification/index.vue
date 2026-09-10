@@ -99,6 +99,11 @@ const handleOpenModal = async (notification?: Notification) => {
   if (result) await fetchData();
 };
 
+useModalRouteOpener({
+  modal,
+  onClosed: () => fetchData(),
+});
+
 await fetchData();
 
 watch(page, () => fetchData());

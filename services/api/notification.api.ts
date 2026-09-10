@@ -9,6 +9,8 @@ export const useNotificationApi = () => {
   return {
     getAllNotifications: (params?: IQuery) =>
       api.get<Notification[]>(API_ENDPOINTS.notification, { params }),
+    getOneNotification: (id: string) =>
+      api.getById<Notification>(API_ENDPOINTS.notification, id),
     create: (data: Partial<Notification>) => api.post(API_ENDPOINTS.notification, data),
     update: (id: string, data: Partial<Notification>) =>
       api.patch(API_ENDPOINTS.notification, id, data),

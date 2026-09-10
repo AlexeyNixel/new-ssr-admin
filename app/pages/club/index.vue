@@ -29,6 +29,11 @@ const handleOpenModal = async (club?: Club) => {
   }
 };
 
+useModalRouteOpener({
+  modal,
+  onClosed: () => fetchData(),
+});
+
 const columns: TableColumn<Club>[] = [
   {
     id: 'preview',

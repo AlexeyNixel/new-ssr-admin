@@ -138,10 +138,26 @@ export const useApi = () => {
     };
   };
 
+  // Загрузка одной сущности по id для авторизованных разделов админки.
+  // В отличие от getOne — шлёт куку и разворачивает { data } обёртку.
+  const getById = async <T>(
+    endpoint: string,
+    id: string,
+    options?: { params?: IQuery }
+  ): Promise<T> => {
+    const res = await $fetch<T | { data: T }>(baseApi + endpoint + id, {
+      method: 'GET',
+      credentials: 'include',
+      ...options,
+    });
+    return res && typeof res === 'object' && 'data' in res ? res.data : res;
+  };
+
   return {
     get,
     getWithoutPagination,
     getOne,
+    getById,
     login,
     me,
     logout,

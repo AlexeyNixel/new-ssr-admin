@@ -11,25 +11,45 @@ const emit = defineEmits<{ close: [boolean] }>();
 
 const clubApi = useClubApi();
 const toast = useToast();
-const isUpdate = !!props.club;
 const schema = clubSchema;
 
+const { entity: club, pending, notFound } = useModalEntity({
+  prop: props.club,
+  fetchById: (id) => clubApi.getOneClub(id),
+});
+const isUpdate = computed(() => !!club.value);
+
 const newClub = ref({
-  name: props.club?.name || '',
-  description: props.club?.description || '',
-  member: props.club?.member || '',
-  worktime: props.club?.worktime || '',
-  previewFileId: props.club?.previewFileId || '',
+  name: '',
+  description: '',
+  member: '',
+  worktime: '',
+  previewFileId: '',
 });
 
+watch(
+  club,
+  (value) => {
+    if (!value) return;
+    newClub.value = {
+      name: value.name || '',
+      description: value.description || '',
+      member: value.member || '',
+      worktime: value.worktime || '',
+      previewFileId: value.previewFileId || '',
+    };
+  },
+  { immediate: true }
+);
+
 const onSubmit = async () => {
-  if (isUpdate && props.club) {
-    await clubApi.updateClub(props.club.id, newClub.value);
+  if (isUpdate.value && club.value) {
+    await clubApi.updateClub(club.value.id, newClub.value);
   } else {
     await clubApi.createClub(newClub.value);
   }
 
-  toast.add({ title: isUpdate ? 'Клуб обновлён' : 'Клуб создан' });
+  toast.add({ title: isUpdate.value ? 'Клуб обновлён' : 'Клуб создан' });
   emit('close', true);
 };
 </script>
@@ -45,7 +65,21 @@ const onSubmit = async () => {
     :dismissible="false"
   >
     <template #body>
-      <div class="flex flex-col w-full">
+      <div v-if="pending" class="flex items-center justify-center py-12">
+        <UIcon
+          name="i-heroicons-arrow-path"
+          class="w-6 h-6 animate-spin text-neutral-400"
+        />
+      </div>
+
+      <div
+        v-else-if="notFound"
+        class="py-12 text-center text-neutral-500 dark:text-neutral-400"
+      >
+        Запись не найдена
+      </div>
+
+      <div v-else class="flex flex-col w-full">
         <UForm
           :schema="schema"
           :state="newClub"

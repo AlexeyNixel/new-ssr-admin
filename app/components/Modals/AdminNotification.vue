@@ -1,14 +1,28 @@
 <template>
   <UModal
     :title="
-      props.notification ? 'Редактирование уведомления' : 'Создание уведомления'
+      isUpdate ? 'Редактирование уведомления' : 'Создание уведомления'
     "
     description="Заполните форму для отправки уведомления пользователям"
     :dismissible="false"
     @submit="createNotification"
   >
     <template #body>
-      <div class="flex flex-col w-full">
+      <div v-if="pending" class="flex items-center justify-center py-12">
+        <UIcon
+          name="i-heroicons-arrow-path"
+          class="w-6 h-6 animate-spin text-neutral-400"
+        />
+      </div>
+
+      <div
+        v-else-if="notFound"
+        class="py-12 text-center text-neutral-500 dark:text-neutral-400"
+      >
+        Запись не найдена
+      </div>
+
+      <div v-else class="flex flex-col w-full">
         <!-- Форма - элементы на всю ширину -->
         <UForm
           :schema="schema"
@@ -121,12 +135,12 @@
               size="md"
               class="min-w-[120px]"
               :icon="
-                props.notification
+                isUpdate
                   ? 'i-heroicons-pencil-square-20-solid'
                   : 'i-heroicons-plus-20-solid'
               "
             >
-              {{ props.notification ? 'Обновить' : 'Создать' }}
+              {{ isUpdate ? 'Обновить' : 'Создать' }}
             </UButton>
           </div>
         </UForm>
@@ -151,31 +165,58 @@ const schema = notificationSchema;
 const toast = useToast();
 const notificationApi = useNotificationApi();
 
+const { entity: notification, pending, notFound } = useModalEntity({
+  prop: props.notification,
+  fetchById: (id) => notificationApi.getOneNotification(id),
+});
+const isUpdate = computed(() => !!notification.value);
+
 const startTime = shallowRef();
 const endTime = shallowRef();
 
-const newNotification = ref({
-  title: props.notification?.title,
-  description: props.notification?.description,
-  endTime: props.notification?.endTime,
-  startTime: props.notification?.startTime,
-  type: props.notification?.type,
-  isDeleted: props.notification?.isDeleted,
+const newNotification = ref<{
+  title?: string;
+  description?: string;
+  endTime?: string;
+  startTime?: string;
+  type?: Notification['type'];
+  isDeleted?: boolean;
+}>({
+  title: undefined,
+  description: undefined,
+  endTime: undefined,
+  startTime: undefined,
+  type: undefined,
+  isDeleted: undefined,
 });
 
-if (props.notification) {
-  startTime.value = new CalendarDate(
-    +dayjs(props.notification.startTime).year(),
-    dayjs(props.notification.startTime).month() + 1,
-    dayjs(props.notification.startTime).date()
-  );
+watch(
+  notification,
+  (value) => {
+    if (!value) return;
+    newNotification.value = {
+      title: value.title,
+      description: value.description,
+      endTime: value.endTime,
+      startTime: value.startTime,
+      type: value.type,
+      isDeleted: value.isDeleted,
+    };
 
-  endTime.value = new CalendarDate(
-    +dayjs(props.notification.endTime).year(),
-    dayjs(props.notification.endTime).month() + 1,
-    dayjs(props.notification.endTime).date()
-  );
-}
+    startTime.value = new CalendarDate(
+      +dayjs(value.startTime).year(),
+      dayjs(value.startTime).month() + 1,
+      dayjs(value.startTime).date()
+    );
+
+    endTime.value = new CalendarDate(
+      +dayjs(value.endTime).year(),
+      dayjs(value.endTime).month() + 1,
+      dayjs(value.endTime).date()
+    );
+  },
+  { immediate: true }
+);
 
 const notificationTypes = [
   {
@@ -205,22 +246,18 @@ const createNotification = async () => {
   try {
     newNotification.value.startTime = dayjs(startTime.value).toISOString();
     newNotification.value.endTime = dayjs(endTime.value).toISOString();
-    if (!props.notification) {
-      await notificationApi.create(newNotification.value);
+    if (isUpdate.value && notification.value) {
+      await notificationApi.update(notification.value.id, newNotification.value);
     } else {
-      await notificationApi.update(
-        props.notification.id,
-        newNotification.value
-      );
+      await notificationApi.create(newNotification.value);
     }
     emit('close', true);
     toast.add({ title: 'Запись обновлена', color: 'success' });
-  } catch (e) {
+  } catch {
     toast.add({
       title: 'Произошла ошибка, проверте введеные вами данные',
       color: 'error',
     });
-    return e;
   }
 };
 

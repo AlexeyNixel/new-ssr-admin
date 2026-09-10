@@ -11,27 +11,51 @@ const emit = defineEmits<{ close: [boolean] }>();
 
 const toast = useToast();
 const mapPointApi = useMapPointApi();
-const isUpdate = !!props.mapPoint;
 const isLoading = ref(false);
 const schema = mapPointSchema;
+
+const { entity: mapPoint, pending, notFound } = useModalEntity({
+  prop: props.mapPoint,
+  fetchById: (id) => mapPointApi.getOneMapPoint(id),
+});
+const isUpdate = computed(() => !!mapPoint.value);
 
 const position = ref<string>();
 
 const newMapPoint = ref<Partial<IMapPoint>>({
-  title: props.mapPoint?.title || '',
-  description: props.mapPoint?.description || '',
-  content: props.mapPoint?.content || '',
-  imageFileId: props.mapPoint?.imageFileId || null,
-  lat: props.mapPoint?.lat,
-  lng: props.mapPoint?.lng,
-  preset: props.mapPoint?.preset || '',
-  isDeleted: props.mapPoint?.isDeleted || false,
+  title: '',
+  description: '',
+  content: '',
+  imageFileId: undefined,
+  lat: undefined,
+  lng: undefined,
+  preset: '',
+  isDeleted: false,
 });
+
+watch(
+  mapPoint,
+  (value) => {
+    if (!value) return;
+    newMapPoint.value = {
+      title: value.title || '',
+      description: value.description || '',
+      content: value.content || '',
+      imageFileId: value.imageFileId || undefined,
+      lat: value.lat,
+      lng: value.lng,
+      preset: value.preset || '',
+      isDeleted: value.isDeleted || false,
+    };
+    if (value.lat != null && value.lng != null) {
+      position.value = `${value.lat}, ${value.lng}`;
+    }
+  },
+  { immediate: true }
+);
 
 const onSubmit = async () => {
   isLoading.value = true;
-
-  console.log(position.value?.split(', '));
 
   if (position.value) {
     newMapPoint.value.lat = Number(position.value?.split(', ')[0]);
@@ -39,8 +63,8 @@ const onSubmit = async () => {
   }
 
   try {
-    if (isUpdate && props.mapPoint) {
-      await mapPointApi.updateMapPoint(props.mapPoint.id, newMapPoint.value);
+    if (isUpdate.value && mapPoint.value) {
+      await mapPointApi.updateMapPoint(mapPoint.value.id, newMapPoint.value);
       toast.add({ title: 'Точка обновлена' });
     } else {
       await mapPointApi.createMapPoint(newMapPoint.value);
@@ -67,7 +91,21 @@ const onSubmit = async () => {
     :dismissible="false"
   >
     <template #body>
-      <div class="flex flex-col w-full">
+      <div v-if="pending" class="flex items-center justify-center py-12">
+        <UIcon
+          name="i-heroicons-arrow-path"
+          class="w-6 h-6 animate-spin text-neutral-400"
+        />
+      </div>
+
+      <div
+        v-else-if="notFound"
+        class="py-12 text-center text-neutral-500 dark:text-neutral-400"
+      >
+        Запись не найдена
+      </div>
+
+      <div v-else class="flex flex-col w-full">
         <UForm
           :schema="schema"
           :state="newMapPoint"
@@ -77,7 +115,7 @@ const onSubmit = async () => {
           <UFormField name="image" label="Изображение точки">
             <UiUploadImage
               v-model="newMapPoint.imageFileId!"
-              :preview="props.mapPoint?.imageFileId"
+              :preview="mapPoint?.imageFileId"
               class="w-full"
             />
           </UFormField>

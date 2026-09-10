@@ -8,6 +8,10 @@ export const useSlideApi = () => {
   return {
     getAllSlides: (params?: IQuery) =>
       api.get<Slide[]>(API_ENDPOINTS.slides, { params }),
+    getOneSlide: (id: string) =>
+      api.getById<Slide>(API_ENDPOINTS.slides, id, {
+        params: { include: 'image' },
+      }),
     updateSlide: (id: string, data: Partial<Slide>) =>
       api.patch(API_ENDPOINTS.slides, id, data),
     createSlide: (data: Partial<Slide>) => api.post(API_ENDPOINTS.slides, data),

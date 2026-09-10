@@ -99,6 +99,11 @@ const handleOpenModal = async (book?: Book) => {
   if (result) await fetchData();
 };
 
+useModalRouteOpener({
+  modal,
+  onClosed: () => fetchData(),
+});
+
 watch(page, () => fetchData());
 
 useHead({ title: 'НОМБ | Книги' });
