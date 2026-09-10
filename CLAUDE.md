@@ -104,10 +104,19 @@ export const useEventApi = () => {
 
 ### Авторизация (`app/composables/useAuth.ts`)
 
-- JWT хранится в куке `access_token`, данные пользователя — в `user_data`.
-- `checkAuth()` декодирует токен (`jwt-decode`) и проверяет `exp`.
-- `app/middleware/auth.global.ts` — глобальный мидлвар, редиректит на
-  `/login`, если `isAuthenticated === false` и путь не `/login`.
+- JWT хранится в **httpOnly-куке `access_token`**, которую ставит сам бэкенд
+  (на логине). Из JS она недоступна — `useAuth` её не читает и не декодирует.
+- `checkAuth()` — `async`: один раз за загрузку приложения дёргает
+  `GET /api/auth/me` (`useApi().me()`), выставляет `isAuthenticated` и кладёт
+  данные пользователя в куку `user_data` (для отображения в сайдбаре).
+  Результат кэшируется через `useState('authChecked')`; `checkAuth(true)` —
+  принудительная перепроверка.
+- `clearAuth()` — `async`: вызывает `POST /api/auth/logout` (`useApi().logout()`),
+  затем чистит локальный стейт и `user_data`.
+- `app/middleware/auth.global.ts` — глобальный мидлвар, `await auth.checkAuth()`,
+  затем редиректит на `/login`, если `isAuthenticated === false` и путь не
+  `/login` (и наоборот — с `/login` на `/`, если уже авторизован).
+- `jwt-decode` остался в зависимостях, но больше не используется.
 
 ### Страницы-списки + таблица (`layouts/table.vue`)
 
