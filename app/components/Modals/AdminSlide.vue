@@ -13,42 +13,89 @@ const toast = useToast();
 
 const schema = slideSchema;
 
-const newSlides = ref({
-  imageFileId: props.slide?.imageFileId || '',
-  postId: props.slide?.postId || undefined,
-  isDeleted: props.slide?.isDeleted || false,
-  slideOrder: props.slide?.slideOrder || 0,
-  url: props.slide?.url || '',
+const { entity: slide, pending, notFound } = useModalEntity({
+  prop: props.slide,
+  fetchById: (id) => slideApi.getOneSlide(id),
 });
+const isUpdate = computed(() => !!slide.value);
+const isLoading = ref(false);
+
+const newSlides = ref<{
+  imageFileId: string;
+  postId?: string;
+  isDeleted: boolean;
+  slideOrder: number;
+  url: string;
+}>({
+  imageFileId: '',
+  postId: undefined,
+  isDeleted: false,
+  slideOrder: 0,
+  url: '',
+});
+
+watch(
+  slide,
+  (value) => {
+    if (!value) return;
+    newSlides.value = {
+      imageFileId: value.imageFileId || '',
+      postId: value.postId || undefined,
+      isDeleted: value.isDeleted || false,
+      slideOrder: value.slideOrder || 0,
+      url: value.url || '',
+    };
+  },
+  { immediate: true }
+);
 
 const onSubmit = async () => {
   if (!newSlides.value.postId) {
     delete newSlides.value.postId;
   }
 
-  if (props.slide) {
-    await slideApi.updateSlide(props.slide?.id, newSlides.value);
-  } else {
-    await slideApi.createSlide(newSlides.value);
-  }
+  isLoading.value = true;
+  try {
+    if (isUpdate.value && slide.value) {
+      await slideApi.updateSlide(slide.value.id, newSlides.value);
+    } else {
+      await slideApi.createSlide(newSlides.value);
+    }
 
-  toast.add({ title: props.slide ? 'Слайд обновлен' : 'Слайд создан' });
-  emit('close', true);
+    toast.add({ title: isUpdate.value ? 'Слайд обновлен' : 'Слайд создан' });
+    emit('close', true);
+  } finally {
+    isLoading.value = false;
+  }
 };
 </script>
 
 <template>
   <UModal
     :dismissible="false"
-    :title="slide ? 'Редактирование слайда' : 'Создание слайда'"
+    :title="isUpdate ? 'Редактирование слайда' : 'Создание слайда'"
     :description="
-      slide
+      isUpdate
         ? 'Внесите изменения в существующий слайд'
         : 'Заполните информацию для нового слайда'
     "
   >
     <template #body>
-      <div class="flex flex-col w-full">
+      <div v-if="pending" class="flex items-center justify-center py-12">
+        <UIcon
+          name="i-heroicons-arrow-path"
+          class="w-6 h-6 animate-spin text-neutral-400"
+        />
+      </div>
+
+      <div
+        v-else-if="notFound"
+        class="py-12 text-center text-neutral-500 dark:text-neutral-400"
+      >
+        Запись не найдена
+      </div>
+
+      <div v-else class="flex flex-col w-full">
         <!-- Форма -->
         <UForm
           :schema="schema"
@@ -169,12 +216,12 @@ const onSubmit = async () => {
               class="min-w-[160px]"
               :loading="isLoading"
               :icon="
-                slide
+                isUpdate
                   ? 'i-heroicons-pencil-square-20-solid'
                   : 'i-heroicons-plus-20-solid'
               "
             >
-              {{ slide ? 'Сохранить изменения' : 'Создать слайд' }}
+              {{ isUpdate ? 'Сохранить изменения' : 'Создать слайд' }}
             </UButton>
           </div>
         </UForm>

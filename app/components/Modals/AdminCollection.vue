@@ -10,42 +10,70 @@ const props = defineProps<{
 }>();
 const emit = defineEmits<{ close: [boolean] }>();
 
+const { entity: collection, pending, notFound } = useModalEntity({
+  prop: props.collection,
+  fetchById: (id) => bookApi.getOneCollection(id),
+});
+const isUpdate = computed(() => !!collection.value);
+
 const newCollection = ref({
-  previewFileId: props?.collection?.previewFileId || '',
-  label: props?.collection?.label || '',
+  previewFileId: '',
+  label: '',
 });
 
+watch(
+  collection,
+  (value) => {
+    if (!value) return;
+    newCollection.value = {
+      previewFileId: value.previewFileId || '',
+      label: value.label || '',
+    };
+  },
+  { immediate: true }
+);
+
 const onSubmit = async () => {
-  if (props.collection) {
-    await bookApi.updateCollection(props?.collection?.id, {
+  if (isUpdate.value && collection.value) {
+    await bookApi.updateCollection(collection.value.id, {
       ...newCollection.value,
     });
+    toast.add({ title: 'Сборник обновлён' });
   } else {
     await bookApi.createCollection({ ...newCollection.value });
+    toast.add({ title: 'Сборник создан' });
   }
 
-  toast.add({ title: 'Запись обновлена' });
-
-  closeModal();
-};
-
-const closeModal = () => {
   emit('close', true);
 };
 </script>
 
 <template>
   <UModal
-    :title="collection ? 'Редактирование сборника' : 'Создание сборника'"
+    :title="isUpdate ? 'Редактирование сборника' : 'Создание сборника'"
     :description="
-      collection
+      isUpdate
         ? 'Внесите изменения в сборник'
         : 'Заполните информацию для нового сборника'
     "
     :dismissible="false"
   >
     <template #body>
-      <div class="flex flex-col w-full">
+      <div v-if="pending" class="flex items-center justify-center py-12">
+        <UIcon
+          name="i-heroicons-arrow-path"
+          class="w-6 h-6 animate-spin text-neutral-400"
+        />
+      </div>
+
+      <div
+        v-else-if="notFound"
+        class="py-12 text-center text-neutral-500 dark:text-neutral-400"
+      >
+        Запись не найдена
+      </div>
+
+      <div v-else class="flex flex-col w-full">
         <UForm class="space-y-5" @submit="onSubmit">
           <UFormField label="Название" required>
             <UInput
@@ -77,12 +105,12 @@ const closeModal = () => {
               size="md"
               class="min-w-[120px]"
               :icon="
-                collection
+                isUpdate
                   ? 'i-heroicons-pencil-square-20-solid'
                   : 'i-heroicons-plus-20-solid'
               "
             >
-              {{ collection ? 'Обновить' : 'Создать' }}
+              {{ isUpdate ? 'Обновить' : 'Создать' }}
             </UButton>
           </div>
         </UForm>

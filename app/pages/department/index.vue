@@ -65,6 +65,11 @@ const handleOpenModal = async (department?: Department) => {
   if (result) await fetchData();
 };
 
+useModalRouteOpener({
+  modal,
+  onClosed: () => fetchData(),
+});
+
 const handleToggleVisibility = async (department: Department) => {
   department.isDeleted = !department.isDeleted;
   await departmentApi.updateDepartment(department.id, { isDeleted: department.isDeleted });

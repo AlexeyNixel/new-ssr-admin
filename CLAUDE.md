@@ -173,6 +173,38 @@ const handleOpenModal = async (department?: Department) => {
 `AdminNotification.vue`) — единый стиль вёрстки, отступов и кнопок уже
 унифицирован для всех сущностей.
 
+### Deep-link на модалку редактирования
+
+Модалку редактирования можно открыть сразу при заходе на страницу-список по
+ссылке `/<entity>?editId=<id>`. Два composable:
+
+- **`app/composables/useModalRouteOpener.ts`** — на странице. Если в URL есть
+  `?editId`, вызывает `modal.open()` (без пропсов); после сохранения — `onClosed`.
+  Параметр читается один раз при инициализации страницы (SPA), URL не меняется.
+
+  ```ts
+  useModalRouteOpener({ modal, onClosed: () => fetchData() });
+  ```
+
+- **`app/composables/useModalEntity.ts`** — внутри каждой модалки `AdminX.vue`.
+  Если сущность пришла пропсом (клик по строке таблицы) — берёт её без запроса;
+  если пропса нет, но есть `?editId` — грузит `GET /api/<entity>/:id`.
+
+  ```ts
+  const { entity: department, pending, notFound } = useModalEntity({
+    prop: props.department,
+    fetchById: (id) => departmentApi.getOneDepartment(id),
+  });
+  const isUpdate = computed(() => !!department.value);
+  // форму наполнять реактивно: watch(department, apply, { immediate: true })
+  ```
+
+Подключено на всех 9 страницах/модалках (department, event, slide, notification,
+map-point, book, collection, navigation, club). Полный список ссылок — в
+`docs/deep-links.md`. Загрузка одной сущности: `getById<T>(endpoint, id, options?)`
+в `services/api/index.ts` (шлёт куку, разворачивает `{ data }`); в каждом
+`*.api.ts` — метод `getOne<Entity>`.
+
 ### Валидация (`app/schemas/*.schema.ts`)
 
 Zod-схемы. Сообщения об ошибках — на русском. Частый паттерн «обрезать
@@ -235,12 +267,11 @@ Tiptap). Расширения: таблицы, картинки с ресайз�
 Учитывай при рефакторинге рядом с этими местами, но не переписывай их
 «заодно», если не просили:
 
-- **`app/components/Modals/AdminClub.vue`** — недоделанная модалка (раздел
-  «Клубы» только начат). Нет `UForm`, схемы валидации, обработчика
-  сохранения и `emit('close')`. Обращается к `club.preview.path`, что
-  упадёт при создании нового клуба (проп `club` обязателен, но при создании
-  не передаётся). `useClubApi` содержит только `getAllClubs` — нет
-  create/update.
+- **`app/components/Modals/AdminClub.vue`** — модалка доведена до общего
+  паттерна (`UForm` + `clubSchema` + `emit('close', true)`), `useClubApi`
+  содержит `getAllClubs` / `getOneClub` / `createClub` / `updateClub`.
+  `club?.preview?.path` теперь через optional chaining. Осталось проверить
+  раздел вживую на реальных данных.
 - **Хардкод хостов**: `http://static.infomania.ru` в `UploadImage.vue` и
   `http://localhost:3300` + `http://static.infomania.ru` в
   `app/utils/uploadAdapter.ts` (похоже, не используется — legacy-адаптер для

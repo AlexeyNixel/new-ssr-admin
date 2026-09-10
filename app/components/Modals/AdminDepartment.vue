@@ -10,41 +10,54 @@ interface Props {
 const props = defineProps<Props>();
 const emit = defineEmits<{ close: [boolean] }>();
 
-const isUpdate = ref(!!props?.department);
-
 const toast = useToast();
 const departmentApi = useDepartmentApi();
 
 const schema = departmentSchema;
 
-const newDepartment = ref({
-  title: props.department?.title || '',
-  slug: props.department?.slug || '',
-  isDeleted: props.department?.isDeleted || false,
+const { entity: department, pending, notFound } = useModalEntity({
+  prop: props.department,
+  fetchById: (id) => departmentApi.getOneDepartment(id),
 });
 
-const handleCancel = () => {
-  emit('close', true);
-};
+const isUpdate = computed(() => !!department.value);
+
+const newDepartment = ref({
+  title: '',
+  slug: '',
+  isDeleted: false,
+});
+
+watch(
+  department,
+  (value) => {
+    if (!value) return;
+    newDepartment.value = {
+      title: value.title || '',
+      slug: value.slug || '',
+      isDeleted: value.isDeleted || false,
+    };
+  },
+  { immediate: true }
+);
 
 const onSubmit = async () => {
-  if (isUpdate.value && props.department) {
-    await departmentApi.updateDepartment(
-      props.department.id,
-      newDepartment.value
-    );
+  if (isUpdate.value && department.value) {
+    await departmentApi.updateDepartment(department.value.id, newDepartment.value);
+    toast.add({ title: 'Отдел обновлён' });
+    emit('close', true);
+    return;
+  }
+
+  const res = (await departmentApi.createDepartment(newDepartment.value)) as
+    | { message?: string }
+    | null;
+
+  if (res?.message) {
+    toast.add({ title: res.message, color: 'error' });
   } else {
-    const res = await departmentApi.createDepartment(newDepartment.value) as { message?: string } | null;
-
-    if (res?.message) {
-      toast.add({ title: res.message, color: 'error' });
-    } else {
-      toast.add({
-        title: 'Отдел создан',
-      });
-
-      handleCancel();
-    }
+    toast.add({ title: 'Отдел создан' });
+    emit('close', true);
   }
 };
 </script>
@@ -60,7 +73,24 @@ const onSubmit = async () => {
     :dismissible="false"
   >
     <template #body>
-      <div class="flex flex-col w-full">
+      <div
+        v-if="pending"
+        class="flex items-center justify-center py-12"
+      >
+        <UIcon
+          name="i-heroicons-arrow-path"
+          class="w-6 h-6 animate-spin text-neutral-400"
+        />
+      </div>
+
+      <div
+        v-else-if="notFound"
+        class="py-12 text-center text-neutral-500 dark:text-neutral-400"
+      >
+        Запись не найдена
+      </div>
+
+      <div v-else class="flex flex-col w-full">
         <UForm
           :schema="schema"
           :state="newDepartment"

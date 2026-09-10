@@ -20,17 +20,43 @@ const places = [
 const toast = useToast();
 
 const bookApi = useBookApi();
+
+const { entity: book, pending, notFound } = useModalEntity({
+  prop: props.book,
+  fetchById: (id) => bookApi.getOneBook(id),
+});
+const isUpdate = computed(() => !!book.value);
+
 const newBook = ref({
-  title: props.book?.title || '',
-  description: props.book?.description || '',
-  content: props.book?.content || '',
-  previewFileId: props.book?.previewFileId || '',
-  isDeleted: props.book?.isDeleted || false,
-  isVideo: props.book?.isVideo || false,
-  place: props.book?.place || '',
-  litresLink: props.book?.litresLink || '',
+  title: '',
+  description: '',
+  content: '',
+  previewFileId: '',
+  isDeleted: false,
+  isVideo: false,
+  place: '',
+  litresLink: '',
   collections: [],
 });
+
+watch(
+  book,
+  (value) => {
+    if (!value) return;
+    newBook.value = {
+      title: value.title || '',
+      description: value.description || '',
+      content: value.content || '',
+      previewFileId: value.previewFileId || '',
+      isDeleted: value.isDeleted || false,
+      isVideo: value.isVideo || false,
+      place: value.place || '',
+      litresLink: value.litresLink || '',
+      collections: [],
+    };
+  },
+  { immediate: true }
+);
 
 const schema = z.object({
   title: z
@@ -80,8 +106,8 @@ const schema = z.object({
 });
 
 const onSubmit = async () => {
-  if (props.book) {
-    await bookApi.updateBook(props.book.id, newBook.value);
+  if (isUpdate.value && book.value) {
+    await bookApi.updateBook(book.value.id, newBook.value);
     toast.add({ title: 'Книга обновлена' });
   } else {
     await bookApi.createBook(newBook.value);
@@ -94,9 +120,9 @@ const onSubmit = async () => {
 
 <template>
   <UModal
-    :title="book ? 'Редактирование книги' : 'Создание книги'"
+    :title="isUpdate ? 'Редактирование книги' : 'Создание книги'"
     :description="
-      book
+      isUpdate
         ? 'Внесите изменения в информацию о книге'
         : 'Заполните информацию о новой книге'
     "
@@ -104,7 +130,21 @@ const onSubmit = async () => {
     :ui="{ content: 'sm:max-w-5xl' }"
   >
     <template #body>
-      <div class="flex flex-col w-full">
+      <div v-if="pending" class="flex items-center justify-center py-12">
+        <UIcon
+          name="i-heroicons-arrow-path"
+          class="w-6 h-6 animate-spin text-neutral-400"
+        />
+      </div>
+
+      <div
+        v-else-if="notFound"
+        class="py-12 text-center text-neutral-500 dark:text-neutral-400"
+      >
+        Запись не найдена
+      </div>
+
+      <div v-else class="flex flex-col w-full">
         <UForm
           :schema="schema"
           :state="newBook"
@@ -253,12 +293,12 @@ const onSubmit = async () => {
               size="md"
               class="min-w-[160px]"
               :icon="
-                book
+                isUpdate
                   ? 'i-heroicons-pencil-square-20-solid'
                   : 'i-heroicons-plus-20-solid'
               "
             >
-              {{ book ? 'Обновить книгу' : 'Создать книгу' }}
+              {{ isUpdate ? 'Обновить книгу' : 'Создать книгу' }}
             </UButton>
           </div>
         </UForm>

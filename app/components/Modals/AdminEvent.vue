@@ -13,7 +13,12 @@ const emit = defineEmits(['close', 'saved']);
 
 const toast = useToast();
 const eventApi = useEventApi();
-const isUpdate = !!props.event;
+
+const { entity: event, pending, notFound } = useModalEntity({
+  prop: props.event,
+  fetchById: (id) => eventApi.getOneEvent(id),
+});
+const isUpdate = computed(() => !!event.value);
 const isLoading = ref(false);
 const schema = eventSchema;
 
@@ -25,12 +30,20 @@ const newEvent = ref<Partial<IEvent>>({
   place: undefined,
   isDeleted: false,
   eventTime: new Date().toISOString(),
-  ...props.event,
 });
 
-if (isUpdate) {
-  newEvent.value.eventTime = newEvent.value.eventTime?.slice(0, 16);
-}
+watch(
+  event,
+  (value) => {
+    if (!value) return;
+    newEvent.value = {
+      ...newEvent.value,
+      ...value,
+      eventTime: value.eventTime?.slice(0, 16),
+    };
+  },
+  { immediate: true }
+);
 
 // --- Диапазон дат (только для создания) ---
 const isRange = ref(false);
@@ -60,11 +73,11 @@ function addDays(dateStr: string, days: number): string {
 const handleSubmit = async () => {
   isLoading.value = true;
   try {
-    if (isUpdate && props.event) {
+    if (isUpdate.value && event.value) {
       const payload = { ...newEvent.value, eventTime: newEvent.value.eventTime + ':00.000Z' };
-      await eventApi.updateEvent(props.event.id, payload);
+      await eventApi.updateEvent(event.value.id, payload);
       toast.add({ title: 'Событие обновлено' });
-      emit('close');
+      emit('close', true);
       return;
     }
 
@@ -87,7 +100,7 @@ const handleSubmit = async () => {
       toast.add({ title: 'Событие создано' });
     }
 
-    emit('close');
+    emit('close', true);
   } finally {
     isLoading.value = false;
   }
@@ -105,7 +118,21 @@ const handleSubmit = async () => {
     :dismissible="false"
   >
     <template #body>
-      <div class="flex flex-col w-full">
+      <div v-if="pending" class="flex items-center justify-center py-12">
+        <UIcon
+          name="i-heroicons-arrow-path"
+          class="w-6 h-6 animate-spin text-neutral-400"
+        />
+      </div>
+
+      <div
+        v-else-if="notFound"
+        class="py-12 text-center text-neutral-500 dark:text-neutral-400"
+      >
+        Запись не найдена
+      </div>
+
+      <div v-else class="flex flex-col w-full">
         <UForm
           :schema="schema"
           :state="newEvent"

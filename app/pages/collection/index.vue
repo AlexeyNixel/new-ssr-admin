@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type { BookCollection } from '~~/services/types/book-collection.type';
+import type { BookCollection } from '~~/services/types/book.type';
 import { useBookApi } from '~~/services/api/book.api';
 import AdminCollection from '~/components/Modals/AdminCollection.vue';
 import dayjs from 'dayjs';
@@ -23,6 +23,11 @@ const handleOpenModal = async (collection?: BookCollection) => {
   const result = await instance.result;
   if (result) await fetchData();
 };
+
+useModalRouteOpener({
+  modal,
+  onClosed: () => fetchData(),
+});
 
 await fetchData();
 

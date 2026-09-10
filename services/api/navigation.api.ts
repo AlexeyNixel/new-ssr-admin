@@ -14,6 +14,9 @@ export const useNavigationApi = () => {
         API_ENDPOINTS.navigation + 'untree'
       ),
 
+    getOneNavigation: (id: string) =>
+      api.getById<NavigationItem>(API_ENDPOINTS.navigation, id),
+
     create: async (data: Partial<NavigationItem>): Promise<unknown> =>
       api.post(API_ENDPOINTS.navigation, data),
 
