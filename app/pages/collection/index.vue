@@ -55,7 +55,7 @@ useHead({ title: 'НОМБ | Сборники книг' });
               :src="'http://static.infomania.ru' + collection.preview.path"
               :alt="collection.label"
               class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-            />
+            >
             <div v-else class="w-full h-full flex items-center justify-center">
               <UIcon name="i-heroicons-book-open" class="w-10 h-10 text-neutral-300" />
             </div>

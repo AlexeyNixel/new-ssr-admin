@@ -2,6 +2,7 @@ import { useRuntimeConfig } from 'nuxt/app';
 import type { AuthResponse } from '~/composables/useAuth';
 import type { File } from '~~/services/types/file.type';
 import type { IQuery } from '~~/services/types/query.type';
+import type { User } from '~~/services/types/user.type';
 
 export interface ApiResponse<T = unknown> {
   data: T;
@@ -94,7 +95,7 @@ export const useApi = () => {
     password: string;
   }): Promise<AuthResponse> => {
     try {
-      const data = await $fetch(baseApi + '/api/auth/login', {
+      const data = await $fetch<AuthResponse>(baseApi + '/api/auth/login', {
         method: 'POST',
         credentials: 'include',
         body: {
@@ -105,6 +106,21 @@ export const useApi = () => {
     } catch {
       throw new Error();
     }
+  };
+
+  const me = async (): Promise<User> => {
+    const res = await $fetch<User | { data: User }>(baseApi + '/api/auth/me', {
+      method: 'GET',
+      credentials: 'include',
+    });
+    return res && 'data' in res ? res.data : res;
+  };
+
+  const logout = async (): Promise<void> => {
+    await $fetch(baseApi + '/api/auth/logout', {
+      method: 'POST',
+      credentials: 'include',
+    });
   };
 
   const getOne = async <T>(
@@ -127,6 +143,8 @@ export const useApi = () => {
     getWithoutPagination,
     getOne,
     login,
+    me,
+    logout,
     post,
     postMany,
     postFile,

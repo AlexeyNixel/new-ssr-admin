@@ -13,7 +13,7 @@
       :src="`http://static.infomania.ru${newPreview.path}`"
       alt=""
       @click="open()"
-    />
+    >
   </UFileUpload>
 </template>
 

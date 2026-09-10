@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import UploadExhibition from '~/components/Ui/UploadExhibition.vue';
+import type { User } from '~~/services/types/user.type';
 
 const navLinks = [
   {
@@ -63,7 +64,7 @@ const navLinks = [
     icon: 'i-heroicons-map-pin',
   },
 ];
-const cookies = useCookie('user_data');
+const cookies = useCookie<User | null>('user_data');
 const authApi = useAuth();
 const user = computed(() => {
   return {
@@ -76,8 +77,8 @@ const user = computed(() => {
 
 const isAuth = ref(authApi.isAuthenticated);
 
-const handleLogout = () => {
-  authApi.clearAuth();
+const handleLogout = async () => {
+  await authApi.clearAuth();
   navigateTo('/login');
 };
 </script>
