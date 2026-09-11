@@ -39,7 +39,7 @@ watch(file, async (newFile) => {
       .chain()
       .focus()
       .deleteRange({ from: pos, to: pos + 1 })
-      .setImage({ src: res.path })
+      .setImage({ src: `http://static.infomania.ru${res.path}` })
       .run();
 
     loading.value = false;
