@@ -49,6 +49,11 @@ const navLinks = [
     icon: 'i-hugeicons-books-01',
   },
   {
+    label: 'Игры',
+    link: '/game',
+    icon: 'i-heroicons-puzzle-piece',
+  },
+  {
     label: 'Навигация',
     link: '/navigation',
     icon: 'i-heroicons:bars-arrow-down',

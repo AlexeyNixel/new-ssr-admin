@@ -16,4 +16,7 @@ export const API_ENDPOINTS = {
   uploadExhibition: '/api/files/upload/exhibition/',
   clubs: '/api/clubs/',
   mapPoint: '/api/map-point/',
+  game: '/api/games/',
+  gameGenre: '/api/games/genres/',
+  gameSeries: '/api/games/series/',
 };

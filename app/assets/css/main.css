@@ -92,6 +92,15 @@ html {
 
     img {
       display: block;
+      /*
+       * Легаси-картинки из старого редактора приходят с width/height.
+       * ResizableNodeView (@tiptap/extension-image) переносит их в инлайн-стиль
+       * (style="height: 768px"), из-за чего высота фиксируется и картинка
+       * растягивается по вертикали. Тема @nuxt/ui задаёт только max-width.
+       * Возвращаем пропорции — как `.ck-content img { height: auto }` на сайте.
+       * !important нужен, чтобы перебить инлайн-стиль ResizableNodeView.
+       */
+      height: auto !important;
     }
 
     [data-resize-handle] {

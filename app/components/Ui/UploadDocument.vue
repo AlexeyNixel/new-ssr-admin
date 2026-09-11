@@ -28,11 +28,19 @@
 import { useUploadApi } from '~~/services/api/upload.api';
 import { useClipboard } from '@vueuse/core';
 
+// modelValue/preview — опциональны: без них компонент ведёт себя как раньше
+// (просто загружает файл и показывает ссылку для копирования).
+const props = defineProps<{
+  modelValue?: string;
+  preview?: string;
+}>();
+const emit = defineEmits(['update:modelValue']);
+
 const { copy, copied } = useClipboard();
 
 const document = ref();
 const toast = useToast();
-const url = ref('');
+const url = ref(props.preview || '');
 
 const uploadApi = useUploadApi();
 
@@ -51,6 +59,7 @@ const uploadDocument = async () => {
     });
 
     url.value = result.path;
+    emit('update:modelValue', result.id);
   }
 };
 </script>

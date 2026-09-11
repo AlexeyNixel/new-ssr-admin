@@ -8,4 +8,6 @@ export interface NavigationItem {
   parentId?: string;
   target: string;
   title: string;
+  to?: string;
+  slug?: string;
 }
