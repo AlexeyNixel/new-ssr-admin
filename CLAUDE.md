@@ -205,6 +205,26 @@ map-point, book, collection, navigation, club). Полный список ссы
 в `services/api/index.ts` (шлёт куку, разворачивает `{ data }`); в каждом
 `*.api.ts` — метод `getOne<Entity>`.
 
+### Навигация — дерево с drag-and-drop (`app/pages/navigation/index.vue`)
+
+Не `UTable`, а собственное дерево: `app/components/Navigation/NavTree.vue`
+(корень + Sortable) → рекурсивный `NavTreeNode.vue`. Общий контекст (глубина,
+свёрнутые ветки, опции Sortable, колбэки edit/create-child) — через
+`provide/inject` (`context.ts`).
+
+- Перетаскивание (`sortablejs`, `group: 'nav-tree'`, `handle: '.nav-drag-handle'`)
+  меняет и порядок, и родителя. Лимит вложенности — 5 уровней (`onMove` +
+  `onEnd`).
+- `onEnd` откатывает DOM-перемещение, дальше всё делает модель:
+  `useNavTree().applyMove()` мутирует дерево и в фоне сохраняет — `parentId`
+  через `PATCH /api/navigation-item/:id`, порядок соседей через
+  `updateBatchOrder` (`batch-update` принимает только `{id, order}`). Ошибка →
+  тост + `reload()`.
+- Свёрнутые ветки — в `localStorage` (`nav-tree-collapsed`).
+- Спека: `docs/superpowers/specs/2026-09-10-navigation-admin-redesign-design.md`.
+- Проверить на реальном бэке: принимает ли `PATCH` `parentId: ''` для переноса
+  в корень (иначе — `null`, одно место в `useNavTree.persist`).
+
 ### Валидация (`app/schemas/*.schema.ts`)
 
 Zod-схемы. Сообщения об ошибках — на русском. Частый паттерн «обрезать
@@ -235,6 +255,12 @@ Tiptap). Расширения: таблицы, картинки с ресайз�
 `EditorImageUploadExtension`), `details/summary`, выравнивание текста,
 кастомный `iframe`-нод. Подключается как `<EditorCustom v-model="...">` в
 формы (поле `content`).
+
+Стили контента редактора — в `app/assets/css/main.css`, блок `.tiptap {…}`
+(не путать с `ck-content.css` — то для отрендеренного контента на сайте).
+Картинки: `.tiptap img { height: auto !important }` — легаси-контент из старого
+редактора приходит с `width/height`, а `ResizableNodeView` пишет их в
+инлайн-стиль, из-за чего без `height: auto` картинка растягивается.
 
 ### Выбор связанных сущностей
 
