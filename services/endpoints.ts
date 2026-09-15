@@ -19,4 +19,7 @@ export const API_ENDPOINTS = {
   game: '/api/games/',
   gameGenre: '/api/games/genres/',
   gameSeries: '/api/games/series/',
+  comic: '/api/comics/',
+  comicGenre: '/api/comics/genres/',
+  comicSeries: '/api/comics/series/',
 };
