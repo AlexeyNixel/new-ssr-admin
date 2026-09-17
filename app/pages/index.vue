@@ -1,478 +1,337 @@
-<!-- pages/admin/instructions.vue -->
-<template>
-  <div class="min-h-screen bg-gray-50 dark:bg-gray-900">
-    <div class="container mx-auto px-4 py-8 max-w-5xl">
-      <!-- Header -->
-      <div class="mb-8 text-center">
-        <h1 class="text-3xl font-bold text-gray-900 dark:text-white mb-2">
-          📘 Админ-панель: инструкции
-        </h1>
-        <p class="text-gray-600 dark:text-gray-400">
-          Быстрое руководство по управлению ключевыми разделами сайта
-        </p>
-      </div>
+<script setup lang="ts">
+import dayjs from 'dayjs';
+import utc from 'dayjs/plugin/utc';
+import { useNotificationApi } from '~~/services/api/notification.api';
+import { usePostApi } from '~~/services/api/post.api';
+import { usePageApi } from '~~/services/api/page.api';
+import { useTagApi } from '~~/services/api/tag.api';
+import { useBookApi } from '~~/services/api/book.api';
+import { useGameApi } from '~~/services/api/game.api';
+import { useComicApi } from '~~/services/api/comic.api';
+import { useEventApi } from '~~/services/api/event.api';
+import { useSlideApi } from '~~/services/api/slide.api';
+import { useClubApi } from '~~/services/api/club.api';
+import { useDepartmentApi } from '~~/services/api/department.api';
+import { useNavigationApi } from '~~/services/api/navigation.api';
+import { useMapPointApi } from '~~/services/api/map-point.api';
+import type { IEvent } from '~~/services/types/event.type';
+import type { Notification } from '~~/services/types/notification.type';
+import type { Post } from '~~/services/types/post.type';
+import type { User } from '~~/services/types/user.type';
 
-      <!-- ==================== ИНСТРУКЦИЯ 1: УВЕДОМЛЕНИЯ ==================== -->
-      <div id="notifications" class="mb-12 scroll-mt-4">
-        <div class="flex items-center gap-3 mb-6">
-          <div class="p-2 bg-purple-100 dark:bg-purple-900 rounded-lg">
-            <UIcon
-              name="i-heroicons-bell"
-              class="w-6 h-6 text-purple-600 dark:text-purple-400"
-            />
-          </div>
-          <h2 class="text-2xl font-bold text-gray-900 dark:text-white">
-            🔔 Управление уведомлениями
-          </h2>
-        </div>
+dayjs.extend(utc);
 
-        <UCard>
-          <div class="space-y-6">
-            <!-- Структура данных -->
-            <div>
-              <h3
-                class="text-lg font-semibold text-gray-800 dark:text-gray-200 mb-3"
-              >
-                📋 Структура уведомления
-              </h3>
-              <div
-                class="bg-gray-100 dark:bg-gray-800 rounded-lg p-4 font-mono text-sm"
-              >
-                <pre class="text-gray-700 dark:text-gray-300"><code>{
-  id: string           // Уникальный идентификатор
-  title: string        // Заголовок уведомления
-  description: string  // Текст уведомления
-  postId: string       // ID связанной статьи (если есть)
-  startTime: string    // Дата начала показа (ISO)
-  endTime: string      // Дата окончания показа (ISO)
-  type: 'error' | 'warning' | 'success'  // Тип: ошибка/предупреждение/успех
-  isDeleted: boolean   // Мягкое удаление
-}</code></pre>
-              </div>
-            </div>
+interface StatEntry {
+  key: string;
+  label: string;
+  icon: string;
+  link: string;
+}
 
-            <!-- Пошаговая инструкция -->
-            <div>
-              <h3
-                class="text-lg font-semibold text-gray-800 dark:text-gray-200 mb-4"
-              >
-                ➕ Как создать уведомление
-              </h3>
-              <ol
-                class="list-decimal list-inside space-y-3 text-gray-700 dark:text-gray-300"
-              >
-                <li>
-                  Перейдите в раздел
-                  <UBadge color="purple">Уведомления → Создать</UBadge>
-                </li>
-                <li>
-                  Заполните <strong>заголовок</strong> и
-                  <strong>описание</strong> (обязательные поля)
-                </li>
-                <li>
-                  Выберите <strong>тип уведомления</strong> в зависимости от
-                  контекста:
-                  <div class="mt-2 ml-6 space-x-2">
-                    <UBadge color="red">error</UBadge> — для критических ошибок
-                    <UBadge color="amber">warning</UBadge> — для предупреждений
-                    <UBadge color="green">success</UBadge> — для успешных
-                    операций
-                  </div>
-                </li>
-                <li>
-                  Установите <strong>период показа</strong> (startTime /
-                  endTime)
-                </li>
-                <li>
-                  Привяжите <strong>postId</strong> (опционально, если
-                  уведомление относится к статье)
-                </li>
-                <li>
-                  Нажмите <UBadge color="green">Сохранить</UBadge> — уведомление
-                  появится на сайте в указанный период
-                </li>
-              </ol>
-            </div>
+interface StatGroup {
+  label: string;
+  icon: string;
+  color: string;
+  iconWrap: string;
+  topBorder: string;
+  items: StatEntry[];
+}
 
-            <!-- Пример интерфейса уведомления -->
-            <div class="border-t dark:border-gray-700 pt-6">
-              <p
-                class="text-sm font-medium text-gray-600 dark:text-gray-400 mb-3"
-              >
-                Как выглядят уведомления на сайте:
-              </p>
-              <div class="space-y-3">
-                <div
-                  class="bg-red-50 dark:bg-red-900/20 border-l-4 border-red-500 rounded-lg p-4"
-                >
-                  <div class="flex items-start gap-3">
-                    <UIcon
-                      name="i-heroicons-exclamation-circle"
-                      class="w-5 h-5 text-red-600 dark:text-red-400 mt-0.5"
-                    />
-                    <div>
-                      <div class="font-semibold text-red-800 dark:text-red-300">
-                        [error] Библиотека не работает в понедельник
-                      </div>
-                      <div class="text-sm text-red-700 dark:text-red-400">
-                        Технический день
-                      </div>
-                    </div>
-                  </div>
-                </div>
-                <div
-                  class="bg-amber-50 dark:bg-amber-900/20 border-l-4 border-amber-500 rounded-lg p-4"
-                >
-                  <div class="flex items-start gap-3">
-                    <UIcon
-                      name="i-heroicons-clock"
-                      class="w-5 h-5 text-amber-600 dark:text-amber-400 mt-0.5"
-                    />
-                    <div>
-                      <div
-                        class="font-semibold text-amber-800 dark:text-amber-300"
-                      >
-                        [warning] Технические работы
-                      </div>
-                      <div class="text-sm text-amber-700 dark:text-amber-400">
-                        Перерыв работы с 10:00 до 11:00
-                      </div>
-                    </div>
-                  </div>
-                </div>
-                <div
-                  class="bg-green-50 dark:bg-green-900/20 border-l-4 border-green-500 rounded-lg p-4"
-                >
-                  <div class="flex items-start gap-3">
-                    <UIcon
-                      name="i-heroicons-check-circle"
-                      class="w-5 h-5 text-green-600 dark:text-green-400 mt-0.5"
-                    />
-                    <div>
-                      <div
-                        class="font-semibold text-green-800 dark:text-green-300"
-                      >
-                        [success] Началась регистрация на турнир настольных игр
-                      </div>
-                      <div class="text-sm text-green-700 dark:text-green-400">
-                        Вы можете пройти регистрацию на турнир на нашем сайте.
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
+const statGroups: StatGroup[] = [
+  {
+    label: 'Контент',
+    icon: 'i-heroicons-document-text',
+    color: 'blue',
+    iconWrap: 'bg-blue-100 text-blue-600',
+    topBorder: 'border-t-blue-500',
+    items: [
+      { key: 'notification', label: 'Уведомления', icon: 'i-heroicons-bell', link: '/notification' },
+      { key: 'post', label: 'Посты', icon: 'i-heroicons-newspaper', link: '/post' },
+      { key: 'page', label: 'Страницы', icon: 'i-heroicons-newspaper', link: '/page' },
+      { key: 'tag', label: 'Тэги', icon: 'i-mdi-tag-outline', link: '/tag' },
+    ],
+  },
+  {
+    label: 'Библиотека',
+    icon: 'i-hugeicons-books-01',
+    color: 'violet',
+    iconWrap: 'bg-violet-100 text-violet-600',
+    topBorder: 'border-t-violet-500',
+    items: [
+      { key: 'book', label: 'Книги', icon: 'i-heroicons:book-open', link: '/book' },
+      { key: 'collection', label: 'Сборники книг', icon: 'i-hugeicons-books-01', link: '/collection' },
+      { key: 'game', label: 'Игры', icon: 'i-heroicons-puzzle-piece', link: '/game' },
+      { key: 'comic', label: 'Комиксы', icon: 'i-heroicons-book-open', link: '/comic' },
+    ],
+  },
+  {
+    label: 'Мероприятия',
+    icon: 'i-solar-calendar-line-duotone',
+    color: 'amber',
+    iconWrap: 'bg-amber-100 text-amber-600',
+    topBorder: 'border-t-amber-500',
+    items: [
+      { key: 'event', label: 'События', icon: 'i-solar-calendar-line-duotone', link: '/event' },
+      { key: 'slide', label: 'Слайды', icon: 'i-material-symbols-image-outline', link: '/slide' },
+      { key: 'club', label: 'Клубы', icon: 'iconoir:community', link: '/club' },
+    ],
+  },
+  {
+    label: 'Структура сайта',
+    icon: 'i-heroicons-map-pin',
+    color: 'emerald',
+    iconWrap: 'bg-emerald-100 text-emerald-600',
+    topBorder: 'border-t-emerald-500',
+    items: [
+      { key: 'department', label: 'Отделы', icon: 'i-heroicons-user-group', link: '/department' },
+      { key: 'navigation', label: 'Навигация', icon: 'i-heroicons:bars-arrow-down', link: '/navigation' },
+      { key: 'mapPoint', label: 'Точки на карте', icon: 'i-heroicons-map-pin', link: '/map-point' },
+    ],
+  },
+];
 
-            <!-- Важные замечания -->
-            <div
-              class="bg-amber-50 dark:bg-amber-900/20 rounded-lg p-4 border-l-4 border-amber-500"
-            >
-              <div class="flex items-start gap-2">
-                <UIcon
-                  name="i-heroicons-light-bulb"
-                  class="w-5 h-5 text-amber-600 dark:text-amber-400 mt-0.5"
-                />
-                <div class="text-sm">
-                  <p class="font-medium text-amber-800 dark:text-amber-300">
-                    ⚠️ Важные правила для уведомлений
-                  </p>
-                  <ul
-                    class="list-disc list-inside mt-1 text-amber-700 dark:text-amber-400 space-y-1"
-                  >
-                    <li>
-                      Уведомления с <strong>isDeleted = true</strong> не
-                      отображаются на сайте (мягкое удаление)
-                    </li>
-                    <li>
-                      Период показа проверяется по текущему времени:
-                      <code class="bg-amber-100 dark:bg-amber-800 px-1 rounded"
-                        >startTime ≤ now ≤ endTime</code
-                      >
-                    </li>
-                    <li>
-                      Если <strong>postId</strong> указан — уведомление
-                      отображается только на странице этой статьи
-                    </li>
-                    <li>
-                      При удалении статьи — связанные уведомления можно
-                      автоматически скрыть или удалить
-                    </li>
-                  </ul>
-                </div>
-              </div>
-            </div>
-          </div>
-        </UCard>
-      </div>
+const TYPE_LABELS: Record<Notification['type'], { label: string; color: 'error' | 'warning' | 'success' }> = {
+  error: { label: 'Ошибка', color: 'error' },
+  warning: { label: 'Предупреждение', color: 'warning' },
+  success: { label: 'Успех', color: 'success' },
+};
 
-      <!-- ==================== ИНСТРУКЦИЯ 2: ГЛАВНЫЙ СЛАЙДЕР ==================== -->
-      <div id="slider" class="mb-12 scroll-mt-4">
-        <div class="flex items-center gap-3 mb-6">
-          <div class="p-2 bg-blue-100 dark:bg-blue-900 rounded-lg">
-            <UIcon
-              name="i-heroicons-photo"
-              class="w-6 h-6 text-blue-600 dark:text-blue-400"
-            />
-          </div>
-          <h2 class="text-2xl font-bold text-gray-900 dark:text-white">
-            🎠 Управление главным слайдером
-          </h2>
-        </div>
+const notificationApi = useNotificationApi();
+const postApi = usePostApi();
+const pageApi = usePageApi();
+const tagApi = useTagApi();
+const bookApi = useBookApi();
+const gameApi = useGameApi();
+const comicApi = useComicApi();
+const eventApi = useEventApi();
+const slideApi = useSlideApi();
+const clubApi = useClubApi();
+const departmentApi = useDepartmentApi();
+const navigationApi = useNavigationApi();
+const mapPointApi = useMapPointApi();
 
-        <UCard>
-          <div class="space-y-6">
-            <!-- Структура данных слайда -->
-            <div>
-              <h3
-                class="text-lg font-semibold text-gray-800 dark:text-gray-200 mb-3"
-              >
-                📋 Структура слайда
-              </h3>
-              <div
-                class="bg-gray-100 dark:bg-gray-800 rounded-lg p-4 font-mono text-sm"
-              >
-                <pre class="text-gray-700 dark:text-gray-300"><code>{
-  id: string           // Уникальный ID слайда
-  slideOrder: number   // Порядок показа (сортировка)
-  postId: string       // ID связанной статьи
-  imageFileId: string  // ID файла изображения
-  url: string          // Ссылка при клике на слайд
-  image: File {        // Объект изображения
-    id: string
-    originalName: string
-    mimeType: string
-    path: string
-    preview: string    // Превью изображения
-    // ...
+const cookies = useCookie<User | null>('user_data');
+const greetingName = computed(() => cookies.value?.name || 'Модератор');
+const today = dayjs().format('DD.MM.YYYY');
+
+const counts = reactive<Record<string, number | null>>(
+  Object.fromEntries(statGroups.flatMap((group) => group.items.map((item) => [item.key, null]))),
+);
+
+const loadCount = (key: string, request: Promise<{ meta?: { total: number } }>) => {
+  request
+    .then((res) => {
+      counts[key] = res.meta?.total ?? 0;
+    })
+    .catch(() => {
+      counts[key] = null;
+    });
+};
+
+loadCount('notification', notificationApi.getAllNotifications({ limit: 1 }));
+loadCount('post', postApi.getAllPosts({ limit: 1 }));
+loadCount('page', pageApi.getAllPages({ limit: 1 }));
+loadCount('tag', tagApi.getAllTags({ limit: 1 }));
+loadCount('book', bookApi.getAllBook({ limit: 1 }));
+loadCount('collection', bookApi.getAllCollections({ limit: 1 }));
+loadCount('game', gameApi.getAllGames({ limit: 1 }));
+loadCount('comic', comicApi.getAllComics({ limit: 1 }));
+loadCount('event', eventApi.getAllEvents({ limit: 1 }));
+loadCount('slide', slideApi.getAllSlides({ limit: 1 }));
+loadCount('club', clubApi.getAllClubs({ limit: 1 }));
+loadCount('department', departmentApi.getAllDepartments({ limit: 1 }));
+loadCount('mapPoint', mapPointApi.getAllMapPoints({ limit: 1 }));
+
+navigationApi
+  .getAllNavigationWithoutTree()
+  .then((items) => {
+    counts.navigation = items.length;
+  })
+  .catch(() => {
+    counts.navigation = null;
+  });
+
+const upcomingEvents = ref<IEvent[] | null>(null);
+const activeNotifications = ref<Notification[] | null>(null);
+const recentPosts = ref<Post[] | null>(null);
+
+const loadUpcomingEvents = async () => {
+  try {
+    const res = await eventApi.getAllEvents({ limit: 50, sortBy: 'eventTime' });
+    const now = new Date().toISOString();
+    upcomingEvents.value = (res.data ?? [])
+      .filter((event) => !event.isDeleted && event.eventTime >= now)
+      .sort((a, b) => a.eventTime.localeCompare(b.eventTime))
+      .slice(0, 5);
+  } catch {
+    upcomingEvents.value = [];
   }
-  createdAt: string    // Дата создания
-  isDeleted: boolean   // Мягкое удаление
-}</code></pre>
-              </div>
-            </div>
+};
 
-            <!-- Пошаговая инструкция -->
-            <div>
-              <h3
-                class="text-lg font-semibold text-gray-800 dark:text-gray-200 mb-4"
-              >
-                🖼️ Как добавить слайд в карусель
-              </h3>
-              <ol
-                class="list-decimal list-inside space-y-3 text-gray-700 dark:text-gray-300"
-              >
-                <li>
-                  Перейдите в раздел
-                  <UBadge color="blue">Главный слайдер → Добавить слайд</UBadge>
-                </li>
-                <li>
-                  Загрузите изображение через медиа-менеджер (поддерживаются
-                  JPG, PNG, WEBP)
-                </li>
-                <li>
-                  Укажите <strong>URL</strong>, куда перейдет пользователь при
-                  клике на слайд
-                </li>
-                <li>
-                  При необходимости свяжите слайд со статьей через
-                  <strong>postId</strong>
-                </li>
-                <li>
-                  Установите <strong>порядок показа (slideOrder)</strong>:
-                  <div
-                    class="mt-2 ml-6 text-sm text-gray-500 dark:text-gray-400"
-                  >
-                    ↳ Чем меньше число — тем раньше показывается слайд (1, 2,
-                    3...)
-                  </div>
-                </li>
-                <li>
-                  Нажмите <UBadge color="green">Сохранить</UBadge> — слайд
-                  появится на главной странице
-                </li>
-              </ol>
-            </div>
+const loadActiveNotifications = async () => {
+  try {
+    const res = await notificationApi.getAllNotifications({ limit: 50 });
+    const now = new Date().toISOString();
+    activeNotifications.value = (res.data ?? [])
+      .filter((notification) => !notification.isDeleted && notification.startTime <= now && now <= notification.endTime)
+      .sort((a, b) => a.endTime.localeCompare(b.endTime))
+      .slice(0, 5);
+  } catch {
+    activeNotifications.value = [];
+  }
+};
 
-            <!-- Таблица управления порядком слайдов -->
-            <div>
-              <div class="flex justify-between items-center mb-3">
-                <h3
-                  class="text-md font-semibold text-gray-800 dark:text-gray-200"
-                >
-                  📊 Список слайдов с управлением порядком
-                </h3>
-                <UButton size="xs" color="blue" variant="outline"
-                  >+ Добавить слайд</UButton
-                >
-              </div>
-              <div
-                class="border dark:border-gray-700 rounded-lg overflow-hidden"
-              >
-                <table
-                  class="min-w-full divide-y divide-gray-200 dark:divide-gray-700"
-                >
-                  <thead class="bg-gray-50 dark:bg-gray-800">
-                    <tr>
-                      <th
-                        class="px-4 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-400"
-                      >
-                        Порядок
-                      </th>
-                      <th
-                        class="px-4 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-400"
-                      >
-                        Превью
-                      </th>
-                      <th
-                        class="px-4 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-400"
-                      >
-                        URL / postId
-                      </th>
-                      <th
-                        class="px-4 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-400"
-                      >
-                        Действия
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody class="divide-y divide-gray-200 dark:divide-gray-700">
-                    <tr class="hover:bg-gray-50 dark:hover:bg-gray-800/50">
-                      <td class="px-4 py-2">
-                        <div class="flex items-center gap-1">
-                          <UButton
-                            icon="i-heroicons-chevron-up"
-                            size="2xs"
-                            color="gray"
-                            variant="ghost"
-                          />
-                          <span class="text-sm">1</span>
-                          <UButton
-                            icon="i-heroicons-chevron-down"
-                            size="2xs"
-                            color="gray"
-                            variant="ghost"
-                          />
-                        </div>
-                      </td>
-                      <td class="px-4 py-2">
-                        <div
-                          class="w-10 h-10 bg-gray-200 dark:bg-gray-700 rounded"
-                        />
-                      </td>
-                      <td class="px-4 py-2 text-sm">/promo/new-year</td>
-                      <td class="px-4 py-2">
-                        <div class="flex gap-1">
-                          <UButton
-                            icon="i-heroicons-pencil"
-                            size="2xs"
-                            color="gray"
-                            variant="ghost"
-                          />
-                          <UButton
-                            icon="i-heroicons-trash"
-                            size="2xs"
-                            color="red"
-                            variant="ghost"
-                          />
-                        </div>
-                      </td>
-                    </tr>
-                  </tbody>
-                </table>
-              </div>
-            </div>
+const loadRecentPosts = async () => {
+  try {
+    const res = await postApi.getAllPosts({ limit: 5, sortBy: 'createdAt', sortOrder: 'desc' });
+    recentPosts.value = (res.data ?? [])
+      .slice()
+      .sort((a, b) => b.createdAt.localeCompare(a.createdAt))
+      .slice(0, 5);
+  } catch {
+    recentPosts.value = [];
+  }
+};
 
-            <!-- Важные замечания -->
-            <div
-              class="bg-blue-50 dark:bg-blue-900/20 rounded-lg p-4 border-l-4 border-blue-500"
-            >
-              <div class="flex items-start gap-2">
-                <UIcon
-                  name="i-heroicons-light-bulb"
-                  class="w-5 h-5 text-blue-600 dark:text-blue-400 mt-0.5"
-                />
-                <div class="text-sm">
-                  <p class="font-medium text-blue-800 dark:text-blue-300">
-                    💡 Рекомендации по слайдеру
-                  </p>
-                  <ul
-                    class="list-disc list-inside mt-1 text-blue-700 dark:text-blue-400 space-y-1"
-                  >
-                    <li>
-                      Изображения автоматически оптимизируются — загружайте в
-                      высоком разрешении
-                    </li>
-                    <li>
-                      Слайды с <strong>isDeleted = true</strong> не
-                      отображаются, но остаются в БД
-                    </li>
-                    <li>
-                      Если указан <strong>postId</strong>, слайд может вести на
-                      страницу статьи (приоритетнее url?)
-                    </li>
-                    <li>
-                      Рекомендуемый порядок: от 1 до 10, чтобы легко вставлять
-                      новые слайды
-                    </li>
-                    <li>
-                      Используйте <strong>slideOrder</strong> как поле для
-                      сортировки в API:
-                      <code class="bg-blue-100 dark:bg-blue-800 px-1 rounded"
-                        >ORDER BY slideOrder ASC</code
-                      >
-                    </li>
-                  </ul>
-                </div>
-              </div>
-            </div>
+loadUpcomingEvents();
+loadActiveNotifications();
+loadRecentPosts();
 
-            <!-- Интеграция с файлами -->
-            <div class="bg-gray-100 dark:bg-gray-800 rounded-lg p-4">
-              <p
-                class="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
-              >
-                📁 Примечание о File
-              </p>
-              <p class="text-sm text-gray-600 dark:text-gray-400">
-                Изображения хранятся в отдельной таблице <strong>File</strong>.
-                Поле <code>imageFileId</code> связывает слайд с файлом. Доступ к
-                изображению через <code>image.preview</code> или
-                <code>image.path</code>. Поддерживаются форматы: JPG, PNG, WEBP,
-                GIF.
-              </p>
-            </div>
+useHead({ title: 'НОМБ | Панель управления' });
+</script>
+
+<template>
+  <div class="min-h-full p-6 bg-gray-50">
+    <div class="mb-6">
+      <h1 class="text-2xl font-bold text-gray-900">Здравствуйте, {{ greetingName }}!</h1>
+      <p class="text-gray-600 mt-1">{{ today }} · панель управления контентом библиотеки «НОМБ»</p>
+    </div>
+
+    <!-- Обзор контента -->
+    <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4 mb-6">
+      <div
+        v-for="group in statGroups"
+        :key="group.label"
+        :class="['bg-white rounded-lg shadow-sm border border-gray-200 border-t-4 p-4', group.topBorder]"
+      >
+        <div class="flex items-center gap-2 mb-3">
+          <div :class="['p-1.5 rounded-lg', group.iconWrap]">
+            <UIcon :name="group.icon" class="w-4 h-4" />
           </div>
-        </UCard>
+          <h2 class="font-semibold text-gray-900">{{ group.label }}</h2>
+        </div>
+        <ul class="space-y-1">
+          <li v-for="item in group.items" :key="item.key">
+            <NuxtLink
+              :to="item.link"
+              class="flex items-center justify-between gap-2 px-2 py-1.5 rounded-md hover:bg-gray-100 transition-colors"
+            >
+              <span class="flex items-center gap-2 text-sm text-gray-700">
+                <UIcon :name="item.icon" class="w-4 h-4 text-gray-400" />
+                {{ item.label }}
+              </span>
+              <UBadge :color="counts[item.key] === null ? 'neutral' : group.color" variant="subtle">
+                {{ counts[item.key] ?? '—' }}
+              </UBadge>
+            </NuxtLink>
+          </li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- Активность -->
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
+      <!-- Ближайшие события -->
+      <div class="bg-white rounded-lg shadow-sm border border-gray-200 border-t-4 border-t-amber-500 p-4">
+        <div class="flex items-center justify-between mb-3">
+          <div class="flex items-center gap-2">
+            <div class="p-1.5 rounded-lg bg-amber-100 text-amber-600">
+              <UIcon name="i-solar-calendar-line-duotone" class="w-4 h-4" />
+            </div>
+            <h2 class="font-semibold text-gray-900">Ближайшие события</h2>
+          </div>
+          <NuxtLink to="/event" class="text-xs text-amber-600 hover:underline">Все события</NuxtLink>
+        </div>
+        <p v-if="upcomingEvents === null" class="text-sm text-gray-400">Загрузка…</p>
+        <p v-else-if="upcomingEvents.length === 0" class="text-sm text-gray-400">Нет ближайших событий</p>
+        <ul v-else class="space-y-1">
+          <li v-for="event in upcomingEvents" :key="event.id">
+            <NuxtLink
+              :to="`/event?editId=${event.id}`"
+              class="block px-2 py-1.5 rounded-md hover:bg-gray-100 transition-colors"
+            >
+              <p class="text-sm font-medium text-gray-800 truncate">{{ event.title }}</p>
+              <p class="text-xs text-gray-500">
+                {{ dayjs(event.eventTime).utc().format('DD.MM.YYYY HH:mm') }}{{ event.place ? ` · ${event.place}` : '' }}
+              </p>
+            </NuxtLink>
+          </li>
+        </ul>
       </div>
 
-      <!-- Кнопка "Наверх" -->
-      <div class="fixed bottom-6 right-6">
-        <UButton
-          icon="i-heroicons-arrow-up"
-          color="gray"
-          variant="solid"
-          class="shadow-lg"
-          @click="scrollToTop"
-        />
+      <!-- Активные уведомления -->
+      <div class="bg-white rounded-lg shadow-sm border border-gray-200 border-t-4 border-t-blue-500 p-4">
+        <div class="flex items-center justify-between mb-3">
+          <div class="flex items-center gap-2">
+            <div class="p-1.5 rounded-lg bg-blue-100 text-blue-600">
+              <UIcon name="i-heroicons-bell" class="w-4 h-4" />
+            </div>
+            <h2 class="font-semibold text-gray-900">Активные уведомления</h2>
+          </div>
+          <NuxtLink to="/notification" class="text-xs text-blue-600 hover:underline">Все уведомления</NuxtLink>
+        </div>
+        <p v-if="activeNotifications === null" class="text-sm text-gray-400">Загрузка…</p>
+        <p v-else-if="activeNotifications.length === 0" class="text-sm text-gray-400">Нет активных уведомлений</p>
+        <ul v-else class="space-y-1">
+          <li v-for="notification in activeNotifications" :key="notification.id">
+            <NuxtLink
+              :to="`/notification?editId=${notification.id}`"
+              class="block px-2 py-1.5 rounded-md hover:bg-gray-100 transition-colors"
+            >
+              <div class="flex items-center gap-2">
+                <UBadge :color="TYPE_LABELS[notification.type]?.color ?? 'neutral'" variant="subtle" size="sm">
+                  {{ TYPE_LABELS[notification.type]?.label ?? notification.type }}
+                </UBadge>
+                <p class="text-sm font-medium text-gray-800 truncate">{{ notification.title }}</p>
+              </div>
+              <p class="text-xs text-gray-500 mt-0.5">до {{ dayjs(notification.endTime).format('DD.MM.YYYY HH:mm') }}</p>
+            </NuxtLink>
+          </li>
+        </ul>
+      </div>
+
+      <!-- Последние публикации -->
+      <div class="bg-white rounded-lg shadow-sm border border-gray-200 border-t-4 border-t-cyan-500 p-4">
+        <div class="flex items-center justify-between mb-3">
+          <div class="flex items-center gap-2">
+            <div class="p-1.5 rounded-lg bg-cyan-100 text-cyan-600">
+              <UIcon name="i-heroicons-newspaper" class="w-4 h-4" />
+            </div>
+            <h2 class="font-semibold text-gray-900">Последние публикации</h2>
+          </div>
+          <NuxtLink to="/post" class="text-xs text-cyan-600 hover:underline">Все посты</NuxtLink>
+        </div>
+        <p v-if="recentPosts === null" class="text-sm text-gray-400">Загрузка…</p>
+        <p v-else-if="recentPosts.length === 0" class="text-sm text-gray-400">Публикаций пока нет</p>
+        <ul v-else class="space-y-1">
+          <li v-for="post in recentPosts" :key="post.id">
+            <NuxtLink
+              :to="`/post/admin/${post.id}`"
+              class="block px-2 py-1.5 rounded-md hover:bg-gray-100 transition-colors"
+            >
+              <div class="flex items-center gap-2">
+                <UBadge :color="post.isDeleted ? 'warning' : 'success'" variant="subtle" size="sm">
+                  {{ post.isDeleted ? 'Скрыт' : 'Опубликован' }}
+                </UBadge>
+                <p class="text-sm font-medium text-gray-800 truncate">{{ post.title }}</p>
+              </div>
+              <p class="text-xs text-gray-500 mt-0.5">{{ dayjs(post.createdAt).format('DD.MM.YYYY HH:mm') }}</p>
+            </NuxtLink>
+          </li>
+        </ul>
       </div>
     </div>
   </div>
 </template>
 
-<script setup>
-// Функция для плавного скролла к топу
-const scrollToTop = () => {
-  window.scrollTo({ top: 0, behavior: 'smooth' });
-};
-</script>
-
-<style scoped>
-.scroll-mt-4 {
-  scroll-margin-top: 1rem;
-}
-
-pre code {
-  white-space: pre-wrap;
-  word-break: break-word;
-}
-</style>
+<style scoped></style>

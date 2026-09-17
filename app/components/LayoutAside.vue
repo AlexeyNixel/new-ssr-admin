@@ -1,79 +1,141 @@
 <script setup lang="ts">
+import type { NavigationMenuItem } from '@nuxt/ui';
 import UploadExhibition from '~/components/Ui/UploadExhibition.vue';
 import type { User } from '~~/services/types/user.type';
 
-const navLinks = [
+interface NavLink {
+  label: string;
+  link: string;
+  icon: string;
+}
+
+interface NavGroup {
+  label: string;
+  icon: string;
+  items: NavLink[];
+}
+
+const navGroups: NavGroup[] = [
   {
-    label: 'Уведомления',
-    link: '/notification',
-    icon: 'i-heroicons-newspaper',
+    label: 'Контент',
+    icon: 'i-heroicons-document-text',
+    items: [
+      {
+        label: 'Уведомления',
+        link: '/notification',
+        icon: 'i-heroicons-newspaper',
+      },
+      {
+        label: 'Посты',
+        link: '/post',
+        icon: 'i-heroicons-newspaper',
+      },
+      {
+        label: 'Страницы',
+        link: '/page',
+        icon: 'i-heroicons-newspaper',
+      },
+      {
+        label: 'Тэги',
+        link: '/tag',
+        icon: 'i-mdi-tag-outline',
+      },
+    ],
   },
   {
-    label: 'Посты',
-    link: '/post',
-    icon: 'i-heroicons-newspaper',
-  },
-  {
-    label: 'Страницы',
-    link: '/page',
-    icon: 'i-heroicons-newspaper',
-  },
-  {
-    label: 'Тэги',
-    link: '/tag',
-    icon: 'i-mdi-tag-outline',
-  },
-  {
-    label: 'Отделы',
-    link: '/department',
-    icon: 'i-heroicons-user-group',
-  },
-  {
-    label: 'Слайды',
-    link: '/slide',
-    icon: 'i-material-symbols-image-outline',
-  },
-  {
-    label: 'События',
-    link: '/event',
-    icon: 'i-solar-calendar-line-duotone',
-  },
-  {
-    label: 'Книги',
-    link: '/book',
-    icon: 'i-heroicons:book-open',
-  },
-  {
-    label: 'Сборники книг',
-    link: '/collection',
+    label: 'Библиотека',
     icon: 'i-hugeicons-books-01',
+    items: [
+      {
+        label: 'Книги',
+        link: '/book',
+        icon: 'i-heroicons:book-open',
+      },
+      {
+        label: 'Сборники книг',
+        link: '/collection',
+        icon: 'i-hugeicons-books-01',
+      },
+      {
+        label: 'Игры',
+        link: '/game',
+        icon: 'i-heroicons-puzzle-piece',
+      },
+      {
+        label: 'Комиксы',
+        link: '/comic',
+        icon: 'i-heroicons-book-open',
+      },
+    ],
   },
   {
-    label: 'Игры',
-    link: '/game',
-    icon: 'i-heroicons-puzzle-piece',
+    label: 'Мероприятия',
+    icon: 'i-solar-calendar-line-duotone',
+    items: [
+      {
+        label: 'События',
+        link: '/event',
+        icon: 'i-solar-calendar-line-duotone',
+      },
+      {
+        label: 'Слайды',
+        link: '/slide',
+        icon: 'i-material-symbols-image-outline',
+      },
+      {
+        label: 'Клубы',
+        link: '/club',
+        icon: 'iconoir:community',
+      },
+    ],
   },
   {
-    label: 'Комиксы',
-    link: '/comic',
-    icon: 'i-heroicons-book-open',
-  },
-  {
-    label: 'Навигация',
-    link: '/navigation',
-    icon: 'i-heroicons:bars-arrow-down',
-  },
-  {
-    label: 'Клубы',
-    link: '/club',
-    icon: 'iconoir:community',
-  },
-  {
-    label: 'Точки на карте',
-    link: '/map-point',
+    label: 'Структура сайта',
     icon: 'i-heroicons-map-pin',
+    items: [
+      {
+        label: 'Отделы',
+        link: '/department',
+        icon: 'i-heroicons-user-group',
+      },
+      {
+        label: 'Навигация',
+        link: '/navigation',
+        icon: 'i-heroicons:bars-arrow-down',
+      },
+      {
+        label: 'Точки на карте',
+        link: '/map-point',
+        icon: 'i-heroicons-map-pin',
+      },
+    ],
   },
 ];
+
+const route = useRoute();
+
+const navItems = computed<NavigationMenuItem[]>(() =>
+  navGroups.map((group) => {
+    const children = group.items.map((item) => {
+      const active = route.path.startsWith(item.link);
+      return {
+        label: item.label,
+        to: item.link,
+        icon: item.icon,
+        active,
+        ui: active ? { childLink: 'before:bg-primary' } : undefined,
+      };
+    });
+
+    return {
+      label: group.label,
+      icon: group.icon,
+      defaultOpen: children.some((child) => child.active),
+      children,
+    };
+  }),
+);
+
 const cookies = useCookie<User | null>('user_data');
 const authApi = useAuth();
 const user = computed(() => {
@@ -94,7 +156,7 @@ const handleLogout = async () => {
 </script>
 
 <template>
-  <div class="h-screen sticky top-0 bg-gray-900 text-white flex flex-col">
+  <div class="dark h-screen sticky top-0 bg-gray-900 text-white flex flex-col">
     <div class="p-6 border-b border-gray-700">
       <NuxtLink to="/" class="flex items-center gap-3 group">
         <div
@@ -110,36 +172,15 @@ const handleLogout = async () => {
     </div>
 
     <!-- Навигация -->
-    <nav class="flex-1 p-4 space-y-1">
-      <NuxtLink
-        v-for="link in navLinks"
-        :key="link.link"
-        class="flex items-center gap-3 p-3 rounded-lg transition-colors duration-200 group"
-        :class="[
-          $route.path.startsWith(link.link)
-            ? 'bg-blue-600 text-white shadow-sm'
-            : 'text-gray-300 hover:bg-gray-800 hover:text-white',
-        ]"
-        :to="link.link"
-      >
-        <Icon
-          :name="link.icon"
-          class="text-xl"
-          :class="[
-            $route.path.startsWith(link.link)
-              ? 'text-white'
-              : 'text-gray-400 group-hover:text-white',
-          ]"
-        />
-        <span class="font-medium">{{ link.label }}</span>
+    <nav class="flex-1 overflow-y-auto p-4">
+      <UNavigationMenu
+        :items="navItems"
+        orientation="vertical"
+        color="primary"
+        class="w-full"
+      />
 
-        <div
-          v-if="$route.path.startsWith(link.link)"
-          class="ml-auto w-2 h-2 bg-white rounded-full"
-        />
-      </NuxtLink>
-
-      <UploadExhibition />
+      <UploadExhibition class="mt-2" />
     </nav>
     <div v-if="isAuth" class="p-4 border-t border-gray-700">
       <div class="flex items-center gap-3 mb-4 p-3 rounded-lg bg-gray-800">
