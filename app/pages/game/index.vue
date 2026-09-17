@@ -16,7 +16,8 @@ const overlay = useOverlay();
 const modal = overlay.create(AdminGame);
 
 const statusLabel = (status: string) =>
-  GAME_STATUS_OPTIONS.find((option) => option.value === status)?.label ?? status;
+  GAME_STATUS_OPTIONS.find((option) => option.value === status)?.label ??
+  status;
 
 const fetchData = async () => {
   gameRes.value = await gameApi.getAllGames({
@@ -36,7 +37,9 @@ const columns: TableColumn<Game>[] = [
     cell: ({ row }) => {
       const cover = row.original.images[0]?.file.path;
       if (!cover)
-        return h('div', { class: 'w-10 h-10 rounded bg-neutral-100 dark:bg-neutral-800' });
+        return h('div', {
+          class: 'w-10 h-10 rounded bg-neutral-100 dark:bg-neutral-800',
+        });
       return h('img', {
         src: `http://static.infomania.ru${cover}`,
         class: 'w-10 h-10 object-cover rounded',
@@ -51,7 +54,16 @@ const columns: TableColumn<Game>[] = [
       h('div', { class: 'flex flex-col gap-1 max-w-xs' }, [
         h('p', { class: 'font-medium' }, row.original.title),
         row.original.series
-          ? h(UBadge, { variant: 'subtle', color: 'secondary', size: 'sm', class: 'w-max' }, () => row.original.series?.title)
+          ? h(
+              UBadge,
+              {
+                variant: 'subtle',
+                color: 'secondary',
+                size: 'sm',
+                class: 'w-max',
+              },
+              () => row.original.series?.title
+            )
           : null,
       ]),
   },
@@ -62,7 +74,11 @@ const columns: TableColumn<Game>[] = [
       h('div', { class: 'flex flex-col gap-1' }, [
         h(UBadge, {
           variant: 'subtle',
-          color: row.original.status === 'IN_STOCK' || row.original.status === 'ON_HANDS' ? 'success' : 'warning',
+          color:
+            row.original.status === 'IN_STOCK' ||
+            row.original.status === 'ON_HANDS'
+              ? 'success'
+              : 'warning',
           label: statusLabel(row.original.status),
           class: 'w-max',
         }),
@@ -79,7 +95,9 @@ const columns: TableColumn<Game>[] = [
     accessorKey: 'createdAt',
     header: 'Дата добавления',
     cell: ({ row }) =>
-      h('div', { class: 'text-sm text-neutral-500 whitespace-nowrap' },
+      h(
+        'div',
+        { class: 'text-sm text-neutral-500 whitespace-nowrap' },
         dayjs(row.original.createdAt).format('DD.MM.YYYY')
       ),
   },

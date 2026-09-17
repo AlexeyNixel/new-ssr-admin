@@ -32,7 +32,9 @@ const columns: TableColumn<Comic>[] = [
     cell: ({ row }) => {
       const cover = row.original.images[0]?.file.path;
       if (!cover)
-        return h('div', { class: 'w-10 h-14 rounded bg-neutral-100 dark:bg-neutral-800' });
+        return h('div', {
+          class: 'w-10 h-14 rounded bg-neutral-100 dark:bg-neutral-800',
+        });
       return h('img', {
         src: `http://static.infomania.ru${cover}`,
         class: 'w-10 h-14 object-cover rounded',
@@ -44,12 +46,23 @@ const columns: TableColumn<Comic>[] = [
     accessorKey: 'title',
     header: 'Название',
     cell: ({ row }) =>
-      h('div', { class: 'flex flex-col gap-1 max-w-xs' }, [
+      h('div', { class: 'flex flex-col gap-1 max-w-xs text-wrap' }, [
         h('p', { class: 'font-medium' }, row.original.title),
         row.original.series
-          ? h(UBadge, { variant: 'subtle', color: 'secondary', size: 'sm', class: 'w-max' }, () =>
-              row.original.series?.title
-                + (row.original.volumeNumber ? ` · том ${row.original.volumeNumber}` : ''))
+          ? h(
+              UBadge,
+              {
+                variant: 'subtle',
+                color: 'secondary',
+                size: 'sm',
+                class: 'w-max',
+              },
+              () =>
+                row.original.series?.title +
+                (row.original.volumeNumber
+                  ? ` · том ${row.original.volumeNumber}`
+                  : '')
+            )
           : null,
       ]),
   },
@@ -57,12 +70,19 @@ const columns: TableColumn<Comic>[] = [
     id: 'author',
     header: 'Автор/художник',
     cell: ({ row }) =>
-      h('div', { class: 'text-sm text-neutral-600' }, [
-        row.original.author,
-        row.original.illustrator && row.original.illustrator !== row.original.author
-          ? ` / ${row.original.illustrator}`
-          : '',
-      ].filter(Boolean).join('')),
+      h(
+        'div',
+        { class: 'text-sm text-neutral-600 text-wrap' },
+        [
+          row.original.author,
+          row.original.illustrator &&
+          row.original.illustrator !== row.original.author
+            ? ` / ${row.original.illustrator}`
+            : '',
+        ]
+          .filter(Boolean)
+          .join('')
+      ),
   },
   {
     id: 'status',
@@ -80,7 +100,9 @@ const columns: TableColumn<Comic>[] = [
     accessorKey: 'createdAt',
     header: 'Дата добавления',
     cell: ({ row }) =>
-      h('div', { class: 'text-sm text-neutral-500 whitespace-nowrap' },
+      h(
+        'div',
+        { class: 'text-sm text-neutral-500 whitespace-nowrap' },
         dayjs(row.original.createdAt).format('DD.MM.YYYY')
       ),
   },
