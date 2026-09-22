@@ -14,10 +14,13 @@ import { useClubApi } from '~~/services/api/club.api';
 import { useDepartmentApi } from '~~/services/api/department.api';
 import { useNavigationApi } from '~~/services/api/navigation.api';
 import { useMapPointApi } from '~~/services/api/map-point.api';
+import { useAuditLogApi } from '~~/services/api/audit-log.api';
 import type { IEvent } from '~~/services/types/event.type';
 import type { Notification } from '~~/services/types/notification.type';
 import type { Post } from '~~/services/types/post.type';
 import type { User } from '~~/services/types/user.type';
+import type { AuditLogEntry } from '~~/services/types/audit-log.type';
+import { NuxtLink } from '#components';
 
 dayjs.extend(utc);
 
@@ -96,6 +99,56 @@ const TYPE_LABELS: Record<Notification['type'], { label: string; color: 'error' 
   success: { label: 'Успех', color: 'success' },
 };
 
+// Человекочитаемые названия сущностей для журнала изменений (GET /audit-log).
+// Список типов — по спеке backend: docs/superpowers/specs/2026-09-22-audit-log-design.md
+const ENTITY_LABELS: Record<string, string> = {
+  Post: 'Новость',
+  Department: 'Отдел',
+  Tag: 'Тег',
+  Achievement: 'Достижение',
+  Book: 'Книга',
+  BookCollection: 'Сборник книг',
+  Club: 'Клуб',
+  Event: 'Событие',
+  MainSliderSlide: 'Слайд',
+  MapPoint: 'Точка на карте',
+  Notification: 'Уведомление',
+  Page: 'Страница',
+  Comic: 'Комикс',
+  ComicGenre: 'Жанр комиксов',
+  ComicSeries: 'Серия комиксов',
+  Game: 'Игра',
+  GameGenre: 'Жанр игр',
+  GameSeries: 'Серия игр',
+  NavigationItem: 'Пункт навигации',
+};
+
+const ACTION_LABELS: Record<AuditLogEntry['action'], { label: string; color: 'success' | 'primary' }> = {
+  CREATE: { label: 'Создано', color: 'success' },
+  UPDATE: { label: 'Изменено', color: 'primary' },
+};
+
+// Только те типы, для которых точно известен рабочий URL редактирования
+// (см. docs/deep-links.md + /post/admin/:id). Page сюда не входит — бэкенд
+// ищет её по slug, а в журнале есть только id.
+const ENTITY_LINK_BUILDERS: Partial<Record<string, (id: string) => string>> = {
+  Post: (id) => `/post/admin/${id}`,
+  Department: (id) => `/department?editId=${id}`,
+  Event: (id) => `/event?editId=${id}`,
+  MainSliderSlide: (id) => `/slide?editId=${id}`,
+  Notification: (id) => `/notification?editId=${id}`,
+  MapPoint: (id) => `/map-point?editId=${id}`,
+  Book: (id) => `/book?editId=${id}`,
+  BookCollection: (id) => `/collection?editId=${id}`,
+  NavigationItem: (id) => `/navigation?editId=${id}`,
+  Club: (id) => `/club?editId=${id}`,
+};
+
+const auditLogLink = (entry: AuditLogEntry): string | null => {
+  const builder = ENTITY_LINK_BUILDERS[entry.entityType];
+  return builder ? builder(entry.entityId) : null;
+};
+
 const notificationApi = useNotificationApi();
 const postApi = usePostApi();
 const pageApi = usePageApi();
@@ -109,6 +162,7 @@ const clubApi = useClubApi();
 const departmentApi = useDepartmentApi();
 const navigationApi = useNavigationApi();
 const mapPointApi = useMapPointApi();
+const auditLogApi = useAuditLogApi();
 
 const cookies = useCookie<User | null>('user_data');
 const greetingName = computed(() => cookies.value?.name || 'Модератор');
@@ -154,6 +208,7 @@ navigationApi
 const upcomingEvents = ref<IEvent[] | null>(null);
 const activeNotifications = ref<Notification[] | null>(null);
 const recentPosts = ref<Post[] | null>(null);
+const recentAuditLog = ref<AuditLogEntry[] | null>(null);
 
 const loadUpcomingEvents = async () => {
   try {
@@ -193,9 +248,19 @@ const loadRecentPosts = async () => {
   }
 };
 
+const loadRecentAuditLog = async () => {
+  try {
+    const res = await auditLogApi.getAuditLog({ limit: 5 });
+    recentAuditLog.value = res.data ?? [];
+  } catch {
+    recentAuditLog.value = [];
+  }
+};
+
 loadUpcomingEvents();
 loadActiveNotifications();
 loadRecentPosts();
+loadRecentAuditLog();
 
 useHead({ title: 'НОМБ | Панель управления' });
 </script>
@@ -240,7 +305,7 @@ useHead({ title: 'НОМБ | Панель управления' });
     </div>
 
     <!-- Активность -->
-    <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
+    <div class="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-4 gap-4">
       <!-- Ближайшие события -->
       <div class="bg-white rounded-lg shadow-sm border border-gray-200 border-t-4 border-t-amber-500 p-4">
         <div class="flex items-center justify-between mb-3">
@@ -327,6 +392,42 @@ useHead({ title: 'НОМБ | Панель управления' });
               </div>
               <p class="text-xs text-gray-500 mt-0.5">{{ dayjs(post.createdAt).format('DD.MM.YYYY HH:mm') }}</p>
             </NuxtLink>
+          </li>
+        </ul>
+      </div>
+
+      <!-- Последние изменения -->
+      <div class="bg-white rounded-lg shadow-sm border border-gray-200 border-t-4 border-t-violet-500 p-4">
+        <div class="flex items-center justify-between mb-3">
+          <div class="flex items-center gap-2">
+            <div class="p-1.5 rounded-lg bg-violet-100 text-violet-600">
+              <UIcon name="i-heroicons-clock" class="w-4 h-4" />
+            </div>
+            <h2 class="font-semibold text-gray-900">Последние изменения</h2>
+          </div>
+        </div>
+        <p v-if="recentAuditLog === null" class="text-sm text-gray-400">Загрузка…</p>
+        <p v-else-if="recentAuditLog.length === 0" class="text-sm text-gray-400">Изменений пока нет</p>
+        <ul v-else class="space-y-1">
+          <li v-for="entry in recentAuditLog" :key="entry.id">
+            <component
+              :is="auditLogLink(entry) ? NuxtLink : 'div'"
+              :to="auditLogLink(entry) ?? undefined"
+              class="block px-2 py-1.5 rounded-md transition-colors"
+              :class="auditLogLink(entry) ? 'hover:bg-gray-100' : ''"
+            >
+              <div class="flex items-center gap-2">
+                <UBadge :color="ACTION_LABELS[entry.action]?.color ?? 'neutral'" variant="subtle" size="sm">
+                  {{ ACTION_LABELS[entry.action]?.label ?? entry.action }}
+                </UBadge>
+                <p class="text-sm font-medium text-gray-800 truncate">
+                  {{ ENTITY_LABELS[entry.entityType] ?? entry.entityType }}
+                </p>
+              </div>
+              <p class="text-xs text-gray-500 mt-0.5">
+                {{ dayjs(entry.createdAt).format('DD.MM.YYYY HH:mm') }} · {{ entry.user?.name || entry.user?.username || 'система' }}
+              </p>
+            </component>
           </li>
         </ul>
       </div>

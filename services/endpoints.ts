@@ -22,4 +22,5 @@ export const API_ENDPOINTS = {
   comic: '/api/comics/',
   comicGenre: '/api/comics/genres/',
   comicSeries: '/api/comics/series/',
+  auditLog: '/api/audit-log/',
 };
