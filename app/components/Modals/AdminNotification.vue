@@ -52,11 +52,11 @@
             />
           </UFormField>
 
-          <!-- Тип уведомления - ОРИГИНАЛЬНЫЙ ВАРИАНТ -->
+          <!-- Тип уведомления -->
           <UFormField name="type" label="Тип уведомления" required>
             <URadioGroup
               v-model="newNotification.type"
-              :color="newNotification.type"
+              :color="newNotification.type ? typeColorMap[newNotification.type] : undefined"
               :items="notificationTypes"
               variant="card"
               class="w-full"
@@ -69,6 +69,34 @@
               </template>
             </URadioGroup>
           </UFormField>
+
+          <!-- Превью -->
+          <div class="space-y-2">
+            <h4
+              class="text-sm font-medium text-gray-700 dark:text-gray-300 flex items-center gap-2"
+            >
+              <UIcon name="i-heroicons-eye" class="w-4 h-4" />
+              Превью
+            </h4>
+            <div
+              class="flex items-start gap-3 rounded-lg border-l-4 p-4"
+              :class="previewStyle.wrapper"
+            >
+              <UIcon
+                :name="previewStyle.icon"
+                class="w-5 h-5 shrink-0 mt-0.5"
+                :class="previewStyle.iconClass"
+              />
+              <div class="min-w-0">
+                <p class="font-medium text-sm" :class="previewStyle.titleClass">
+                  {{ newNotification.title || 'Заголовок уведомления' }}
+                </p>
+                <p class="text-sm mt-0.5" :class="previewStyle.descClass">
+                  {{ newNotification.description || 'Здесь появится описание уведомления' }}
+                </p>
+              </div>
+            </div>
+          </div>
 
           <!-- Время показа -->
           <div class="space-y-3">
@@ -240,7 +268,67 @@ const notificationTypes = [
     icon: 'i-heroicons-x-circle-16-solid',
     description: 'Для критических проблем',
   },
+  {
+    value: 'festive',
+    label: 'Праздничное',
+    color: 'purple',
+    icon: 'i-heroicons-gift-16-solid',
+    description: 'Для праздничных поздравлений и акций',
+  },
 ];
+
+const typeColorMap: Record<NonNullable<Notification['type']>, string> = {
+  success: 'success',
+  warning: 'warning',
+  error: 'error',
+  festive: 'purple',
+};
+
+const previewStyles: Record<
+  NonNullable<Notification['type']>,
+  { wrapper: string; icon: string; iconClass: string; titleClass: string; descClass: string }
+> = {
+  success: {
+    wrapper: 'bg-green-50 border-green-500 dark:bg-green-950/40 dark:border-green-500',
+    icon: 'i-heroicons-check-circle-16-solid',
+    iconClass: 'text-green-600 dark:text-green-400',
+    titleClass: 'text-green-900 dark:text-green-100',
+    descClass: 'text-green-700 dark:text-green-300',
+  },
+  warning: {
+    wrapper: 'bg-yellow-50 border-yellow-500 dark:bg-yellow-950/40 dark:border-yellow-500',
+    icon: 'i-heroicons-exclamation-triangle-16-solid',
+    iconClass: 'text-yellow-600 dark:text-yellow-400',
+    titleClass: 'text-yellow-900 dark:text-yellow-100',
+    descClass: 'text-yellow-700 dark:text-yellow-300',
+  },
+  error: {
+    wrapper: 'bg-red-50 border-red-500 dark:bg-red-950/40 dark:border-red-500',
+    icon: 'i-heroicons-x-circle-16-solid',
+    iconClass: 'text-red-600 dark:text-red-400',
+    titleClass: 'text-red-900 dark:text-red-100',
+    descClass: 'text-red-700 dark:text-red-300',
+  },
+  festive: {
+    wrapper: 'bg-purple-50 border-purple-500 dark:bg-purple-950/40 dark:border-purple-500',
+    icon: 'i-heroicons-gift-16-solid',
+    iconClass: 'text-purple-600 dark:text-purple-400',
+    titleClass: 'text-purple-900 dark:text-purple-100',
+    descClass: 'text-purple-700 dark:text-purple-300',
+  },
+};
+
+const defaultPreviewStyle = {
+  wrapper: 'bg-gray-50 border-gray-300 dark:bg-gray-800/40 dark:border-gray-600',
+  icon: 'i-heroicons-bell-16-solid',
+  iconClass: 'text-gray-500 dark:text-gray-400',
+  titleClass: 'text-gray-700 dark:text-gray-200',
+  descClass: 'text-gray-500 dark:text-gray-400',
+};
+
+const previewStyle = computed(() =>
+  newNotification.value.type ? previewStyles[newNotification.value.type] : defaultPreviewStyle
+);
 
 const createNotification = async () => {
   try {

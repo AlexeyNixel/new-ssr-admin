@@ -6,5 +6,5 @@ export interface Notification {
   startTime: string;
   endTime: string;
   isDeleted: boolean;
-  type: 'error' | 'warning' | 'success';
+  type: 'error' | 'warning' | 'success' | 'festive';
 }
