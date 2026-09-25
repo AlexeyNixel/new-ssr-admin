@@ -6,10 +6,11 @@ import { UBadge, UButton } from '#components';
 import AdminNotification from '~/components/Modals/AdminNotification.vue';
 import dayjs from 'dayjs';
 
-const TYPE_LABELS: Record<Notification['type'], { label: string; color: 'error' | 'warning' | 'success' }> = {
+const TYPE_LABELS: Record<Notification['type'], { label: string; color: 'error' | 'warning' | 'success' | 'purple' }> = {
   error: { label: 'Ошибка', color: 'error' },
   warning: { label: 'Предупреждение', color: 'warning' },
   success: { label: 'Успех', color: 'success' },
+  festive: { label: 'Праздничное', color: 'purple' },
 };
 
 const notificationApi = useNotificationApi();

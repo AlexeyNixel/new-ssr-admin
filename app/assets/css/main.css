@@ -90,6 +90,42 @@ html {
       }
     }
 
+    .editor-iframe {
+      position: relative;
+      margin: 1rem 0;
+      max-width: 100%;
+      border-radius: 0.5rem;
+      outline: 2px solid transparent;
+      outline-offset: 2px;
+
+      iframe {
+        display: block;
+        max-width: 100%;
+        border-radius: 0.5rem;
+        background: var(--color-neutral-100);
+      }
+
+      &.is-selected {
+        outline-color: var(--color-primary-500);
+      }
+    }
+
+    /* Перехватывает клик, чтобы выделить узел, а не провалиться во фрейм */
+    .editor-iframe__overlay {
+      position: absolute;
+      inset: 0;
+      cursor: pointer;
+    }
+
+    .editor-iframe__bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 0.5rem;
+      margin-top: 0.25rem;
+      padding: 0 0.25rem;
+    }
+
     img {
       display: block;
       /*

@@ -106,6 +106,11 @@ const items: EditorToolbarItem[][] = [
       icon: 'i-lucide-strikethrough',
       tooltip: { text: 'Зачёркнутый' },
     },
+    {
+      kind: 'clearFormatting',
+      icon: 'i-lucide-remove-formatting',
+      tooltip: { text: 'Очистить форматирование' },
+    },
   ],
   [
     {
@@ -163,6 +168,7 @@ const bubbleToolBar: EditorToolbarItem[][] = [
     { kind: 'mark', mark: 'underline', icon: 'i-lucide-underline', tooltip: { text: 'Подчёркнутый' } },
     { kind: 'mark', mark: 'strike', icon: 'i-lucide-strikethrough', tooltip: { text: 'Зачёркнутый' } },
     { kind: 'mark', mark: 'code', icon: 'i-lucide-code', tooltip: { text: 'Код' } },
+    { kind: 'clearFormatting', icon: 'i-lucide-remove-formatting', tooltip: { text: 'Очистить форматирование' } },
   ],
   [
     {
@@ -214,22 +220,70 @@ const extensions = [
   }),
 ];
 
-const addIframe = (editor: Editor) => {
-  const input = window.prompt('Вставьте код iframe или URL');
-  if (!input) return;
+/*
+ * Встроенный обработчик списков @nuxt/ui (createListHandler) при снятии списка
+ * вызывает lift('taskList') — у нас нет расширения TaskList, команда падает с
+ * «There is no node type named 'taskList'» и повторный клик по списку ничего
+ * не делает. Нативный toggle*List из Tiptap сам снимает список и переключает
+ * маркированный ⇄ нумерованный.
+ */
+const createListHandler = (listType: 'bulletList' | 'orderedList') => {
+  const toggle = (editor: Editor) =>
+    listType === 'bulletList'
+      ? editor.chain().focus().toggleBulletList()
+      : editor.chain().focus().toggleOrderedList();
 
-  let src = input;
-  if (input.trim().startsWith('<')) {
-    const parser = new DOMParser();
-    const doc = parser.parseFromString(input, 'text/html');
-    const el = doc.body.firstChild as HTMLIFrameElement;
-    src = el?.src || input;
-  }
-
-  editor.chain().focus().setIframe({ src }).run();
+  return {
+    // can().toggle*List() ложно отдаёт false внутри списка другого типа,
+    // хотя сама команда переключает тип — поэтому внутри списка всегда разрешаем
+    canExecute: (editor: Editor) =>
+      editor.isActive('bulletList') ||
+      editor.isActive('orderedList') ||
+      (listType === 'bulletList'
+        ? editor.can().toggleBulletList()
+        : editor.can().toggleOrderedList()),
+    execute: toggle,
+    isActive: (editor: Editor) => editor.isActive(listType),
+    isDisabled: (editor: Editor) => editor.isActive('code') || editor.isActive('image'),
+  };
 };
 
+const toggleDetails = (editor: Editor) => {
+  if (editor.isActive('details')) editor.chain().focus().unsetDetails().run();
+  else editor.chain().focus().setDetails().run();
+};
+
+type AlignCmd = { align?: 'left' | 'center' | 'right' | 'justify' };
+
+// Повторный клик по активному выравниванию сбрасывает его (как у заголовков/списков).
+// «По левому краю» — выравнивание по умолчанию, подсвечиваем его и без атрибута.
+const isAlignActive = (editor: Editor, align?: string) =>
+  editor.isActive({ textAlign: align }) ||
+  (align === 'left' &&
+    (editor.isActive('paragraph') || editor.isActive('heading')) &&
+    !['center', 'right', 'justify'].some((a) => editor.isActive({ textAlign: a })));
+
 const customHandlers = {
+  bulletList: createListHandler('bulletList'),
+  orderedList: createListHandler('orderedList'),
+  textAlign: {
+    canExecute: (editor: Editor, cmd: AlignCmd) =>
+      !!cmd.align && editor.can().setTextAlign(cmd.align),
+    execute: (editor: Editor, cmd: AlignCmd) =>
+      isAlignActive(editor, cmd.align)
+        ? editor.chain().focus().unsetTextAlign()
+        : editor.chain().focus().setTextAlign(cmd.align!),
+    isActive: (editor: Editor, cmd: AlignCmd) => isAlignActive(editor, cmd.align),
+    isDisabled: (editor: Editor) => editor.isActive('image') || editor.isActive('iframe'),
+  },
+  // Встроенный clearFormatting не трогает выравнивание — сбрасываем и его
+  clearFormatting: {
+    canExecute: (editor: Editor) => editor.can().clearNodes() || editor.can().unsetAllMarks(),
+    execute: (editor: Editor) =>
+      editor.chain().focus().clearNodes().unsetAllMarks().unsetTextAlign(),
+    isActive: () => false,
+    isDisabled: undefined,
+  },
   imageUpload: {
     canExecute: (editor: Editor) => editor.can().insertImageUpload(),
     execute: (editor: Editor) => editor.chain().focus().insertImageUpload(),
@@ -286,6 +340,7 @@ const customHandlers = {
     v-slot="{ editor }"
     :handlers="customHandlers"
     :extensions="extensions"
+    :image="false"
     content-type="html"
     placeholder="Введите текст, / для команд"
     class="border border-accented rounded-lg"
@@ -310,25 +365,13 @@ const customHandlers = {
             size="sm"
             :active="editor.isActive('details')"
             :disabled="!editor.can().setDetails() && !editor.can().unsetDetails()"
-            @click="
-              editor.isActive('details')
-                ? editor.chain().focus().unsetDetails().run()
-                : editor.chain().focus().setDetails().run()
-            "
+            @click="toggleDetails(editor)"
           />
         </UTooltip>
       </template>
 
       <template #iframe>
-        <UTooltip text="Вставить iframe">
-          <UButton
-            icon="i-lucide-monitor-play"
-            color="neutral"
-            variant="ghost"
-            size="sm"
-            @click="addIframe(editor)"
-          />
-        </UTooltip>
+        <EditorIframePopover :editor="editor" />
       </template>
     </UEditorToolbar>
 

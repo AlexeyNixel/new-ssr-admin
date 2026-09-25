@@ -1,5 +1,8 @@
 export default defineAppConfig({
   ui: {
+    colors: {
+      purple: 'purple',
+    },
     modal: {
       slots: {
         content: 'rounded-2xl shadow-2xl overflow-hidden w-full max-w-lg',

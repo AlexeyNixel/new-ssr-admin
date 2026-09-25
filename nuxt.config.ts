@@ -13,6 +13,9 @@ export default defineNuxtConfig({
   ui: {
     colorMode: false,
     fonts: false,
+    theme: {
+      colors: ['primary', 'secondary', 'success', 'info', 'warning', 'error', 'purple'],
+    },
   },
   vite: {
     server: {

@@ -94,7 +94,7 @@ function handleKeyDown(event: KeyboardEvent) {
 
 <template>
   <UPopover v-model:open="open" :ui="{ content: 'p-0.5' }">
-    <UTooltip text="Link">
+    <UTooltip text="Ссылка">
       <UButton
         icon="i-lucide-link"
         color="neutral"
@@ -114,7 +114,7 @@ function handleKeyDown(event: KeyboardEvent) {
         name="url"
         type="url"
         variant="none"
-        placeholder="Paste a link..."
+        placeholder="Вставьте ссылку…"
         @keydown="handleKeyDown"
       >
         <div class="flex items-center mr-0.5">
@@ -123,7 +123,7 @@ function handleKeyDown(event: KeyboardEvent) {
             variant="ghost"
             size="sm"
             :disabled="!url && !active"
-            title="Apply link"
+            title="Применить"
             @click="setLink"
           />
 
@@ -135,7 +135,7 @@ function handleKeyDown(event: KeyboardEvent) {
             variant="ghost"
             size="sm"
             :disabled="!url && !active"
-            title="Open in new window"
+            title="Открыть в новой вкладке"
             @click="openLink"
           />
 
@@ -145,7 +145,7 @@ function handleKeyDown(event: KeyboardEvent) {
             variant="ghost"
             size="sm"
             :disabled="!url && !active"
-            title="Remove link"
+            title="Убрать ссылку"
             @click="removeLink"
           />
         </div>
