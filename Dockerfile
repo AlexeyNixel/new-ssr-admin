@@ -26,7 +26,7 @@ WORKDIR /app
 ENV NODE_ENV=production \
     NUXT_TELEMETRY_DISABLED=1 \
     HOST=0.0.0.0 \
-    PORT=3007
+    PORT=3002
 
 COPY --from=build --chown=node:node /app/.output ./.output
 
