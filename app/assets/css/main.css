@@ -224,15 +224,28 @@ html {
       border-radius: 0.125rem;
     }
 
+    /*
+     * Обёртка из TableView. Если столбцы в px шире редактора — таблица
+     * прокручивается внутри, а не вылезает за границы.
+     */
+    .tableWrapper {
+      max-width: 100%;
+      overflow-x: auto;
+      margin: 1rem 0;
+      padding-bottom: 2px;
+    }
+
+    &.resize-cursor {
+      cursor: col-resize;
+    }
+
     table {
       @apply shadow;
       border-collapse: collapse;
       margin: 0;
-      overflow: hidden;
       table-layout: fixed;
       width: 100%;
-      border-radius: 10px;
-      border: 1px solid black;
+      border: 1px solid var(--color-neutral-300);
 
       td,
       th {
@@ -242,9 +255,18 @@ html {
         padding: 6px 8px;
         position: relative;
         vertical-align: top;
+        /* длинные слова/ссылки не распирают столбец при уменьшении */
+        overflow-wrap: anywhere;
 
         > * {
           margin-bottom: 0;
+        }
+
+        img,
+        iframe,
+        [data-resize-wrapper],
+        [data-resize-container] {
+          max-width: 100% !important;
         }
       }
 

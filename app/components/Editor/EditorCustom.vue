@@ -6,6 +6,12 @@ import type { EditorCustomHandlers } from '#ui/types';
 import type { EditorSuggestionMenuItem } from '#ui/components/EditorSuggestionMenu.vue';
 import ImageUpload from './EditorImageUploadExtension';
 import { TableKit } from '@tiptap/extension-table';
+import {
+  FluidTableView,
+  TableCellWithWidth,
+  TableColumnWidth,
+  TableHeaderWithWidth,
+} from './tableColumnWidth';
 import { TextAlign } from '@tiptap/extension-text-align';
 import {
   Details,
@@ -50,6 +56,7 @@ const tableToolbar: EditorToolbarItem[][] = [
     },
   ],
   [
+    { slot: 'tableWidth' as const },
     {
       kind: 'deleteTable',
       icon: 'i-lucide-table-2',
@@ -185,6 +192,9 @@ const suggestionItems: EditorSuggestionMenuItem[][] = [
   ],
 ];
 
+// Пока открыт поповер ширины, фокус уходит из редактора — тулбар таблицы не прячем
+const tableWidthOpen = ref(false);
+
 const countWords = (text: string) => text.split(/\s+/).filter(Boolean).length;
 const readingMinutes = (words: number) => Math.max(1, Math.round(words / 180));
 
@@ -233,8 +243,13 @@ const extensions = [
   DetailsContent,
   TextAlign.configure({ types: ['heading', 'paragraph'] }),
   TableKit.configure({
-    table: { resizable: true },
+    table: { resizable: true, cellMinWidth: 40, View: FluidTableView },
+    tableCell: false,
+    tableHeader: false,
   }),
+  TableCellWithWidth,
+  TableHeaderWithWidth,
+  TableColumnWidth,
   ImageUpload,
   Image.configure({
     resize: {
@@ -420,8 +435,12 @@ const customHandlers = {
       :editor="editor"
       :items="tableToolbar"
       layout="bubble"
-      :should-show="({ editor, view }) => editor.isActive('table') && view.hasFocus()"
-    />
+      :should-show="({ editor, view }) => editor.isActive('table') && (view.hasFocus() || tableWidthOpen)"
+    >
+      <template #tableWidth>
+        <EditorTableWidthPopover v-model:open="tableWidthOpen" :editor="editor" />
+      </template>
+    </UEditorToolbar>
 
     <UEditorSuggestionMenu :editor="editor" :items="suggestionItems" />
 
