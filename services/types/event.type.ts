@@ -14,4 +14,5 @@ export interface EventQuery {
   limit?: number;
   page?: number;
   sortBy?: string;
+  sortOrder?: 'asc' | 'desc';
 }
