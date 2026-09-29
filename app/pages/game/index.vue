@@ -1,141 +1,196 @@
 <script setup lang="ts">
 import type { TableColumn, TableRow } from '@nuxt/ui';
-import { UBadge, UButton } from '#components';
+import { ListRowActions, ListThumb, ListVisibilityBadge, UBadge, UIcon } from '#components';
 import { useGameApi } from '~~/services/api/game.api';
-import dayjs from 'dayjs';
-import type { Game } from '~~/services/types/game.type';
+import type { Game, GameStatus } from '~~/services/types/game.type';
 import { GAME_STATUS_OPTIONS } from '~~/services/types/game.type';
+import type { Meta } from '~~/services/api';
+
+const PAGE_SIZE = 20;
 
 const toast = useToast();
 const gameApi = useGameApi();
-const gameRes = ref();
-const page = ref(1);
-const search = ref('');
 
-const statusLabel = (status: string) =>
-  GAME_STATUS_OPTIONS.find((option) => option.value === status)?.label ??
-  status;
+await redirectEditIdToPage('/game');
+
+const { page, search, filters } = useListQuery({ status: 'all' });
+
+const games = ref<Game[]>([]);
+const meta = ref<Meta>();
+const loading = ref(false);
+const counts = reactive({ all: 0, published: 0 });
 
 const fetchData = async () => {
-  gameRes.value = await gameApi.getAllGames({
-    isDeleted: true,
-    limit: 20,
-    page: page.value,
-    search: search.value,
-  });
+  loading.value = true;
+  try {
+    const res = await gameApi.getAllGames({
+      limit: PAGE_SIZE,
+      page: page.value,
+      search: search.value || undefined,
+      // наличие isDeleted = «включая скрытые»; без него — только опубликованные
+      ...(filters.status === 'all' ? { isDeleted: true } : {}),
+    });
+    games.value = res.data ?? [];
+    meta.value = res.meta;
+  } catch {
+    toast.add({ title: 'Не удалось загрузить игры', color: 'error' });
+  } finally {
+    loading.value = false;
+  }
 };
 
-await fetchData();
+const fetchCounts = async () => {
+  const [all, published] = await Promise.allSettled([
+    gameApi.getAllGames({ limit: 1, isDeleted: true }),
+    gameApi.getAllGames({ limit: 1 }),
+  ]);
+  if (all.status === 'fulfilled') counts.all = all.value.meta?.total ?? 0;
+  if (published.status === 'fulfilled') counts.published = published.value.meta?.total ?? 0;
+};
+
+await Promise.all([fetchData(), fetchCounts()]);
+watch([page, search, () => ({ ...filters })], fetchData);
+
+// ---------- Наличие в фонде ----------
+
+const STATUS_COLORS: Record<GameStatus, 'success' | 'info' | 'warning' | 'error' | 'neutral'> = {
+  IN_STOCK: 'success',
+  ON_HANDS: 'info',
+  TEMPORARILY_UNAVAILABLE: 'warning',
+  WRITTEN_OFF: 'neutral',
+  LOST: 'error',
+  DAMAGED: 'error',
+};
+const statusLabel = (status: GameStatus) =>
+  GAME_STATUS_OPTIONS.find((option) => option.value === status)?.label ?? status;
+
+// ---------- Действия ----------
+
+const setVisibility = async (game: Game, isDeleted: boolean) => {
+  const previous = game.isDeleted;
+  game.isDeleted = isDeleted;
+  try {
+    await gameApi.updateGame(game.id, { isDeleted });
+    counts.published += isDeleted ? -1 : 1;
+    toast.add({ title: isDeleted ? 'Игра скрыта' : 'Игра опубликована', color: 'success' });
+  } catch {
+    game.isDeleted = previous;
+    toast.add({ title: 'Не удалось изменить видимость', color: 'error' });
+  }
+};
+
+const rowActions = (game: Game) => [
+  [
+    { label: 'Редактировать', icon: 'i-lucide-pencil', to: `/game/admin/${game.id}` },
+    ...(game.videoUrl
+      ? [{ label: 'Видео с правилами', icon: 'i-lucide-play-circle', to: game.videoUrl, target: '_blank' }]
+      : []),
+    ...(game.rulesFile?.path
+      ? [{ label: 'Файл с правилами', icon: 'i-lucide-file-text', to: staticUrl(game.rulesFile.path), target: '_blank' }]
+      : []),
+  ],
+  [
+    {
+      label: game.isDeleted ? 'Опубликовать' : 'Скрыть с сайта',
+      icon: game.isDeleted ? 'i-lucide-eye' : 'i-lucide-eye-off',
+      onSelect: () => setVisibility(game, !game.isDeleted),
+    },
+  ],
+];
+
+// ---------- Таблица ----------
+
+const paramChip = (icon: string, text: string) =>
+  h('span', { class: 'inline-flex items-center gap-1 whitespace-nowrap' }, [
+    h(UIcon, { name: icon, class: 'size-3.5 text-dimmed' }),
+    text,
+  ]);
 
 const columns: TableColumn<Game>[] = [
   {
-    id: 'preview',
-    header: 'Обложка',
+    id: 'cover',
+    header: '',
+    meta: { class: { th: 'w-16', td: 'w-16' } },
+    cell: ({ row }) => h(ListThumb, { path: row.original.images?.[0]?.file?.path, icon: 'i-lucide-dices' }),
+  },
+  {
+    id: 'title',
+    header: 'Игра',
     cell: ({ row }) => {
-      const cover = row.original.images[0]?.file.path;
-      if (!cover)
-        return h('div', {
-          class: 'w-10 h-10 rounded bg-neutral-100 dark:bg-neutral-800',
-        });
-      return h('img', {
-        src: `http://static.infomania.ru${cover}`,
-        class: 'w-10 h-10 object-cover rounded',
-        alt: row.original.title,
-      });
+      const game = row.original;
+      const genres = (game.genres ?? []).map(({ genre }) => genre.title);
+      return h('div', { class: 'min-w-60 max-w-md space-y-1 whitespace-normal' }, [
+        h('p', { class: 'line-clamp-2 font-medium text-highlighted' }, game.title),
+        h('div', { class: 'flex flex-wrap items-center gap-1 text-xs text-muted' }, [
+          game.series
+            ? h(UBadge, { label: game.series.title, color: 'secondary', variant: 'subtle', size: 'sm' })
+            : null,
+          ...genres.slice(0, 2).map((title) => h(UBadge, { label: title, color: 'neutral', variant: 'outline', size: 'sm' })),
+          genres.length > 2 ? h('span', `+${genres.length - 2}`) : null,
+        ]),
+      ]);
     },
   },
   {
-    accessorKey: 'title',
-    header: 'Название',
+    id: 'params',
+    header: 'Параметры',
+    cell: ({ row }) => {
+      const g = row.original;
+      const players = formatRange(g.playerMin, g.playerMax);
+      const duration = formatRange(g.durationMin, g.durationMax);
+      const chips = [
+        players && paramChip('i-lucide-users', players),
+        duration && paramChip('i-lucide-timer', `${duration} мин`),
+        g.playerAge != null && paramChip('i-lucide-baby', `${g.playerAge}+`),
+      ].filter(Boolean);
+      return chips.length
+        ? h('div', { class: 'flex flex-wrap gap-x-3 gap-y-1 text-sm text-default' }, chips)
+        : h('span', { class: 'text-sm text-dimmed' }, 'Не указаны');
+    },
+  },
+  {
+    id: 'stock',
+    header: 'В фонде',
     cell: ({ row }) =>
-      h('div', { class: 'flex flex-col gap-1 max-w-xs' }, [
-        h('p', { class: 'font-medium' }, row.original.title),
-        row.original.series
-          ? h(
-              UBadge,
-              {
-                variant: 'subtle',
-                color: 'secondary',
-                size: 'sm',
-                class: 'w-max',
-              },
-              () => row.original.series?.title
-            )
-          : null,
+      h('div', { class: 'space-y-0.5' }, [
+        h(UBadge, {
+          label: statusLabel(row.original.status),
+          color: STATUS_COLORS[row.original.status] ?? 'neutral',
+          variant: 'subtle',
+          class: 'w-max',
+        }),
+        row.original.place ? h('p', { class: 'truncate text-xs text-muted' }, row.original.place) : null,
       ]),
   },
   {
     id: 'status',
-    header: 'Статус',
+    header: 'На сайте',
     cell: ({ row }) =>
-      h('div', { class: 'flex flex-col gap-1' }, [
-        h(UBadge, {
-          variant: 'subtle',
-          color:
-            row.original.status === 'IN_STOCK' ||
-            row.original.status === 'ON_HANDS'
-              ? 'success'
-              : 'warning',
-          label: statusLabel(row.original.status),
-          class: 'w-max',
-        }),
-        h(UBadge, {
-          class: 'cursor-pointer w-max',
-          variant: 'subtle',
-          color: row.original.isDeleted ? 'warning' : 'success',
-          label: row.original.isDeleted ? 'Скрыто' : 'Опубликовано',
-          onClick: (event: MouseEvent) => {
-            event.stopPropagation();
-            handleToggleVisibility(row.original);
-          },
-        }),
-      ]),
-  },
-  {
-    accessorKey: 'createdAt',
-    header: 'Дата добавления',
-    cell: ({ row }) =>
-      h(
-        'div',
-        { class: 'text-sm text-neutral-500 whitespace-nowrap' },
-        dayjs(row.original.createdAt).format('DD.MM.YYYY')
-      ),
+      h(ListVisibilityBadge, {
+        hidden: row.original.isDeleted,
+        hiddenLabel: 'Скрыта',
+        toggle: () => setVisibility(row.original, !row.original.isDeleted),
+      }),
   },
   {
     id: 'actions',
-    header: 'Действия',
-    cell: ({ row }) =>
-      h(UButton, {
-        icon: 'i-heroicons-pencil-square',
-        variant: 'outline',
-        color: 'secondary',
-        size: 'xs',
-        label: 'Редактировать',
-        to: `/game/admin/${row.original.id}`,
-      }),
+    header: '',
+    meta: { class: { td: 'w-12' } },
+    cell: ({ row }) => h(ListRowActions, { items: rowActions(row.original) }),
   },
 ];
 
-const handleToggleVisibility = async (game: Game) => {
-  game.isDeleted = !game.isDeleted;
-  await gameApi.updateGame(game.id, { isDeleted: game.isDeleted });
-  toast.add({
-    title: game.isDeleted ? 'Игра скрыта' : 'Игра восстановлена',
-    color: game.isDeleted ? 'warning' : 'success',
-  });
+const onSelect = (_: Event, row: TableRow<Game>) => navigateTo(`/game/admin/${row.original.id}`);
+
+const statusItems = computed(() => [
+  { label: `Все · ${counts.all}`, value: 'all' },
+  { label: `На сайте · ${counts.published}`, value: 'published' },
+]);
+
+const resetFilters = () => {
+  search.value = '';
+  filters.status = 'all';
 };
-
-const onSelect = (_: Event, row: TableRow<Game>) => {
-  navigateTo(`/game/admin/${row.original.id}`);
-};
-
-await redirectEditIdToPage('/game');
-
-watch(page, () => fetchData());
-watch(search, () => {
-  page.value = 1;
-  fetchData();
-});
 
 useHead({ title: 'НОМБ | Игры' });
 </script>
@@ -143,18 +198,30 @@ useHead({ title: 'НОМБ | Игры' });
 <template>
   <NuxtLayout
     v-model="page"
-    :meta="gameRes.meta"
-    title="Управление играми"
+    v-model:search="search"
     name="table"
-    :search="search"
+    title="Настольные игры"
+    :description="`${counts.all} ${plural(counts.all, ['игра', 'игры', 'игр'])} в каталоге, скрыто ${Math.max(0, counts.all - counts.published)}`"
+    create-label="Новая игра"
+    search-placeholder="Поиск по названию…"
+    :meta="meta"
+    :loading="loading"
     :event-create="() => navigateTo('/game/admin')"
-    @update:search="(value) => (search = value)"
   >
+    <template #filters>
+      <UTabs v-model="filters.status" :items="statusItems" :content="false" size="sm" />
+    </template>
+
     <UTable
-      :data="gameRes.data"
       :columns="columns"
-      :ui="{ thead: 'bg-neutral-50 dark:bg-neutral-800/50', tr: 'cursor-pointer' }"
+      :data="games"
+      :loading="loading"
+      :ui="{ thead: 'bg-elevated/50', tr: 'cursor-pointer hover:bg-elevated/40', td: 'py-3' }"
       @select="onSelect"
-    />
+    >
+      <template #empty>
+        <ListEmpty :searching="!!search || filters.status !== 'all'" title="Игр пока нет" @reset="resetFilters" />
+      </template>
+    </UTable>
   </NuxtLayout>
 </template>

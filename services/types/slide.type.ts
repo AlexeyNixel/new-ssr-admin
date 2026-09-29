@@ -9,4 +9,6 @@ export interface Slide {
   imageFileId: string;
   url: string;
   image: File;
+  /** Привязанная новость — приходит в списке слайдов */
+  post?: { id: string; title: string; slug?: string } | null;
 }
