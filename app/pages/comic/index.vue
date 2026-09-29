@@ -1,18 +1,15 @@
 <script setup lang="ts">
-import type { TableColumn } from '@nuxt/ui';
+import type { TableColumn, TableRow } from '@nuxt/ui';
 import { UBadge, UButton } from '#components';
 import { useComicApi } from '~~/services/api/comic.api';
 import dayjs from 'dayjs';
 import type { Comic } from '~~/services/types/comic.type';
-import AdminComic from '~/components/Modals/AdminComic.vue';
 
 const toast = useToast();
 const comicApi = useComicApi();
 const comicRes = ref();
 const page = ref(1);
 const search = ref('');
-const overlay = useOverlay();
-const modal = overlay.create(AdminComic);
 
 const fetchData = async () => {
   comicRes.value = await comicApi.getAllComics({
@@ -59,7 +56,7 @@ const columns: TableColumn<Comic>[] = [
               },
               () =>
                 row.original.series?.title +
-                (row.original.volumeNumber
+                (row.original.volumeNumber != null
                   ? ` · том ${row.original.volumeNumber}`
                   : '')
             )
@@ -93,7 +90,10 @@ const columns: TableColumn<Comic>[] = [
         variant: 'subtle',
         color: row.original.isDeleted ? 'warning' : 'success',
         label: row.original.isDeleted ? 'Скрыто' : 'Опубликовано',
-        onClick: () => handleToggleVisibility(row.original),
+        onClick: (event: MouseEvent) => {
+          event.stopPropagation();
+          handleToggleVisibility(row.original);
+        },
       }),
   },
   {
@@ -116,7 +116,7 @@ const columns: TableColumn<Comic>[] = [
         color: 'secondary',
         size: 'xs',
         label: 'Редактировать',
-        onClick: () => handleOpenModal(row.original),
+        to: `/comic/admin/${row.original.id}`,
       }),
   },
 ];
@@ -130,16 +130,11 @@ const handleToggleVisibility = async (comic: Comic) => {
   });
 };
 
-const handleOpenModal = async (comic?: Comic) => {
-  const instance = modal.open({ comic });
-  const result = await instance.result;
-  if (result) await fetchData();
+const onSelect = (_: Event, row: TableRow<Comic>) => {
+  navigateTo(`/comic/admin/${row.original.id}`);
 };
 
-useModalRouteOpener({
-  modal,
-  onClosed: () => fetchData(),
-});
+await redirectEditIdToPage('/comic');
 
 watch(page, () => fetchData());
 watch(search, () => {
@@ -157,13 +152,14 @@ useHead({ title: 'НОМБ | Комиксы' });
     title="Управление комиксами"
     name="table"
     :search="search"
-    :event-create="() => handleOpenModal()"
+    :event-create="() => navigateTo('/comic/admin')"
     @update:search="(value) => (search = value)"
   >
     <UTable
       :data="comicRes.data"
       :columns="columns"
-      :ui="{ thead: 'bg-neutral-50 dark:bg-neutral-800/50' }"
+      :ui="{ thead: 'bg-neutral-50 dark:bg-neutral-800/50', tr: 'cursor-pointer' }"
+      @select="onSelect"
     />
   </NuxtLayout>
 </template>

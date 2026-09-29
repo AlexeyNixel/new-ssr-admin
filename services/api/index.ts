@@ -150,7 +150,13 @@ export const useApi = () => {
       credentials: 'include',
       ...options,
     });
-    return res && typeof res === 'object' && 'data' in res ? res.data : res;
+    const entity = res && typeof res === 'object' && 'data' in res ? res.data : res;
+    // Незаполненные заглушки Nest отвечают 200 со строкой вместо сущности —
+    // считаем это ошибкой, иначе форма откроется пустой
+    if (!entity || typeof entity !== 'object') {
+      throw new Error(`Некорректный ответ ${endpoint}${id}`);
+    }
+    return entity;
   };
 
   return {

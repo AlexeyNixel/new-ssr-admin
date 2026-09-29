@@ -1,19 +1,16 @@
 <script setup lang="ts">
-import type { TableColumn } from '@nuxt/ui';
+import type { TableColumn, TableRow } from '@nuxt/ui';
 import { UBadge, UButton } from '#components';
 import { useGameApi } from '~~/services/api/game.api';
 import dayjs from 'dayjs';
 import type { Game } from '~~/services/types/game.type';
 import { GAME_STATUS_OPTIONS } from '~~/services/types/game.type';
-import AdminGame from '~/components/Modals/AdminGame.vue';
 
 const toast = useToast();
 const gameApi = useGameApi();
 const gameRes = ref();
 const page = ref(1);
 const search = ref('');
-const overlay = useOverlay();
-const modal = overlay.create(AdminGame);
 
 const statusLabel = (status: string) =>
   GAME_STATUS_OPTIONS.find((option) => option.value === status)?.label ??
@@ -87,7 +84,10 @@ const columns: TableColumn<Game>[] = [
           variant: 'subtle',
           color: row.original.isDeleted ? 'warning' : 'success',
           label: row.original.isDeleted ? 'Скрыто' : 'Опубликовано',
-          onClick: () => handleToggleVisibility(row.original),
+          onClick: (event: MouseEvent) => {
+            event.stopPropagation();
+            handleToggleVisibility(row.original);
+          },
         }),
       ]),
   },
@@ -111,7 +111,7 @@ const columns: TableColumn<Game>[] = [
         color: 'secondary',
         size: 'xs',
         label: 'Редактировать',
-        onClick: () => handleOpenModal(row.original),
+        to: `/game/admin/${row.original.id}`,
       }),
   },
 ];
@@ -125,16 +125,11 @@ const handleToggleVisibility = async (game: Game) => {
   });
 };
 
-const handleOpenModal = async (game?: Game) => {
-  const instance = modal.open({ game });
-  const result = await instance.result;
-  if (result) await fetchData();
+const onSelect = (_: Event, row: TableRow<Game>) => {
+  navigateTo(`/game/admin/${row.original.id}`);
 };
 
-useModalRouteOpener({
-  modal,
-  onClosed: () => fetchData(),
-});
+await redirectEditIdToPage('/game');
 
 watch(page, () => fetchData());
 watch(search, () => {
@@ -152,13 +147,14 @@ useHead({ title: 'НОМБ | Игры' });
     title="Управление играми"
     name="table"
     :search="search"
-    :event-create="() => handleOpenModal()"
+    :event-create="() => navigateTo('/game/admin')"
     @update:search="(value) => (search = value)"
   >
     <UTable
       :data="gameRes.data"
       :columns="columns"
-      :ui="{ thead: 'bg-neutral-50 dark:bg-neutral-800/50' }"
+      :ui="{ thead: 'bg-neutral-50 dark:bg-neutral-800/50', tr: 'cursor-pointer' }"
+      @select="onSelect"
     />
   </NuxtLayout>
 </template>

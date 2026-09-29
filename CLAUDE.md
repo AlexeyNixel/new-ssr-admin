@@ -169,9 +169,30 @@ const handleOpenModal = async (department?: Department) => {
   `isUpdate = !!props.entity`.
 
 При создании новой модалки/формы **копируй этот паттерн** (как в
-`AdminDepartment.vue`, `AdminEvent.vue`, `AdminSlide.vue`,
-`AdminNotification.vue`) — единый стиль вёрстки, отступов и кнопок уже
-унифицирован для всех сущностей.
+`AdminDepartment.vue`, `AdminNotification.vue`) — единый стиль вёрстки,
+отступов и кнопок уже унифицирован для всех сущностей.
+
+### Полноэкранные страницы редактирования (`/<entity>/admin/[[id]]`)
+
+Новости, страницы, события, слайды, игры и комиксы редактируются не в модалке,
+а на отдельной странице (эталон — `app/pages/post/admin/[[slug]].vue`):
+липкая шапка + основная колонка + боковая панель карточек.
+
+- Каркас: `app/components/EntityForm/` — `Header` (назад, статус, «Не
+  сохранено», кнопка submit — кладётся внутрь `UForm`), `Body` (слоты default
+  и `#aside`), `Card`, `Checklist` («Готовность»), `NotFound`, `TitleInput`,
+  `PublishSwitch` (поверх `isDeleted`), `AgeInput`.
+- Поведение: `useEntityForm({ snapshot, fieldLabels, submit })` из
+  `app/composables/useEntityForm.ts` — несохранённые изменения + confirm при
+  уходе, Ctrl/⌘+S, тост и прокрутка к полю при ошибке валидации (поля
+  помечаются `data-field="<name>"`). Там же `publicationStatus` и
+  `redirectEditIdToPage` (старые `?editId=` → `/<entity>/admin/<id>`).
+- Список ведёт на `/<entity>/admin/<id>` по клику на строку (`@select`);
+  клики по бейджам в строке — с `event.stopPropagation()`.
+- Числа — `UInputNumber` (очищенное поле = `undefined`/`null`, в payload
+  шлём `?? null`, иначе ключ выпадает из JSON и очистка не сохранится).
+- Время событий хранится «наивно» в UTC-нотации (`…T18:30:00.000Z` = 18:30
+  по городу) — дату/время берём из строки без перевода поясов.
 
 ### Deep-link на модалку редактирования
 
@@ -199,8 +220,8 @@ const handleOpenModal = async (department?: Department) => {
   // форму наполнять реактивно: watch(department, apply, { immediate: true })
   ```
 
-Подключено на всех 9 страницах/модалках (department, event, slide, notification,
-map-point, book, collection, navigation, club). Полный список ссылок — в
+Подключено на модалках department, notification, map-point, book, collection,
+navigation, club (event, slide, game, comic переехали на страницы — см. выше). Полный список ссылок — в
 `docs/deep-links.md`. Загрузка одной сущности: `getById<T>(endpoint, id, options?)`
 в `services/api/index.ts` (шлёт куку, разворачивает `{ data }`); в каждом
 `*.api.ts` — метод `getOne<Entity>`.

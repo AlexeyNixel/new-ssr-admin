@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { useEventApi } from '~~/services/api/event.api';
-import type { TableColumn } from '#ui/components/Table.vue';
-import { UBadge, UButton, ModalsAdminEvent } from '#components';
+import type { TableColumn, TableRow } from '#ui/components/Table.vue';
+import { UBadge, UButton } from '#components';
 import dayjs from 'dayjs';
 import utc from 'dayjs/plugin/utc';
 import type { IEvent } from '~~/services/types/event.type';
@@ -11,8 +11,6 @@ dayjs.extend(utc);
 
 const placeMap = Object.fromEntries(EVENT_PLACES.map((p) => [p.key, p.value]));
 
-const overlay = useOverlay();
-const modal = overlay.create(ModalsAdminEvent);
 const toast = useToast();
 const eventApi = useEventApi();
 const eventsRes = ref();
@@ -28,7 +26,10 @@ const columns: TableColumn<IEvent>[] = [
         variant: 'subtle',
         color: row.original.isDeleted ? 'warning' : 'success',
         label: row.original.isDeleted ? 'Скрыто' : 'Активно',
-        onClick: () => handleToggleVisibility(row.original),
+        onClick: (event: MouseEvent) => {
+          event.stopPropagation();
+          handleToggleVisibility(row.original);
+        },
       }),
   },
   {
@@ -75,7 +76,7 @@ const columns: TableColumn<IEvent>[] = [
         color: 'secondary',
         size: 'xs',
         label: 'Редактировать',
-        onClick: () => handleOpenModal(row.original),
+        to: `/event/admin/${row.original.id}`,
       }),
   },
 ];
@@ -89,16 +90,11 @@ const handleToggleVisibility = async (event: IEvent) => {
   });
 };
 
-const handleOpenModal = async (event?: IEvent) => {
-  const instance = modal.open({ event });
-  const result = await instance.result;
-  if (result) await fetchData();
+const onSelect = (_: Event, row: TableRow<IEvent>) => {
+  navigateTo(`/event/admin/${row.original.id}`);
 };
 
-useModalRouteOpener({
-  modal,
-  onClosed: () => fetchData(),
-});
+await redirectEditIdToPage('/event');
 
 const fetchData = async () => {
   eventsRes.value = await eventApi.getAllEvents({
@@ -122,12 +118,13 @@ useHead({ title: 'НОМБ | События' });
     name="table"
     title="Управление событиями"
     :meta="eventsRes.meta"
-    :event-create="() => handleOpenModal()"
+    :event-create="() => navigateTo('/event/admin')"
   >
     <UTable
       :columns="columns"
       :data="eventsRes.data"
-      :ui="{ thead: 'bg-neutral-50 dark:bg-neutral-800/50' }"
+      :ui="{ thead: 'bg-neutral-50 dark:bg-neutral-800/50', tr: 'cursor-pointer' }"
+      @select="onSelect"
     />
   </NuxtLayout>
 </template>
