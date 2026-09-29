@@ -3,6 +3,7 @@ import type { EditorToolbarItem } from '#ui/components/EditorToolbar.vue';
 import Image from '@tiptap/extension-image';
 import type { Editor } from '@tiptap/vue-3';
 import type { EditorCustomHandlers } from '#ui/types';
+import type { EditorSuggestionMenuItem } from '#ui/components/EditorSuggestionMenu.vue';
 import ImageUpload from './EditorImageUploadExtension';
 import { TableKit } from '@tiptap/extension-table';
 import { TextAlign } from '@tiptap/extension-text-align';
@@ -156,10 +157,36 @@ const items: EditorToolbarItem[][] = [
       icon: 'i-lucide-image',
       tooltip: { text: 'Загрузить изображение' },
     },
+    { slot: 'document' as const },
     { slot: 'details' as const },
     { slot: 'iframe' as const },
   ],
 ];
+
+// Меню команд по «/» в начале строки или после пробела.
+// Без иконок: при фильтрации меню переиспользует элементы, и dev-режим
+// @nuxt/icon кэширует CSS иконки со старой картинкой (heading-2 → type).
+const suggestionItems: EditorSuggestionMenuItem[][] = [
+  [
+    { kind: 'paragraph', label: 'Обычный текст' },
+    { kind: 'heading', level: 2, label: 'Заголовок 2', description: 'Крупный подзаголовок' },
+    { kind: 'heading', level: 3, label: 'Заголовок 3', description: 'Средний подзаголовок' },
+    { kind: 'heading', level: 4, label: 'Заголовок 4', description: 'Мелкий подзаголовок' },
+  ],
+  [
+    { kind: 'bulletList', label: 'Маркированный список' },
+    { kind: 'orderedList', label: 'Нумерованный список' },
+    { kind: 'blockquote', label: 'Цитата' },
+    { kind: 'horizontalRule', label: 'Разделитель' },
+  ],
+  [
+    { kind: 'imageUpload', label: 'Изображение', description: 'Загрузить с компьютера' },
+    { kind: 'insertTable', label: 'Таблица', description: '3 × 3 с заголовком' },
+  ],
+];
+
+const countWords = (text: string) => text.split(/\s+/).filter(Boolean).length;
+const readingMinutes = (words: number) => Math.max(1, Math.round(words / 180));
 
 const bubbleToolBar: EditorToolbarItem[][] = [
   [
@@ -336,22 +363,34 @@ const customHandlers = {
 </script>
 
 <template>
+  <!--
+    Тулбар прилипает к верху прокручиваемой области. Если над редактором
+    есть своя липкая шапка, её высоту задают через --editor-toolbar-top.
+  -->
   <UEditor
     v-slot="{ editor }"
     :handlers="customHandlers"
     :extensions="extensions"
     :image="false"
     content-type="html"
-    placeholder="Введите текст, / для команд"
-    class="border border-accented rounded-lg"
+    placeholder="Начните писать или нажмите «/» для вставки блока"
+    class="border border-default rounded-lg bg-default flex flex-col"
     :ui="{
-      base: 'p-4 sm:p-4',
-      content: 'max-w-3xl mx-auto',
+      base: 'px-4 py-5 sm:px-8 min-h-64',
+      content: 'max-w-3xl w-full mx-auto',
     }"
   >
-    <UEditorToolbar :editor="editor" :items="items">
+    <UEditorToolbar
+      :editor="editor"
+      :items="items"
+      class="sticky top-(--editor-toolbar-top,0px) z-10 rounded-t-lg border-b border-default bg-default/95 backdrop-blur px-1.5 py-1 flex-wrap gap-y-1"
+    >
       <template #link>
         <EditorLinkPopover :editor="editor" auto-open />
+      </template>
+
+      <template #document>
+        <EditorDocumentUpload :editor="editor" />
       </template>
 
       <template #details>
@@ -383,5 +422,15 @@ const customHandlers = {
       layout="bubble"
       :should-show="({ editor, view }) => editor.isActive('table') && view.hasFocus()"
     />
+
+    <UEditorSuggestionMenu :editor="editor" :items="suggestionItems" />
+
+    <div
+      class="order-last flex items-center justify-end gap-3 border-t border-default px-4 py-1.5 text-xs text-muted rounded-b-lg"
+    >
+      <span>{{ countWords(editor.getText()) }} сл.</span>
+      <span>{{ editor.getText().length }} симв.</span>
+      <span v-if="countWords(editor.getText())">~{{ readingMinutes(countWords(editor.getText())) }} мин чтения</span>
+    </div>
   </UEditor>
 </template>
