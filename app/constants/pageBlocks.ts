@@ -62,6 +62,12 @@ export const PAGE_BLOCK_TYPES: PageBlockTypeMeta[] = [
     description: 'Произвольный HTML-контент',
     icon: 'i-heroicons-document-text',
   },
+  {
+    type: 'archive',
+    label: 'Архив',
+    description: 'Свёрнутый список датированных ссылок (выпуски, новости)',
+    icon: 'i-heroicons-folder-open',
+  },
 ];
 
 export const getPageBlockMeta = (type: PageBlockType): PageBlockTypeMeta =>
@@ -99,5 +105,7 @@ export const createPageBlock = (type: PageBlockType): PageBlock => {
       return { type: 'banner', text: '' };
     case 'richText':
       return { type: 'richText', html: '' };
+    case 'archive':
+      return { type: 'archive', title: '', note: '', items: [] };
   }
 };
