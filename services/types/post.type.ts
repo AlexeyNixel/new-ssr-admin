@@ -14,6 +14,7 @@ export interface Post {
   title: string;
 
   departmentId: string;
+  previewFileId?: string;
   tagId: string[];
   fileId: string;
 
@@ -28,3 +29,8 @@ export interface Post {
   };
   tags: Tag[];
 }
+
+// Тело запроса создания/обновления: теги передаются массивом id
+export type PostPayload = Partial<Omit<Post, 'tags'>> & {
+  tags?: string[];
+};

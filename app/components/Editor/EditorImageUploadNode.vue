@@ -5,6 +5,7 @@ import { useUploadApi } from '~~/services/api/upload.api';
 
 const props = defineProps<NodeViewProps>();
 const uploadApi = useUploadApi();
+const toast = useToast();
 const file = ref<File | null>(null);
 const loading = ref(false);
 
@@ -12,28 +13,13 @@ watch(file, async (newFile) => {
   if (!newFile) return;
 
   loading.value = true;
-
-  const reader = new FileReader();
-  reader.onload = async (e) => {
-    const dataUrl = e.target?.result as string;
-    if (!dataUrl) {
-      loading.value = false;
-      return;
-    }
-
+  try {
     const body = new FormData();
     body.append('file', newFile);
-
-    // Simulate upload delay
     const res = await uploadApi.uploadImage(body);
 
-    console.log(res);
-
     const pos = props.getPos();
-    if (typeof pos !== 'number') {
-      loading.value = false;
-      return;
-    }
+    if (typeof pos !== 'number') return;
 
     props.editor
       .chain()
@@ -41,10 +27,12 @@ watch(file, async (newFile) => {
       .deleteRange({ from: pos, to: pos + 1 })
       .setImage({ src: `http://static.infomania.ru${res.path}` })
       .run();
-
+  } catch {
+    toast.add({ title: 'Не удалось загрузить изображение', color: 'error' });
+    file.value = null;
+  } finally {
     loading.value = false;
-  };
-  reader.readAsDataURL(newFile);
+  }
 });
 </script>
 
@@ -54,7 +42,7 @@ watch(file, async (newFile) => {
       v-model="file"
       accept="image/*"
       label="Загрузить изображение"
-      description="PNG, JPG  (макс. 2MB)"
+      description="PNG, JPG, WEBP (макс. 2 МБ)"
       :preview="false"
       class="min-h-48"
     >
