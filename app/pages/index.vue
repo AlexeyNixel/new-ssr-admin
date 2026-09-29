@@ -129,13 +129,13 @@ const ACTION_LABELS: Record<AuditLogEntry['action'], { label: string; color: 'su
 };
 
 // Только те типы, для которых точно известен рабочий URL редактирования
-// (см. docs/deep-links.md + /post/admin/:id). Page сюда не входит — бэкенд
+// (см. docs/deep-links.md: /post|event|slide/admin/:id и ?editId для модалок). Page сюда не входит — бэкенд
 // ищет её по slug, а в журнале есть только id.
 const ENTITY_LINK_BUILDERS: Partial<Record<string, (id: string) => string>> = {
   Post: (id) => `/post/admin/${id}`,
   Department: (id) => `/department?editId=${id}`,
-  Event: (id) => `/event?editId=${id}`,
-  MainSliderSlide: (id) => `/slide?editId=${id}`,
+  Event: (id) => `/event/admin/${id}`,
+  MainSliderSlide: (id) => `/slide/admin/${id}`,
   Notification: (id) => `/notification?editId=${id}`,
   MapPoint: (id) => `/map-point?editId=${id}`,
   Book: (id) => `/book?editId=${id}`,
@@ -322,7 +322,7 @@ useHead({ title: 'НОМБ | Панель управления' });
         <ul v-else class="space-y-1">
           <li v-for="event in upcomingEvents" :key="event.id">
             <NuxtLink
-              :to="`/event?editId=${event.id}`"
+              :to="`/event/admin/${event.id}`"
               class="block px-2 py-1.5 rounded-md hover:bg-gray-100 transition-colors"
             >
               <p class="text-sm font-medium text-gray-800 truncate">{{ event.title }}</p>

@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { usePageApi } from '~~/services/api/page.api';
-import type { TableColumn } from '#ui/components/Table.vue';
+import type { TableColumn, TableRow } from '#ui/components/Table.vue';
 import type { Page } from '~~/services/types/page.type';
 import { UBadge, UButton } from '#components';
 
@@ -19,7 +19,10 @@ const columns: TableColumn<Page>[] = [
         variant: 'subtle',
         color: row.original.isDeleted ? 'warning' : 'success',
         label: row.original.isDeleted ? 'Скрыто' : 'Опубликовано',
-        onClick: () => handleToggleVisibility(row.original),
+        onClick: (event: MouseEvent) => {
+          event.stopPropagation();
+          handleToggleVisibility(row.original);
+        },
       }),
   },
   {
@@ -44,7 +47,7 @@ const columns: TableColumn<Page>[] = [
         color: 'secondary',
         size: 'xs',
         label: 'Редактировать',
-        onClick: () => navigateTo('/page/admin/' + row.original.slug),
+        to: '/page/admin/' + row.original.slug,
       }),
   },
 ];
@@ -56,6 +59,10 @@ const handleToggleVisibility = async (p: Page) => {
     title: p.isDeleted ? 'Страница скрыта' : 'Страница опубликована',
     color: p.isDeleted ? 'warning' : 'success',
   });
+};
+
+const onSelect = (_: Event, row: TableRow<Page>) => {
+  navigateTo('/page/admin/' + row.original.slug);
 };
 
 const fetchData = async () => {
@@ -83,7 +90,8 @@ useHead({ title: 'НОМБ | Страницы' });
     <UTable
       :columns="columns"
       :data="pageResult.data"
-      :ui="{ thead: 'bg-neutral-50 dark:bg-neutral-800/50' }"
+      :ui="{ thead: 'bg-neutral-50 dark:bg-neutral-800/50', tr: 'cursor-pointer' }"
+      @select="onSelect"
     />
   </NuxtLayout>
 </template>

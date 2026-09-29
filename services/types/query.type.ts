@@ -4,5 +4,6 @@ export interface IQuery {
   isDeleted?: boolean;
   sortBy?: string;
   sortOrder?: 'desc' | 'asc';
-  include?: string
+  include?: string;
+  search?: string;
 }

@@ -1,27 +1,19 @@
 <script setup lang="ts">
 import { useSlideApi } from '~~/services/api/slide.api';
-import type { TableColumn } from '#ui/components/Table.vue';
+import type { TableColumn, TableRow } from '#ui/components/Table.vue';
 import type { Slide } from '~~/services/types/slide.type';
 import dayjs from 'dayjs';
-import { ModalsAdminSlide, UBadge, UButton } from '#components';
+import { UBadge, UButton } from '#components';
 
-const overlay = useOverlay();
 const slideApi = useSlideApi();
 const slidesRes = ref();
 const page = ref(1);
 
-const modal = overlay.create(ModalsAdminSlide);
+await redirectEditIdToPage('/slide');
 
-const handleOpenModal = async (slide?: Slide) => {
-  const instance = modal.open({ slide });
-  const result = await instance.result;
-  if (result) await fetchData();
+const onSelect = (_: Event, row: TableRow<Slide>) => {
+  navigateTo(`/slide/admin/${row.original.id}`);
 };
-
-useModalRouteOpener({
-  modal,
-  onClosed: () => fetchData(),
-});
 
 const columns: TableColumn<Slide>[] = [
   {
@@ -39,10 +31,10 @@ const columns: TableColumn<Slide>[] = [
     header: 'Изображение',
     cell: ({ row }) => {
       if (!row.original.image?.path)
-        return h('div', { class: 'w-28 h-16 rounded bg-neutral-100 dark:bg-neutral-800' });
+        return h('div', { class: 'w-32 aspect-[127/50] rounded bg-neutral-100 dark:bg-neutral-800' });
       return h('img', {
         src: `http://static.infomania.ru${row.original.image.path}`,
-        class: 'w-28 h-16 object-cover rounded',
+        class: 'w-32 aspect-[127/50] object-cover rounded',
         alt: row.original.image.originalName,
       });
     },
@@ -77,7 +69,7 @@ const columns: TableColumn<Slide>[] = [
         color: 'secondary',
         size: 'xs',
         label: 'Редактировать',
-        onClick: () => handleOpenModal(row.original),
+        to: `/slide/admin/${row.original.id}`,
       }),
   },
 ];
@@ -104,12 +96,13 @@ useHead({ title: 'НОМБ | Слайды' });
     name="table"
     title="Управление слайдами"
     :meta="slidesRes.meta"
-    :event-create="handleOpenModal"
+    :event-create="() => navigateTo('/slide/admin')"
   >
     <UTable
       :columns="columns"
       :data="slidesRes.data"
-      :ui="{ thead: 'bg-neutral-50 dark:bg-neutral-800/50' }"
+      :ui="{ thead: 'bg-neutral-50 dark:bg-neutral-800/50', tr: 'cursor-pointer' }"
+      @select="onSelect"
     />
   </NuxtLayout>
 </template>

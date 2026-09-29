@@ -34,8 +34,6 @@
 | Раздел          | URL для открытия модалки редактирования | GET по id                        |
 | --------------- | --------------------------------------- | -------------------------------- |
 | Отделы          | `/department?editId=<id>`               | `GET /api/departments/:id`       |
-| События         | `/event?editId=<id>`                    | `GET /api/event/:id`             |
-| Слайды          | `/slide?editId=<id>`                    | `GET /api/main-slider/:id?include=image` |
 | Уведомления     | `/notification?editId=<id>`             | `GET /api/notification/:id`      |
 | Точки на карте  | `/map-point?editId=<id>`                | `GET /api/map-point/:id`         |
 | Книги           | `/book?editId=<id>`                     | `GET /api/book/:id?include=preview` |
@@ -43,18 +41,26 @@
 | Навигация       | `/navigation?editId=<id>`               | `GET /api/navigation-item/:id`   |
 | Клубы           | `/club?editId=<id>`                     | `GET /api/clubs/:id?include=preview` |
 
-Пример: `https://admin.infomania.ru/event?editId=1f0c...` — откроется страница
-«События» с уже открытой модалкой редактирования этого события.
+Пример: `https://admin.infomania.ru/book?editId=1f0c...` — откроется страница
+«Книги» с уже открытой модалкой редактирования этой книги.
 
-## Посты и страницы
+## Разделы с отдельной страницей редактирования
 
-Посты и статичные страницы редактируются не в модалке, а на отдельном роуте —
-deep-link им не нужен:
+Эти разделы редактируются не в модалке, а на полноэкранной странице
+(общий каркас — `app/components/EntityForm/*` + `useEntityForm`):
 
-| Раздел  | URL редактирования        |
-| ------- | ------------------------- |
-| Посты   | `/post/admin/<slug>`      |
-| Страницы| `/page/admin/<slug>`      |
+| Раздел   | URL редактирования       | Создание          |
+| -------- | ------------------------ | ----------------- |
+| Посты    | `/post/admin/<id>`       | `/post/admin`     |
+| Страницы | `/page/admin/<slug>`     | `/page/admin`     |
+| События  | `/event/admin/<id>`      | `/event/admin`    |
+| Слайды   | `/slide/admin/<id>`      | `/slide/admin`    |
+| Игры     | `/game/admin/<id>`       | `/game/admin`     |
+| Комиксы  | `/comic/admin/<id>`      | `/comic/admin`    |
+
+Старые ссылки `/event?editId=<id>`, `/slide?editId=<id>`, `/game?editId=<id>`,
+`/comic?editId=<id>` продолжают работать: список перенаправляет на
+`/<раздел>/admin/<id>` (`redirectEditIdToPage` в `useEntityForm.ts`).
 
 ## Как подключить к новой сущности
 
