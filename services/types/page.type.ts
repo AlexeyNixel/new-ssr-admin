@@ -44,10 +44,18 @@ export interface PageFeaturesBlock {
   items: PageFeaturesBlockItem[];
 }
 
+export interface PageTagsBlockLinkItem {
+  text: string;
+  url?: string;
+}
+
+/** Строка — старый формат (тег без ссылки), объект — тег, который может быть ссылкой. */
+export type PageTagsBlockItem = string | PageTagsBlockLinkItem;
+
 export interface PageTagsBlock {
   type: 'tags';
   title?: string;
-  items: string[];
+  items: PageTagsBlockItem[];
 }
 
 export interface PageAdvantagesBlock {
@@ -80,6 +88,19 @@ export interface PageRichTextBlock {
   html: string;
 }
 
+export interface PageArchiveBlockItem {
+  date?: string;
+  text: string;
+  url: string;
+}
+
+export interface PageArchiveBlock {
+  type: 'archive';
+  title: string;
+  note?: string;
+  items: PageArchiveBlockItem[];
+}
+
 export type PageContentBlock =
   | PageStatsBlock
   | PageFeaturesBlock
@@ -88,7 +109,8 @@ export type PageContentBlock =
   | PageHighlightBlock
   | PagePersonBlock
   | PageBannerBlock
-  | PageRichTextBlock;
+  | PageRichTextBlock
+  | PageArchiveBlock;
 
 export type PageBlock = PageHeroBlock | PageContentBlock;
 

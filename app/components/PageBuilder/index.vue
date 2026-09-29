@@ -51,6 +51,8 @@ const getSummary = (block: PageBlock): string | undefined => {
       return block.text;
     case 'richText':
       return 'Произвольный HTML-контент';
+    case 'archive':
+      return block.title || `Ссылок: ${block.items.length}`;
   }
 };
 
@@ -84,6 +86,7 @@ useSortable('.page-blocks-list', blocks, {
         <PageBuilderBlockPerson v-else-if="block.type === 'person'" :block="block" />
         <PageBuilderBlockBanner v-else-if="block.type === 'banner'" :block="block" />
         <PageBuilderBlockRichText v-else-if="block.type === 'richText'" :block="block" />
+        <PageBuilderBlockArchive v-else-if="block.type === 'archive'" :block="block" />
       </PageBuilderBlockCard>
     </div>
 
