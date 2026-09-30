@@ -113,6 +113,7 @@ const navGroups: NavGroup[] = [
 ];
 
 const route = useRoute();
+const siteUrl = useRuntimeConfig().public.siteUrl as string;
 
 const navItems = computed<NavigationMenuItem[]>(() =>
   navGroups.map((group) => {
@@ -169,6 +170,22 @@ const handleLogout = async () => {
           <p class="text-xs text-gray-400">Админ панель</p>
         </div>
       </NuxtLink>
+
+      <!-- Переход на публичный сайт: в новой вкладке, чтобы админка осталась открытой -->
+      <UButton
+        :to="siteUrl"
+        target="_blank"
+        rel="noopener"
+        color="neutral"
+        variant="soft"
+        icon="i-lucide-globe"
+        trailing-icon="i-lucide-arrow-up-right"
+        block
+        class="mt-4 cursor-pointer"
+        :ui="{ trailingIcon: 'ms-auto size-4 text-gray-400' }"
+      >
+        Перейти на сайт
+      </UButton>
     </div>
 
     <!-- Навигация -->

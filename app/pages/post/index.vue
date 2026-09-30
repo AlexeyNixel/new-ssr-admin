@@ -6,7 +6,7 @@ import { useDepartmentApi } from '~~/services/api/department.api';
 import type { Post } from '~~/services/types/post.type';
 import type { Meta } from '~~/services/api';
 
-const SITE_URL = 'http://dev.infomania.ru/entry/';
+const SITE_URL = `${useRuntimeConfig().public.siteUrl}/entry/`;
 const PAGE_SIZE = 20;
 
 const postApi = usePostApi();

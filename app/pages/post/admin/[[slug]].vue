@@ -18,7 +18,7 @@ const toast = useToast();
 const postApi = usePostApi();
 const departmentApi = useDepartmentApi();
 
-const SITE_URL = 'http://dev.infomania.ru/entry/';
+const SITE_URL = `${useRuntimeConfig().public.siteUrl}/entry/`;
 
 const form = reactive({
   title: '',
