@@ -1,11 +1,19 @@
 <script setup lang="ts">
 import { useSortable } from '@vueuse/integrations/useSortable';
 import type { PageBlock, PageBlockType } from '~~/services/types/page.type';
-import { PAGE_BLOCK_TYPES, createPageBlock, getPageBlockMeta } from '~/constants/pageBlocks';
+import {
+  PAGE_BLOCK_TYPES,
+  createPageBlock,
+  getPageBlockMeta,
+  getPageBlockSummary,
+} from '~/constants/pageBlocks';
+import { stringifyPageBlocks } from '~/utils/pageBlockCode';
 
 const blocks = defineModel<PageBlock[]>({ required: true });
 
-const hasHero = computed(() => blocks.value.some((block) => block.type === 'hero'));
+const hasHero = computed(() =>
+  blocks.value.some((block) => block.type === 'hero')
+);
 
 const addMenuItems = computed(() =>
   PAGE_BLOCK_TYPES.map((meta) => ({
@@ -31,29 +39,36 @@ const removeBlock = (index: number) => {
   blocks.value.splice(index, 1);
 };
 
-const getSummary = (block: PageBlock): string | undefined => {
-  switch (block.type) {
-    case 'hero':
-      return block.title;
-    case 'stats':
-      return `Пунктов: ${block.items.length}`;
-    case 'features':
-      return `Направлений: ${block.items.length}`;
-    case 'tags':
-      return block.title || `Тегов: ${block.items.length}`;
-    case 'advantages':
-      return block.title;
-    case 'highlight':
-      return block.title;
-    case 'person':
-      return block.name;
-    case 'banner':
-      return block.text;
-    case 'richText':
-      return 'Произвольный HTML-контент';
-    case 'archive':
-      return block.title || `Ссылок: ${block.items.length}`;
-  }
+const toast = useToast();
+const { copy } = useClipboard({ legacy: true });
+
+const showCodeImport = ref(false);
+const openCodeImport = () => {
+  showCodeImport.value = true;
+};
+
+const addBlocksFromCode = (imported: PageBlock[]) => {
+  const hero = imported.find((block) => block.type === 'hero');
+  if (hero) blocks.value.unshift(hero);
+  blocks.value.push(...imported.filter((block) => block.type !== 'hero'));
+
+  showCodeImport.value = false;
+  toast.add({
+    title:
+      imported.length > 1
+        ? `Добавлено блоков: ${imported.length}`
+        : 'Блок добавлен',
+    color: 'success',
+  });
+};
+
+const copyCode = async (data: PageBlock | PageBlock[]) => {
+  await copy(stringifyPageBlocks(data));
+  toast.add({
+    title: 'Код скопирован',
+    color: 'success',
+    icon: 'i-heroicons-clipboard-document-check',
+  });
 };
 
 useSortable('.page-blocks-list', blocks, {
@@ -64,7 +79,10 @@ useSortable('.page-blocks-list', blocks, {
 
 <template>
   <div class="space-y-4">
-    <p v-if="!blocks.length" class="text-sm text-neutral-500 dark:text-neutral-400">
+    <p
+      v-if="!blocks.length"
+      class="text-sm text-neutral-500 dark:text-neutral-400"
+    >
       Блоков пока нет — добавьте первый блок ниже
     </p>
 
@@ -74,30 +92,83 @@ useSortable('.page-blocks-list', blocks, {
         :key="index"
         :icon="getPageBlockMeta(block.type).icon"
         :label="getPageBlockMeta(block.type).label"
-        :summary="getSummary(block)"
+        :summary="getPageBlockSummary(block)"
         @remove="removeBlock(index)"
+        @copy="copyCode(block)"
       >
         <PageBuilderBlockHero v-if="block.type === 'hero'" :block="block" />
-        <PageBuilderBlockStats v-else-if="block.type === 'stats'" :block="block" />
-        <PageBuilderBlockFeatures v-else-if="block.type === 'features'" :block="block" />
-        <PageBuilderBlockTags v-else-if="block.type === 'tags'" :block="block" />
-        <PageBuilderBlockAdvantages v-else-if="block.type === 'advantages'" :block="block" />
-        <PageBuilderBlockHighlight v-else-if="block.type === 'highlight'" :block="block" />
-        <PageBuilderBlockPerson v-else-if="block.type === 'person'" :block="block" />
-        <PageBuilderBlockBanner v-else-if="block.type === 'banner'" :block="block" />
-        <PageBuilderBlockRichText v-else-if="block.type === 'richText'" :block="block" />
-        <PageBuilderBlockArchive v-else-if="block.type === 'archive'" :block="block" />
+        <PageBuilderBlockStats
+          v-else-if="block.type === 'stats'"
+          :block="block"
+        />
+        <PageBuilderBlockFeatures
+          v-else-if="block.type === 'features'"
+          :block="block"
+        />
+        <PageBuilderBlockTags
+          v-else-if="block.type === 'tags'"
+          :block="block"
+        />
+        <PageBuilderBlockAdvantages
+          v-else-if="block.type === 'advantages'"
+          :block="block"
+        />
+        <PageBuilderBlockHighlight
+          v-else-if="block.type === 'highlight'"
+          :block="block"
+        />
+        <PageBuilderBlockPerson
+          v-else-if="block.type === 'person'"
+          :block="block"
+        />
+        <PageBuilderBlockBanner
+          v-else-if="block.type === 'banner'"
+          :block="block"
+        />
+        <PageBuilderBlockRichText
+          v-else-if="block.type === 'richText'"
+          :block="block"
+        />
+        <PageBuilderBlockArchive
+          v-else-if="block.type === 'archive'"
+          :block="block"
+        />
       </PageBuilderBlockCard>
     </div>
 
-    <UDropdownMenu :items="addMenuItems" :content="{ align: 'start' }">
+    <PageBuilderCodeImport
+      v-if="showCodeImport"
+      :has-hero="hasHero"
+      @add="addBlocksFromCode"
+      @cancel="showCodeImport = false"
+    />
+
+    <div class="flex flex-wrap items-center gap-2">
+      <UDropdownMenu :items="addMenuItems" :content="{ align: 'start' }">
+        <UButton
+          icon="i-heroicons-plus-20-solid"
+          color="neutral"
+          variant="subtle"
+          label="Добавить блок"
+        />
+      </UDropdownMenu>
       <UButton
-        icon="i-heroicons-plus-20-solid"
+        v-if="!showCodeImport"
+        icon="i-heroicons-code-bracket-20-solid"
         color="neutral"
-        variant="subtle"
-        label="Добавить блок"
+        variant="ghost"
+        label="Вставить код"
+        @click="openCodeImport"
       />
-    </UDropdownMenu>
+      <UButton
+        v-if="blocks.length"
+        icon="i-heroicons-clipboard-document-20-solid"
+        color="neutral"
+        variant="ghost"
+        label="Скопировать код всех блоков"
+        @click="copyCode(blocks)"
+      />
+    </div>
   </div>
 </template>
 

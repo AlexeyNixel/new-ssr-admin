@@ -5,7 +5,7 @@ defineProps<{
   summary?: string;
 }>();
 
-defineEmits<{ remove: [] }>();
+defineEmits<{ remove: []; copy: [] }>();
 </script>
 
 <template>
@@ -21,7 +21,9 @@ defineEmits<{ remove: [] }>();
       />
       <UIcon :name="icon" class="w-5 h-5 text-primary shrink-0" />
       <div class="min-w-0">
-        <p class="font-medium text-sm text-neutral-900 dark:text-white truncate">
+        <p
+          class="font-medium text-sm text-neutral-900 dark:text-white truncate"
+        >
           {{ label }}
         </p>
         <p
@@ -32,11 +34,20 @@ defineEmits<{ remove: [] }>();
         </p>
       </div>
       <UButton
+        icon="i-heroicons-code-bracket-20-solid"
+        color="neutral"
+        variant="ghost"
+        size="xs"
+        class="ml-auto shrink-0"
+        title="Скопировать код блока"
+        @click="$emit('copy')"
+      />
+      <UButton
         icon="i-heroicons-trash-20-solid"
         color="error"
         variant="ghost"
         size="xs"
-        class="ml-auto shrink-0"
+        class="shrink-0"
         @click="$emit('remove')"
       />
     </div>

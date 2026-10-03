@@ -109,3 +109,29 @@ export const createPageBlock = (type: PageBlockType): PageBlock => {
       return { type: 'archive', title: '', note: '', items: [] };
   }
 };
+
+/** Короткое описание блока для шапки карточки и предпросмотра. */
+export const getPageBlockSummary = (block: PageBlock): string | undefined => {
+  switch (block.type) {
+    case 'hero':
+      return block.title;
+    case 'stats':
+      return `Пунктов: ${block.items.length}`;
+    case 'features':
+      return `Направлений: ${block.items.length}`;
+    case 'tags':
+      return block.title || `Тегов: ${block.items.length}`;
+    case 'advantages':
+      return block.title;
+    case 'highlight':
+      return block.title;
+    case 'person':
+      return block.name;
+    case 'banner':
+      return block.text;
+    case 'richText':
+      return 'Произвольный HTML-контент';
+    case 'archive':
+      return block.title || `Ссылок: ${block.items.length}`;
+  }
+};
