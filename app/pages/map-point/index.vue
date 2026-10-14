@@ -25,16 +25,18 @@ const columns: TableColumn<IMapPoint>[] = [
       }),
   },
   {
+    accessorKey: 'description',
+    header: 'Место',
+    cell: ({ row }) =>
+      h('p', { class: ' max-w-xs text-wrap' }, row.original.description),
+  },
+  {
     accessorKey: 'title',
     header: 'Название',
     cell: ({ row }) =>
-      h('p', { class: 'font-medium max-w-xs' }, row.original.title),
+      h('p', { class: 'font-medium max-w-xs text-wrap' }, row.original.title),
   },
-  {
-    accessorKey: 'description',
-    header: 'Место',
-    cell: ({ row }) => h('p', { class: ' max-w-xs' }, row.original.description),
-  },
+
   {
     accessorKey: 'lat',
     header: 'Координаты',

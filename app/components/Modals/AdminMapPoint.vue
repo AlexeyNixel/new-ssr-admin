@@ -21,8 +21,11 @@ const { entity: mapPoint, pending, notFound } = useModalEntity({
 const isUpdate = computed(() => !!mapPoint.value);
 
 const position = ref<string>();
+const imagePath = ref('');
 
-const newMapPoint = ref<Partial<IMapPoint>>({
+const newMapPoint = ref<
+  Partial<Omit<IMapPoint, 'imageFileId'>> & { imageFileId?: string }
+>({
   title: '',
   description: '',
   content: '',
@@ -47,6 +50,7 @@ watch(
       preset: value.preset || '',
       isDeleted: value.isDeleted || false,
     };
+    imagePath.value = value.image?.path ?? '';
     if (value.lat != null && value.lng != null) {
       position.value = `${value.lat}, ${value.lng}`;
     }
@@ -64,7 +68,11 @@ const onSubmit = async () => {
 
   try {
     if (isUpdate.value && mapPoint.value) {
-      await mapPointApi.updateMapPoint(mapPoint.value.id, newMapPoint.value);
+      // ?? null — иначе после удаления картинки ключ выпадет из JSON
+      await mapPointApi.updateMapPoint(mapPoint.value.id, {
+        ...newMapPoint.value,
+        imageFileId: newMapPoint.value.imageFileId ?? null,
+      });
       toast.add({ title: 'Точка обновлена' });
     } else {
       await mapPointApi.createMapPoint(newMapPoint.value);
@@ -112,18 +120,17 @@ const onSubmit = async () => {
           class="space-y-5"
           @submit="onSubmit"
         >
-          <UFormField name="image" label="Изображение точки">
-            <UiUploadImage
-              v-model="newMapPoint.imageFileId!"
-              :preview="mapPoint?.imageFileId"
-              class="w-full"
+          <UFormField name="imageFileId" label="Изображение точки">
+            <PostCover
+              v-model="newMapPoint.imageFileId"
+              v-model:path="imagePath"
+              alt="Изображение точки"
             />
           </UFormField>
 
-          <UFormField name="description" label="Введите адрес">
+          <UFormField name="description" label="Место">
             <UInput
               v-model="newMapPoint.description"
-              placeholder="г. Новосибирск, Красный проспект 26"
               icon="i-heroicons-map-pin-20-solid"
               class="w-full"
             />
@@ -133,7 +140,6 @@ const onSubmit = async () => {
             <UInput
               v-model="newMapPoint.title"
               class="w-full"
-              placeholder="Например: НОМБ"
               size="md"
             />
           </UFormField>
@@ -146,7 +152,6 @@ const onSubmit = async () => {
             <UInput
               v-model="position"
               step="any"
-              placeholder="37.618423"
               icon="i-heroicons-globe-alt-20-solid"
               class="w-full"
             />
@@ -156,7 +161,6 @@ const onSubmit = async () => {
             <UInput
               v-model="newMapPoint.preset"
               class="w-full"
-              placeholder="Например: islands#blueDotIcon"
               icon="i-heroicons-tag-20-solid"
               size="md"
             />
@@ -164,46 +168,6 @@ const onSubmit = async () => {
               Идентификатор стиля метки на карте
             </p>
           </UFormField>
-
-          <!--          <UFormField label="Статус точки">-->
-          <!--            <div-->
-          <!--              class="p-4 bg-neutral-50 dark:bg-neutral-800/50 rounded-xl border border-neutral-200 dark:border-neutral-700"-->
-          <!--            >-->
-          <!--              <div class="flex items-center justify-between">-->
-          <!--                <div class="flex items-center gap-2">-->
-          <!--                  <UIcon-->
-          <!--                    :name="-->
-          <!--                      newMapPoint.isDeleted-->
-          <!--                        ? 'i-heroicons-eye-slash-20-solid'-->
-          <!--                        : 'i-heroicons-eye-20-solid'-->
-          <!--                    "-->
-          <!--                    class="w-4 h-4"-->
-          <!--                    :class="-->
-          <!--                      newMapPoint.isDeleted-->
-          <!--                        ? 'text-neutral-500'-->
-          <!--                        : 'text-green-500'-->
-          <!--                    "-->
-          <!--                  />-->
-          <!--                  <p-->
-          <!--                    class="text-sm font-medium text-neutral-900 dark:text-white"-->
-          <!--                  >-->
-          <!--                    {{-->
-          <!--                      newMapPoint.isDeleted ? 'Точка скрыта' : 'Точка активна'-->
-          <!--                    }}-->
-          <!--                  </p>-->
-          <!--                </div>-->
-          <!--                <USwitch v-model="newMapPoint.isDeleted" />-->
-          <!--              </div>-->
-          <!--            </div>-->
-          <!--            <p class="text-xs text-neutral-500 dark:text-neutral-400">-->
-          <!--              {{-->
-          <!--                !newMapPoint.isDeleted-->
-          <!--                  ? 'Точка видна всем пользователям'-->
-          <!--                  : 'Точка не отображается на карте'-->
-          <!--              }}-->
-          <!--            </p>-->
-          <!--          </UFormField>-->
-
           <div
             class="flex items-center justify-end gap-3 pt-4 mt-2 border-t border-neutral-200 dark:border-neutral-700"
           >

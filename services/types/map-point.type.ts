@@ -1,8 +1,11 @@
+import type { File } from './file.type';
+
 export interface IMapPoint {
   id: string;
   title: string;
   description?: string;
-  imageFileId?: string;
+  imageFileId?: string | null;
+  image?: File | null;
   content?: string;
   lat: number;
   lng: number;
