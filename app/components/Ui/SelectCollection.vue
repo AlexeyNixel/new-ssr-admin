@@ -28,6 +28,13 @@ const toast = useToast();
 
 const collections = ref();
 const collectionsRes = ref(props.modelValue);
+// Подборки книги догружаются после открытия формы — подхватываем их
+watch(
+  () => props.modelValue,
+  (value) => {
+    collectionsRes.value = value;
+  }
+);
 
 const { data } = await bookApi.getAllCollections();
 

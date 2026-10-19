@@ -21,4 +21,5 @@ export const eventSchema = z.object({
     .nullable()
     .refine((val) => val !== null, 'Укажите возрастное ограничение'),
   place: z.string('Выберите место проведения').min(1, 'Выберите место проведения'),
+  category: z.enum(['MASTER', 'MUSIC', 'GAME', 'TALK'], 'Выберите тип события'),
 });

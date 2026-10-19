@@ -1,104 +1,121 @@
 <script setup lang="ts">
 import type { BookCollection } from '~~/services/types/book.type';
 import { useBookApi } from '~~/services/api/book.api';
-import AdminCollection from '~/components/Modals/AdminCollection.vue';
-import dayjs from 'dayjs';
+import type { Meta } from '~~/services/api';
 
-const overlay = useOverlay();
-const modal = overlay.create(AdminCollection);
+const PAGE_SIZE = 24;
+
+const toast = useToast();
 const bookApi = useBookApi();
-const collectionsRes = ref();
+
+// Старые ссылки ?editId=<id> ведут на страницу редактора
+await redirectEditIdToPage('/collection');
+
 const page = ref(1);
+const collections = ref<BookCollection[]>([]);
+const meta = ref<Meta>();
+const loading = ref(false);
 
 const fetchData = async () => {
-  collectionsRes.value = await bookApi.getAllCollections({
-    include: 'preview',
-    limit: 8,
-    page: page.value,
-  });
+  loading.value = true;
+  try {
+    const res = await bookApi.getAllCollections({
+      isDeleted: true,
+      limit: PAGE_SIZE,
+      page: page.value,
+    });
+    collections.value = res.data ?? [];
+    meta.value = res.meta;
+  } catch {
+    toast.add({ title: 'Не удалось загрузить подборки', color: 'error' });
+  } finally {
+    loading.value = false;
+  }
 };
-
-const handleOpenModal = async (collection?: BookCollection) => {
-  const instance = modal.open({ collection });
-  const result = await instance.result;
-  if (result) await fetchData();
-};
-
-useModalRouteOpener({
-  modal,
-  onClosed: () => fetchData(),
-});
 
 await fetchData();
+watch(page, fetchData);
 
-watch(page, () => fetchData());
+const setVisibility = async (collection: BookCollection, isDeleted: boolean) => {
+  const previous = collection.isDeleted;
+  collection.isDeleted = isDeleted;
+  try {
+    await bookApi.updateCollection(collection.id, { isDeleted });
+    toast.add({ title: isDeleted ? 'Подборка скрыта' : 'Подборка опубликована', color: 'success' });
+  } catch {
+    collection.isDeleted = previous;
+    toast.add({ title: 'Не удалось изменить видимость', color: 'error' });
+  }
+};
 
-useHead({ title: 'НОМБ | Сборники книг' });
+useHead({ title: 'НОМБ | Подборки книг' });
 </script>
 
 <template>
   <NuxtLayout
     v-model="page"
     name="table"
-    title="Управление подборками книг"
-    :meta="collectionsRes.meta"
-    :event-create="() => handleOpenModal()"
+    title="Подборки книг"
+    :description="meta ? `${meta.total} ${plural(meta.total, ['подборка', 'подборки', 'подборок'])} в разделе «Книги» на сайте` : undefined"
+    create-label="Новая подборка"
+    :meta="meta"
+    :loading="loading"
+    :event-create="() => navigateTo('/collection/admin')"
   >
     <div class="p-6">
       <div
-        v-if="collectionsRes.data.length > 0"
-        class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4"
+        v-if="collections.length"
+        class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4"
       >
-        <UCard
-          v-for="collection in collectionsRes.data"
+        <!-- Вся карточка — ссылка на редактор (растянутая ссылка у названия); бейдж поверх -->
+        <article
+          v-for="collection in collections"
           :key="collection.id"
-          class="overflow-hidden hover:shadow-lg transition-shadow duration-200 group"
+          class="group relative flex flex-col rounded-xl border border-default bg-default p-4 shadow-xs transition-shadow hover:shadow-md"
         >
-          <div class="relative h-44 -mx-4 -mt-4 mb-4 overflow-hidden bg-neutral-100 dark:bg-neutral-800">
-            <img
-              v-if="collection.preview"
-              :src="'http://static.infomania.ru' + collection.preview.path"
-              :alt="collection.label"
-              class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-            >
-            <div v-else class="w-full h-full flex items-center justify-center">
-              <UIcon name="i-heroicons-book-open" class="w-10 h-10 text-neutral-300" />
-            </div>
-            <UBadge
-              :label="collection.isDeleted ? 'Скрыто' : 'Опубликовано'"
-              :color="collection.isDeleted ? 'warning' : 'success'"
-              variant="subtle"
-              size="sm"
-              class="absolute top-2 right-2"
-            />
+          <div class="rounded-lg bg-elevated px-4 pb-3 pt-5">
+            <CollectionCoverFan :covers="collection.covers ?? []" :height="110" />
           </div>
 
-          <p class="font-semibold line-clamp-2 min-h-[2.5rem]">
+          <NuxtLink
+            :to="`/collection/admin/${collection.id}`"
+            class="mt-3 line-clamp-2 font-semibold text-highlighted after:absolute after:inset-0 after:rounded-xl group-hover:underline focus-visible:outline-none focus-visible:after:outline-2 focus-visible:after:outline-primary"
+          >
             {{ collection.label }}
+          </NuxtLink>
+          <p v-if="collection.description" class="mt-1 line-clamp-2 text-sm text-muted">
+            {{ collection.description }}
           </p>
 
-          <p class="text-xs text-neutral-400 mt-1">
-            {{ dayjs(collection.createdAt).format('DD.MM.YYYY') }}
-          </p>
-
-          <template #footer>
-            <div class="flex gap-2 justify-end">
-              <UButton
-                icon="i-heroicons-pencil-square"
-                color="secondary"
-                variant="outline"
-                size="sm"
-                label="Редактировать"
-                @click="handleOpenModal(collection)"
+          <div class="mt-auto flex items-center justify-between gap-2 pt-3">
+            <span class="text-sm text-muted">
+              {{ collection.bookCount ?? 0 }}
+              {{ plural(collection.bookCount ?? 0, ['книга', 'книги', 'книг']) }}
+            </span>
+            <div class="relative z-10">
+              <ListVisibilityBadge
+                :hidden="collection.isDeleted"
+                :toggle="() => setVisibility(collection, !collection.isDeleted)"
               />
             </div>
-          </template>
-        </UCard>
+          </div>
+        </article>
       </div>
 
-      <div v-else class="py-16 text-center text-neutral-400">
-        <UIcon name="i-heroicons-book-open" class="w-12 h-12 mx-auto mb-3 opacity-40" />
-        <p>Подборок пока нет</p>
+      <div v-else-if="!loading" class="py-16 text-center">
+        <UIcon name="i-lucide-library" class="mx-auto mb-3 size-12 text-dimmed" />
+        <p class="font-medium text-highlighted">
+          Подборок пока нет
+        </p>
+        <p class="mt-1 text-sm text-muted">
+          Соберите книги вокруг темы — так читателю проще выбрать, что взять.
+        </p>
+        <UButton
+          class="mt-4"
+          icon="i-lucide-plus"
+          label="Создать подборку"
+          to="/collection/admin"
+        />
       </div>
     </div>
   </NuxtLayout>

@@ -1,3 +1,6 @@
+/** Тип события для афиши на сайте (цвет плаката и фильтр) */
+export type EventCategory = 'MASTER' | 'MUSIC' | 'GAME' | 'TALK';
+
 export interface IEvent {
   id: string;
   title: string;
@@ -6,6 +9,8 @@ export interface IEvent {
   age: number;
   place: string;
   eventTime: string;
+  /** null — тип не указан (старые события); сайт угадывает его по названию */
+  category?: EventCategory | null;
   isDeleted: boolean;
 }
 

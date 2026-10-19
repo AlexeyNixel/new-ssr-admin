@@ -90,6 +90,15 @@ export const useApi = () => {
     return res.data;
   };
 
+  /** PUT целиком заменяет вложенный ресурс (например, состав книг подборки) */
+  const put = async <T extends object>(endpoint: string, data: T): Promise<unknown> => {
+    return await $fetch<unknown>(baseApi + endpoint, {
+      method: 'PUT',
+      credentials: 'include',
+      body: data,
+    });
+  };
+
   const login = async (user: {
     username: string;
     password: string;
@@ -171,5 +180,6 @@ export const useApi = () => {
     postMany,
     postFile,
     patch,
+    put,
   };
 };

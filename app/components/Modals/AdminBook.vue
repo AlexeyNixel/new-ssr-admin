@@ -36,13 +36,33 @@ const newBook = ref({
   isVideo: false,
   place: '',
   litresLink: '',
-  collections: [],
+  collections: [] as string[],
 });
+
+/*
+ * Бэкенд заменяет подборки книги тем списком, что пришёл. Строка таблицы
+ * приходит без подборок, и раньше форма отправляла [] — книга молча
+ * пропадала из всех подборок. Поэтому подборки догружаем, а пока они
+ * не загружены — не отправляем поле вовсе.
+ */
+const collectionsLoaded = ref(false);
+
+const loadCollections = async (value: Book) => {
+  try {
+    const full = value.collections ? value : await bookApi.getOneBook(value.id);
+    newBook.value.collections = (full.collections ?? []).map((item) => item.id);
+    collectionsLoaded.value = true;
+  } catch {
+    collectionsLoaded.value = false;
+  }
+};
 
 watch(
   book,
   (value) => {
     if (!value) return;
+    collectionsLoaded.value = false;
+    loadCollections(value);
     newBook.value = {
       title: value.title || '',
       description: value.description || '',
@@ -52,7 +72,7 @@ watch(
       isVideo: value.isVideo || false,
       place: value.place || '',
       litresLink: value.litresLink || '',
-      collections: [],
+      collections: newBook.value.collections,
     };
   },
   { immediate: true }
@@ -107,7 +127,11 @@ const schema = z.object({
 
 const onSubmit = async () => {
   if (isUpdate.value && book.value) {
-    await bookApi.updateBook(book.value.id, newBook.value);
+    const { collections, ...data } = newBook.value;
+    await bookApi.updateBook(
+      book.value.id,
+      collectionsLoaded.value ? { ...data, collections } : data
+    );
     toast.add({ title: 'Книга обновлена' });
   } else {
     await bookApi.createBook(newBook.value);

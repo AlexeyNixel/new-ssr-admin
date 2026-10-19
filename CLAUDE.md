@@ -198,7 +198,7 @@ const handleOpenModal = async (department?: Department) => {
 
 ### Полноэкранные страницы редактирования (`/<entity>/admin/[[id]]`)
 
-Новости, страницы, события, слайды, игры и комиксы редактируются не в модалке,
+Новости, страницы, события, слайды, игры, комиксы и подборки книг редактируются не в модалке,
 а на отдельной странице (эталон — `app/pages/post/admin/[[slug]].vue`):
 липкая шапка + основная колонка + боковая панель карточек.
 
@@ -244,8 +244,8 @@ const handleOpenModal = async (department?: Department) => {
   // форму наполнять реактивно: watch(department, apply, { immediate: true })
   ```
 
-Подключено на модалках department, notification, map-point, book, collection,
-navigation, club (event, slide, game, comic переехали на страницы — см. выше). Полный список ссылок — в
+Подключено на модалках department, notification, map-point, book,
+navigation, club (event, slide, game, comic, collection переехали на страницы — см. выше). Полный список ссылок — в
 `docs/deep-links.md`. Загрузка одной сущности: `getById<T>(endpoint, id, options?)`
 в `services/api/index.ts` (шлёт куку, разворачивает `{ data }`); в каждом
 `*.api.ts` — метод `getOne<Entity>`.

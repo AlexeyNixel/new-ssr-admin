@@ -1,8 +1,9 @@
 <script setup lang="ts">
 import { CalendarDate, Time, getLocalTimeZone, today } from '@internationalized/date';
 import { useEventApi } from '~~/services/api/event.api';
-import type { IEvent } from '~~/services/types/event.type';
+import type { EventCategory, IEvent } from '~~/services/types/event.type';
 import { EVENT_PLACES } from '~/constants/places';
+import { EVENT_CATEGORIES, suggestEventCategory } from '~/constants/eventCategories';
 import { EVENT_PHONES } from '~/constants/phone';
 import { eventSchema } from '~/schemas/event.schema';
 import { htmlToText } from '~/schemas/post.schema';
@@ -21,6 +22,7 @@ const form = reactive({
   phone: undefined as string | undefined,
   age: 12 as number | null,
   place: undefined as string | undefined,
+  category: undefined as EventCategory | undefined,
   isDeleted: false,
 });
 
@@ -58,6 +60,7 @@ if (eventId) {
       phone: data.phone || undefined,
       age: data.age ?? null,
       place: data.place || undefined,
+      category: data.category ?? undefined,
       isDeleted: !!data.isDeleted,
     });
     if (data.eventTime) parseEventTime(data.eventTime);
@@ -75,6 +78,13 @@ const placeItems = computed(() =>
     ? [{ key: form.place, value: form.place }, ...EVENT_PLACES]
     : EVENT_PLACES
 );
+
+// Подсказка типа по названию — пока редактор сам не выбрал тип
+const suggestedCategory = computed(() => {
+  if (form.category) return undefined;
+  const value = suggestEventCategory(form.title);
+  return EVENT_CATEGORIES.find((item) => item.value === value);
+});
 
 // ---------- Несколько дней (только при создании) ----------
 
@@ -114,6 +124,7 @@ const { isDirty, markSaved, onError } = useEntityForm({
     phone: 'Телефон',
     age: 'Возрастное ограничение',
     place: 'Место проведения',
+    category: 'Тип события',
   },
 });
 
@@ -137,6 +148,7 @@ const rangeOpen = ref(false);
 const checklist = computed(() => [
   { label: 'Название', done: form.title.trim().length > 0 },
   { label: 'Описание', done: htmlToText(form.content).length > 0 },
+  { label: 'Тип события', done: !!form.category },
   { label: 'Место проведения', done: !!form.place },
   { label: 'Телефон', done: !!form.phone },
   { label: 'Возрастное ограничение', done: form.age != null },
@@ -320,6 +332,48 @@ useHead({ title: isUpdate ? 'НОМБ | Редактирование событ�
                 </UPopover>
               </UFormField>
             </template>
+          </EntityFormCard>
+
+          <EntityFormCard title="Тип события" icon="i-lucide-shapes">
+            <UFormField
+              name="category"
+              data-field="category"
+              label="Что это за событие"
+              help="От типа зависят цвет плаката и фильтр в афише на сайте"
+              required
+            >
+              <URadioGroup
+                v-model="form.category"
+                :items="EVENT_CATEGORIES"
+                value-key="value"
+                variant="card"
+                indicator="hidden"
+                class="w-full"
+                :ui="{ fieldset: 'grid gap-2', item: 'py-2.5', wrapper: 'text-left', description: 'text-left' }"
+              >
+                <template #label="{ item }">
+                  <span class="flex items-center gap-2">
+                    <span
+                      class="size-3.5 shrink-0 rounded-full ring-1 ring-black/15"
+                      :style="{ backgroundColor: item.color }"
+                    />
+                    {{ item.label }}
+                  </span>
+                </template>
+              </URadioGroup>
+            </UFormField>
+
+            <UButton
+              v-if="suggestedCategory"
+              color="neutral"
+              variant="soft"
+              size="sm"
+              icon="i-lucide-wand-sparkles"
+              class="self-start"
+              @click="form.category = suggestedCategory.value"
+            >
+              По названию похоже на «{{ suggestedCategory.label }}»
+            </UButton>
           </EntityFormCard>
 
           <EntityFormCard title="Где и для кого" icon="i-lucide-map-pin">
