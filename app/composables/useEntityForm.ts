@@ -7,6 +7,11 @@ interface UseEntityFormOptions {
   fieldLabels: Record<string, string>;
   /** Отправка формы по Ctrl/⌘ + S. */
   submit: () => void;
+  /**
+   * Автосохранение черновика в localStorage: `key` — уникальный ключ формы
+   * (`event:<id>` / `event:new`), `restore` — подставить снимок обратно в форму.
+   */
+  draft?: { key: string; restore: (data: any) => void };
 }
 
 /**
@@ -14,7 +19,8 @@ interface UseEntityFormOptions {
  * комиксы, игры, события, слайды):
  * - отслеживание несохранённых изменений + предупреждение при уходе;
  * - Ctrl/⌘ + S — сохранить;
- * - при ошибке валидации — тост со списком полей и прокрутка к первому.
+ * - при ошибке валидации — тост со списком полей и прокрутка к первому;
+ * - (опционально) автосохранение черновика — см. useDraftAutosave.
  *
  * Вызывать после того, как форма наполнена загруженными данными.
  */
@@ -26,9 +32,19 @@ export function useEntityForm(options: UseEntityFormOptions) {
   const savedState = ref(serialize());
   const isDirty = computed(() => savedState.value !== serialize());
 
+  const draft = options.draft
+    ? useDraftAutosave({
+        key: options.draft.key,
+        data: () => JSON.parse(serialize()),
+        apply: options.draft.restore,
+        isDirty,
+      })
+    : undefined;
+
   /** Вызывать после успешного сохранения, перед переходом на список. */
   const markSaved = () => {
     savedState.value = serialize();
+    draft?.clear();
   };
 
   onBeforeRouteLeave(() => {
@@ -64,7 +80,7 @@ export function useEntityForm(options: UseEntityFormOptions) {
     input?.focus({ preventScroll: true });
   };
 
-  return { isDirty, markSaved, onError };
+  return { isDirty, markSaved, onError, draft };
 }
 
 /** Статус публикации для шапки формы (soft-delete через `isDeleted`). */

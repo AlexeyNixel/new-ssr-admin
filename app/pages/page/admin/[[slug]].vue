@@ -44,9 +44,10 @@ if (slug) {
 
 const formRef = useTemplateRef('formRef');
 
-const { isDirty, markSaved, onError } = useEntityForm({
+const { isDirty, markSaved, onError, draft } = useEntityForm({
   snapshot: () => form,
   submit: () => formRef.value?.submit(),
+  draft: { key: `page:${slug || 'new'}`, restore: (data) => Object.assign(form, data) },
   fieldLabels: {
     title: 'Название',
     slug: 'Адрес на сайте',
@@ -56,6 +57,12 @@ const { isDirty, markSaved, onError } = useEntityForm({
 
 const status = computed(() =>
   publicationStatus(isUpdate, form.isDeleted, { shown: 'Опубликована', hidden: 'Скрыта', created: 'Новая' })
+);
+
+const config = useRuntimeConfig();
+// Ссылка — по сохранённому адресу: несохранённый slug на сайте ещё не работает
+const siteUrl = computed(() =>
+  loaded.value?.slug && !loaded.value.isDeleted ? `${config.public.siteUrl}/page/${loaded.value.slug}` : undefined
 );
 
 // ---------- Содержимое ----------
@@ -162,9 +169,12 @@ useHead({ title: isUpdate ? 'НОМБ | Редактирование стран�
         :is-dirty="isDirty"
         :saving="saving"
         :submit-label="isUpdate ? 'Сохранить' : 'Создать страницу'"
+        :site-url="siteUrl"
       />
 
       <EntityFormBody>
+        <EntityFormDraftBanner v-if="draft" :draft="draft" />
+
         <section class="rounded-xl border border-default bg-default p-4 shadow-xs sm:p-6">
           <EntityFormTitleInput v-model="form.title" placeholder="Название страницы" />
         </section>

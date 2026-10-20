@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import type { FormErrorEvent } from '@nuxt/ui';
-import { CalendarDate, Time, getLocalTimeZone, today } from '@internationalized/date';
+import { CalendarDate, Time, getLocalTimeZone, parseDate, parseTime, today } from '@internationalized/date';
 import { useEventApi } from '~~/services/api/event.api';
 import type { EventCategory, IEvent } from '~~/services/types/event.type';
 import { EVENT_PLACES } from '~/constants/places';
@@ -11,7 +11,7 @@ import { htmlToText } from '~/schemas/post.schema';
 import EditorCustom from '~/components/Editor/EditorCustom.vue';
 
 const route = useRoute();
-const eventId = route.params.id as string | undefined;
+const eventId = (route.params.id as string | undefined) || undefined;
 const isUpdate = !!eventId;
 
 const toast = useToast();
@@ -119,13 +119,25 @@ watch(eventDate, (value) => {
 
 const formRef = useTemplateRef('formRef');
 
-const { isDirty, markSaved, onError } = useEntityForm({
+const { isDirty, markSaved, onError, draft } = useEntityForm({
   snapshot: () => ({
     ...form,
     date: eventDate.value.toString(),
     time: eventTime.value.toString(),
     range: rangeEnd.value?.toString(),
   }),
+  draft: {
+    key: `event:${eventId ?? (copyFromId ? `copy:${copyFromId}` : 'new')}`,
+    restore: ({ date, time, range, ...fields }) => {
+      Object.assign(form, fields);
+      if (date) eventDate.value = parseDate(date);
+      if (time) eventTime.value = parseTime(time);
+      if (range) {
+        isRange.value = true;
+        nextTick(() => (rangeEnd.value = parseDate(range)));
+      }
+    },
+  },
   submit: () => formRef.value?.submit(),
   fieldLabels: {
     title: 'Название',
@@ -139,6 +151,12 @@ const { isDirty, markSaved, onError } = useEntityForm({
 
 const status = computed(() =>
   publicationStatus(isUpdate, form.isDeleted, { shown: 'Активно', hidden: 'Скрыто', created: 'Новое' })
+);
+
+const config = useRuntimeConfig();
+// Скрытое событие сайт не покажет — ссылку не предлагаем
+const siteUrl = computed(() =>
+  isUpdate && !loaded.value?.isDeleted ? `${config.public.siteUrl}/afisha/${eventId}` : undefined
 );
 
 const dateFormatter = new Intl.DateTimeFormat('ru-RU', {
@@ -298,6 +316,7 @@ useHead({ title: isUpdate ? 'НОМБ | Редактирование событ�
         :is-dirty="isDirty"
         :saving="saving"
         :submit-label="submitLabel"
+        :site-url="siteUrl"
       >
         <template #actions>
           <UTooltip v-if="!isUpdate" text="Сохранить и оставить форму заполненной — останется поменять дату">
@@ -325,6 +344,8 @@ useHead({ title: isUpdate ? 'НОМБ | Редактирование событ�
       </EntityFormHeader>
 
       <EntityFormBody>
+        <EntityFormDraftBanner v-if="draft" :draft="draft" />
+
         <UAlert
           v-if="copiedFrom"
           color="info"

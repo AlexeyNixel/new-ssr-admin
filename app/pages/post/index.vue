@@ -6,7 +6,7 @@ import { useDepartmentApi } from '~~/services/api/department.api';
 import type { Post } from '~~/services/types/post.type';
 import type { Meta } from '~~/services/api';
 
-const SITE_URL = `${useRuntimeConfig().public.siteUrl}/entry/`;
+const SITE_URL = `${useRuntimeConfig().public.siteUrl}/post/`;
 const PAGE_SIZE = 20;
 
 const postApi = usePostApi();
@@ -98,6 +98,7 @@ const setPinned = async (post: Post, isPinned: boolean) => {
 const rowActions = (post: Post) => [
   [
     { label: 'Редактировать', icon: 'i-lucide-pencil', to: `/post/admin/${post.id}` },
+    { label: 'Создать копию', icon: 'i-lucide-copy', to: `/post/admin?copyFrom=${post.id}` },
     { label: 'Открыть на сайте', icon: 'i-lucide-external-link', to: SITE_URL + post.slug, target: '_blank' },
     {
       label: 'Скопировать ссылку',

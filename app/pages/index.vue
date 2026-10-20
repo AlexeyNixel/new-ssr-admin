@@ -597,8 +597,14 @@ useHead({ title: 'НОМБ | Панель управления' });
               <div class="min-w-0 flex-1">
                 <p class="text-sm font-medium leading-snug text-highlighted line-clamp-2">{{ post.title }}</p>
                 <p class="mt-0.5 flex items-center gap-1.5 text-xs text-muted">
-                  <span :class="['size-1.5 rounded-full', post.isDeleted ? 'bg-warning' : 'bg-success']" />
-                  {{ post.isDeleted ? 'Скрыта' : 'Опубликована' }}, {{ formatRelative(post.createdAt) }}
+                  <template v-if="!post.isDeleted && post.publishedAt > nowIso">
+                    <UIcon name="i-lucide-clock" class="size-3 text-info" />
+                    Запланирована на {{ dayjs(post.publishedAt).format('D.MM, HH:mm') }}
+                  </template>
+                  <template v-else>
+                    <span :class="['size-1.5 rounded-full', post.isDeleted ? 'bg-warning' : 'bg-success']" />
+                    {{ post.isDeleted ? 'Скрыта' : 'Опубликована' }}, {{ formatRelative(post.createdAt) }}
+                  </template>
                 </p>
               </div>
             </NuxtLink>
