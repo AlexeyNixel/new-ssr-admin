@@ -165,6 +165,13 @@ const columns: TableColumn<Post>[] = [
               `Запланирована, ${formatRelative(date)}`,
             ])
           : h('p', { class: 'text-xs text-dimmed' }, formatRelative(date)),
+        // анонс: на сайте вместо даты публикации показывается дата мероприятия
+        row.original.eventDate
+          ? h('p', { class: 'mt-0.5 flex items-center gap-1 text-xs text-primary' }, [
+              h(UIcon, { name: 'i-lucide-calendar-heart', class: 'size-3' }),
+              `Мероприятие ${formatDate(`${row.original.eventDate.slice(0, 10)}T00:00:00`)}`,
+            ])
+          : null,
       ]);
     },
   },

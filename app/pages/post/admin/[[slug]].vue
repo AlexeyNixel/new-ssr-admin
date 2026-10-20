@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import slugify from 'slugify';
-import { CalendarDate } from '@internationalized/date';
+import { CalendarDate, parseDate } from '@internationalized/date';
 import type { FormErrorEvent } from '@nuxt/ui';
 import { usePostApi } from '~~/services/api/post.api';
 import { useDepartmentApi } from '~~/services/api/department.api';
@@ -33,6 +33,8 @@ const form = reactive({
 });
 const previewPath = ref('');
 const publishedAt = ref(new Date());
+// Дата мероприятия у новости-анонса; shallowRef — у CalendarDate приватные поля
+const eventDate = shallowRef<CalendarDate>();
 
 const loaded = ref<Post>();
 const loadError = ref(false);
@@ -64,6 +66,14 @@ if (postId) {
     });
     previewPath.value = data.preview?.path ?? '';
     if (data.publishedAt) publishedAt.value = new Date(data.publishedAt);
+    // только дата, без перевода поясов: «2026-10-25T00:00:00.000Z» → 25 октября
+    if (data.eventDate) {
+      try {
+        eventDate.value = parseDate(data.eventDate.slice(0, 10));
+      } catch {
+        eventDate.value = undefined;
+      }
+    }
   } else {
     loadError.value = true;
   }
@@ -83,7 +93,12 @@ watch(
 // ---------- Несохранённые изменения ----------
 
 const snapshot = () =>
-  JSON.stringify({ ...form, previewPath: previewPath.value, publishedAt: publishedAt.value.getTime() });
+  JSON.stringify({
+    ...form,
+    previewPath: previewPath.value,
+    publishedAt: publishedAt.value.getTime(),
+    eventDate: eventDate.value?.toString(),
+  });
 
 const savedState = ref(snapshot());
 const isDirty = computed(() => savedState.value !== snapshot());
@@ -128,6 +143,19 @@ const dateFormatter = new Intl.DateTimeFormat('ru-RU', {
   year: 'numeric',
 });
 const isFuture = computed(() => publishedAt.value.getTime() > Date.now() + 60_000);
+
+// ---------- Дата мероприятия (анонс) ----------
+
+const eventDatePopoverOpen = ref(false);
+const eventDateLabel = computed(() =>
+  eventDate.value ? dateFormatter.format(eventDate.value.toDate('UTC')) : 'Не указана'
+);
+// Анонс с датой раньше публикации — скорее всего опечатка
+const isEventBeforePublish = computed(() => !!eventDate.value && eventDate.value.compare(publishedDate.value) < 0);
+const clearEventDate = () => {
+  eventDate.value = undefined;
+  eventDatePopoverOpen.value = false;
+};
 
 // ---------- Статус ----------
 
@@ -191,6 +219,8 @@ const onSubmit = async () => {
     // или оставит прежний (при редактировании)
     slug: form.slug.trim() || undefined,
     publishedAt: publishedAt.value.toISOString(),
+    // null — явно убрать дату (без ключа бэкенд оставил бы прежнюю)
+    eventDate: eventDate.value?.toString() ?? null,
   };
 
   try {
@@ -436,6 +466,59 @@ useHead({ title: isUpdate ? 'НОМБ | Редактирование новос�
                   </div>
                 </template>
               </UPopover>
+            </UFormField>
+          </section>
+
+          <!-- Анонс мероприятия -->
+          <section class="space-y-3 rounded-xl border border-default bg-default p-4 shadow-xs">
+            <div class="flex items-center gap-2 text-sm font-semibold text-highlighted">
+              <UIcon name="i-lucide-calendar-heart" class="size-4 text-muted" />
+              Анонс мероприятия
+            </div>
+
+            <UFormField
+              label="Дата мероприятия"
+              :help="
+                isEventBeforePublish
+                  ? 'Мероприятие раньше даты публикации — проверьте дату'
+                  : 'Необязательно. Если указана, на сайте покажется она вместо даты публикации. Порядок в ленте — по дате публикации.'
+              "
+              :ui="{ help: isEventBeforePublish ? 'text-warning' : undefined }"
+            >
+              <div class="flex gap-2">
+                <UPopover v-model:open="eventDatePopoverOpen">
+                  <UButton
+                    color="neutral"
+                    variant="outline"
+                    icon="i-lucide-calendar-days"
+                    trailing-icon="i-lucide-chevron-down"
+                    class="min-w-0 flex-1"
+                    :class="!eventDate && 'text-dimmed'"
+                    :ui="{ trailingIcon: 'ms-auto text-dimmed' }"
+                  >
+                    <span class="truncate">{{ eventDateLabel }}</span>
+                  </UButton>
+
+                  <template #content>
+                    <div class="p-2">
+                      <UCalendar
+                        v-model="eventDate"
+                        @update:model-value="eventDatePopoverOpen = false"
+                      />
+                    </div>
+                  </template>
+                </UPopover>
+
+                <UTooltip v-if="eventDate" text="Убрать дату мероприятия">
+                  <UButton
+                    icon="i-lucide-x"
+                    color="neutral"
+                    variant="ghost"
+                    aria-label="Убрать дату мероприятия"
+                    @click="clearEventDate"
+                  />
+                </UTooltip>
+              </div>
             </UFormField>
           </section>
 
