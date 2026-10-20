@@ -5,7 +5,7 @@
     label-key="label"
     multiple
     value-key="id"
-    placeholder="Выберите коллекции"
+    placeholder="Выберите подборки"
     class="w-full"
     create-item
     @update:model-value="emit('update:modelValue', collectionsRes)"
@@ -16,7 +16,6 @@
 <script setup lang="ts">
 import { useBookApi } from '~~/services/api/book.api';
 import type { BookCollection } from '~~/services/types/book.type';
-import type { File as ApiFile } from '~~/services/types/file.type';
 
 const emit = defineEmits(['update:modelValue']);
 const props = defineProps<{
@@ -36,42 +35,23 @@ watch(
   }
 );
 
-const { data } = await bookApi.getAllCollections();
+// isDeleted — вместе со скрытыми: книгу можно заранее положить в готовящуюся подборку
+const { data } = await bookApi.getAllCollections({ isDeleted: true, limit: 1000 });
 
 collections.value = data;
 
+// Картинка у подборки необязательна — создаём по одному названию,
+// описание и обложки книг настраиваются в редакторе подборки
 const onCreate = async (label: string) => {
-  const input = document.createElement('input');
-  input.type = 'file';
-
-  input.onchange = async (e: Event) => {
-    const image = (e.target as HTMLInputElement).files?.[0];
-    if (!image) return;
-
-    const body = new FormData();
-    body.append('file', image);
-
-    const result = (await $fetch('http://localhost:3333/api/files/upload/image', {
-      method: 'POST',
-      body,
-      credentials: 'include',
-    })) as ApiFile;
-
-    if (result) {
-      const collection = (await bookApi.createCollection({
-        label: label,
-        previewFileId: result.id,
-      })) as BookCollection;
-
-      collectionsRes.value.push(collection.id);
-      collections.value.push(collection);
-      toast.add({
-        title: 'Коллекция создана',
-      });
-    }
-  };
-
-  input.click();
+  try {
+    const collection = (await bookApi.createCollection({ label: label.trim() })) as BookCollection;
+    collections.value.push(collection);
+    collectionsRes.value = [...collectionsRes.value, collection.id];
+    emit('update:modelValue', collectionsRes.value);
+    toast.add({ title: 'Подборка создана', description: label.trim(), color: 'success' });
+  } catch {
+    toast.add({ title: 'Не удалось создать подборку', color: 'error' });
+  }
 };
 </script>
 

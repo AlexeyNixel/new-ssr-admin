@@ -142,7 +142,7 @@ export const useEventApi = () => {
   слот `#filters` — вкладки/селекты справа от поиска, `:loading`.
 - Подвал: «Показаны 1–20 из N» + пагинация.
 
-Списки новостей, страниц, событий, слайдов, игр и комиксов — эталон
+Списки новостей, страниц, событий, слайдов, игр, комиксов и книг — эталон
 «информативного» списка:
 
 - `useListQuery({ status: 'all', … })` (`app/composables/useListQuery.ts`) —
@@ -160,8 +160,13 @@ export const useEventApi = () => {
   значение); без него — только опубликованные, «только скрытые» не бывает
   (кол-во скрытых = total(с isDeleted) − total(без)). `search` работает у
   posts, games, comics; у page и event игнорируется. `include` — только одно
-  отношение (`include=preview`), массив даёт 500 или игнорируется. Страниц и
-  слайдов мало — они грузятся целиком и фильтруются на клиенте.
+  отношение (`include=preview`), массив даёт 500 или игнорируется. Страниц,
+  слайдов и книг мало — они грузятся целиком и фильтруются на клиенте
+  (у book нет ни `search`, ни фильтра по `isVideo`).
+- `description` книги — библиографическая запись (ГОСТ), сайт разбирает её
+  на автора/издательство/год/ISBN. Парсер скопирован с сайта в
+  `app/utils/bibliography.ts` (редактор показывает результат разбора) —
+  при изменении правил на сайте обновлять обе копии.
 
 ### Модальные окна CRUD (`app/components/Modals/AdminX.vue`)
 
@@ -198,7 +203,7 @@ const handleOpenModal = async (department?: Department) => {
 
 ### Полноэкранные страницы редактирования (`/<entity>/admin/[[id]]`)
 
-Новости, страницы, события, слайды, игры, комиксы и подборки книг редактируются не в модалке,
+Новости, страницы, события, слайды, игры, комиксы, книги и подборки книг редактируются не в модалке,
 а на отдельной странице (эталон — `app/pages/post/admin/[[slug]].vue`):
 липкая шапка + основная колонка + боковая панель карточек.
 
@@ -244,8 +249,8 @@ const handleOpenModal = async (department?: Department) => {
   // форму наполнять реактивно: watch(department, apply, { immediate: true })
   ```
 
-Подключено на модалках department, notification, map-point, book,
-navigation, club (event, slide, game, comic, collection переехали на страницы — см. выше). Полный список ссылок — в
+Подключено на модалках department, notification, map-point,
+navigation, club (event, slide, game, comic, book, collection переехали на страницы — см. выше). Полный список ссылок — в
 `docs/deep-links.md`. Загрузка одной сущности: `getById<T>(endpoint, id, options?)`
 в `services/api/index.ts` (шлёт куку, разворачивает `{ data }`); в каждом
 `*.api.ts` — метод `getOne<Entity>`.

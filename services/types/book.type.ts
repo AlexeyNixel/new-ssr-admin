@@ -11,7 +11,7 @@ export interface Book {
   isDeleted: boolean;
   isVideo: boolean;
   place: string;
-  litresLink: string;
+  litresLink: string | null;
   createdAt: string;
   /** Подборки книги — только в GET /api/book/:id */
   collections?: Pick<BookCollection, 'id' | 'label'>[];

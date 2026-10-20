@@ -138,7 +138,7 @@ const ENTITY_LINK_BUILDERS: Partial<Record<string, (id: string) => string>> = {
   MainSliderSlide: (id) => `/slide/admin/${id}`,
   Notification: (id) => `/notification?editId=${id}`,
   MapPoint: (id) => `/map-point?editId=${id}`,
-  Book: (id) => `/book?editId=${id}`,
+  Book: (id) => `/book/admin/${id}`,
   BookCollection: (id) => `/collection?editId=${id}`,
   NavigationItem: (id) => `/navigation?editId=${id}`,
   Club: (id) => `/club?editId=${id}`,
