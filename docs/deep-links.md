@@ -52,7 +52,7 @@
 | -------- | ------------------------ | ----------------- |
 | Посты    | `/post/admin/<id>`       | `/post/admin`     |
 | Страницы | `/page/admin/<slug>`     | `/page/admin`     |
-| События  | `/event/admin/<id>`      | `/event/admin`    |
+| События  | `/event/admin/<id>`      | `/event/admin`, копия — `/event/admin?copyFrom=<id>` |
 | Слайды   | `/slide/admin/<id>`      | `/slide/admin`    |
 | Игры     | `/game/admin/<id>`       | `/game/admin`     |
 | Комиксы  | `/comic/admin/<id>`      | `/comic/admin`    |

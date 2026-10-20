@@ -95,7 +95,10 @@ const setVisibility = async (event: IEvent, isDeleted: boolean) => {
 };
 
 const rowActions = (event: IEvent) => [
-  [{ label: 'Редактировать', icon: 'i-lucide-pencil', to: `/event/admin/${event.id}` }],
+  [
+    { label: 'Редактировать', icon: 'i-lucide-pencil', to: `/event/admin/${event.id}` },
+    { label: 'Дублировать', icon: 'i-lucide-copy', to: `/event/admin?copyFrom=${event.id}` },
+  ],
   [
     {
       label: event.isDeleted ? 'Опубликовать' : 'Скрыть с сайта',

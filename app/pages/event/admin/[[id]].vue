@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import type { FormErrorEvent } from '@nuxt/ui';
 import { CalendarDate, Time, getLocalTimeZone, today } from '@internationalized/date';
 import { useEventApi } from '~~/services/api/event.api';
 import type { EventCategory, IEvent } from '~~/services/types/event.type';
@@ -50,10 +51,16 @@ const toEventTime = (date: CalendarDate) =>
 const loaded = ref<IEvent>();
 const loadError = ref(false);
 
-if (eventId) {
+// «Дублировать»: /event/admin?copyFrom=<id> — новое событие, заполненное копией
+const copyFromId = isUpdate ? undefined : (route.query.copyFrom as string | undefined);
+const copiedFrom = ref<IEvent>();
+
+const sourceId = eventId ?? copyFromId;
+if (sourceId) {
   try {
-    const data = await eventApi.getOneEvent(eventId);
-    loaded.value = data;
+    const data = await eventApi.getOneEvent(sourceId);
+    if (isUpdate) loaded.value = data;
+    else copiedFrom.value = data;
     Object.assign(form, {
       title: data.title ?? '',
       content: data.content ?? '',
@@ -61,11 +68,13 @@ if (eventId) {
       age: data.age ?? null,
       place: data.place || undefined,
       category: data.category ?? undefined,
-      isDeleted: !!data.isDeleted,
+      // копия создаётся видимой, даже если оригинал скрыт
+      isDeleted: isUpdate ? !!data.isDeleted : false,
     });
     if (data.eventTime) parseEventTime(data.eventTime);
   } catch {
-    loadError.value = true;
+    if (isUpdate) loadError.value = true;
+    else toast.add({ title: 'Не удалось загрузить событие для копии', color: 'error' });
   }
 }
 
@@ -142,6 +151,25 @@ const formatDate = (date: CalendarDate) => dateFormatter.format(date.toDate('UTC
 
 const isPast = computed(() => eventDate.value.compare(today(getLocalTimeZone())) < 0);
 
+/** «вт, 21 октября 2026 г., 18:30» — из «наивной» строки eventTime */
+const formatEventTime = (value: string) => {
+  const [date = '', time = ''] = value.split('T');
+  const [year, month, day] = date.split('-').map(Number);
+  return `${formatDate(new CalendarDate(year!, month!, day!))}, ${time.slice(0, 5)}`;
+};
+
+// ---------- Созданные без ухода со страницы ----------
+
+// Одинаковые события на разные дни: создал — поменял дату — создал ещё
+const createdHere = ref<{ id: string; eventTime: string }[]>([]);
+const createdTimes = computed(() => new Set(createdHere.value.map((item) => item.eventTime)));
+const alreadyCreated = computed(() => createdTimes.value.has(toEventTime(eventDate.value)));
+
+const dateHelp = computed(() => {
+  if (alreadyCreated.value) return 'На эту дату и время событие уже создано — выберите другую';
+  return isPast.value ? 'Дата в прошлом' : undefined;
+});
+
 const dateOpen = ref(false);
 const rangeOpen = ref(false);
 
@@ -157,9 +185,34 @@ const checklist = computed(() => [
 // ---------- Сохранение ----------
 
 const saving = ref(false);
+const stayAfterCreate = ref(false);
+
+const submitAndStay = () => {
+  stayAfterCreate.value = true;
+  formRef.value?.submit();
+};
+
+const onValidationError = (event: FormErrorEvent) => {
+  stayAfterCreate.value = false;
+  onError(event);
+};
 
 const onSubmit = async () => {
+  const stay = stayAfterCreate.value;
+  stayAfterCreate.value = false;
   if (saving.value) return;
+
+  const times = isUpdate
+    ? []
+    : Array.from({ length: rangeDays.value }, (_, i) => toEventTime(eventDate.value.add({ days: i })));
+  const repeats = times.filter((time) => createdTimes.value.has(time));
+  if (
+    repeats.length &&
+    !window.confirm(`На ${repeats.map(formatEventTime).join('; ')} событие уже создано. Создать ещё одно такое же?`)
+  ) {
+    return;
+  }
+
   saving.value = true;
 
   const payload: Partial<IEvent> = {
@@ -172,23 +225,24 @@ const onSubmit = async () => {
     if (isUpdate) {
       await eventApi.updateEvent(eventId!, { ...payload, eventTime: toEventTime(eventDate.value) });
       toast.add({ title: 'Событие обновлено', color: 'success', icon: 'i-lucide-circle-check' });
-    } else if (rangeDays.value > 1) {
-      for (let i = 0; i < rangeDays.value; i++) {
-        await eventApi.createEvent({
-          ...payload,
-          eventTime: toEventTime(eventDate.value.add({ days: i })),
-        });
+    } else {
+      for (const eventTime of times) {
+        const created = (await eventApi.createEvent({ ...payload, eventTime })) as IEvent;
+        createdHere.value.push({ id: created.id, eventTime });
       }
       toast.add({
-        title: `Создано ${pluralEvents(rangeDays.value)}`,
+        title: times.length > 1 ? `Создано ${pluralEvents(times.length)}` : 'Событие создано',
+        description: stay ? 'Поменяйте дату и создайте следующее' : undefined,
         color: 'success',
         icon: 'i-lucide-circle-check',
       });
-    } else {
-      await eventApi.createEvent({ ...payload, eventTime: toEventTime(eventDate.value) });
-      toast.add({ title: 'Событие создано', color: 'success', icon: 'i-lucide-circle-check' });
     }
     markSaved();
+    if (stay) {
+      // форма остаётся заполненной — сразу предлагаем выбрать новую дату
+      dateOpen.value = true;
+      return;
+    }
     await navigateTo('/event');
   } catch {
     toast.add({
@@ -233,7 +287,7 @@ useHead({ title: isUpdate ? 'НОМБ | Редактирование событ�
       :schema="eventSchema"
       :state="form"
       @submit="onSubmit"
-      @error="onError"
+      @error="onValidationError"
     >
       <EntityFormHeader
         back-to="/event"
@@ -244,9 +298,42 @@ useHead({ title: isUpdate ? 'НОМБ | Редактирование событ�
         :is-dirty="isDirty"
         :saving="saving"
         :submit-label="submitLabel"
-      />
+      >
+        <template #actions>
+          <UTooltip v-if="!isUpdate" text="Сохранить и оставить форму заполненной — останется поменять дату">
+            <UButton
+              icon="i-lucide-copy-plus"
+              color="neutral"
+              variant="outline"
+              :disabled="saving"
+              @click="submitAndStay"
+            >
+              <span class="hidden sm:inline">Создать и остаться</span>
+            </UButton>
+          </UTooltip>
+          <UTooltip v-else text="Новое событие с теми же данными — останется выбрать дату">
+            <UButton
+              :to="`/event/admin?copyFrom=${eventId}`"
+              icon="i-lucide-copy"
+              color="neutral"
+              variant="outline"
+            >
+              <span class="hidden sm:inline">Дублировать</span>
+            </UButton>
+          </UTooltip>
+        </template>
+      </EntityFormHeader>
 
       <EntityFormBody>
+        <UAlert
+          v-if="copiedFrom"
+          color="info"
+          variant="subtle"
+          icon="i-lucide-copy"
+          :title="`Копия события «${copiedFrom.title}»`"
+          :description="`Оригинал — ${formatEventTime(copiedFrom.eventTime)}. Поменяйте дату и время, остальное уже заполнено.`"
+        />
+
         <section class="rounded-xl border border-default bg-default p-4 shadow-xs sm:p-6">
           <EntityFormTitleInput v-model="form.title" placeholder="Название события" />
         </section>
@@ -272,7 +359,11 @@ useHead({ title: isUpdate ? 'НОМБ | Редактирование событ�
 
           <EntityFormCard title="Когда" icon="i-lucide-calendar-clock">
             <div class="grid grid-cols-[minmax(0,1fr)_7rem] gap-3">
-              <UFormField :label="isRange ? 'Первый день' : 'Дата'" :help="isPast ? 'Дата в прошлом' : undefined">
+              <UFormField
+                :label="isRange ? 'Первый день' : 'Дата'"
+                :help="dateHelp"
+                :ui="{ help: alreadyCreated ? 'text-warning' : undefined }"
+              >
                 <UPopover v-model:open="dateOpen">
                   <UButton
                     color="neutral"
@@ -332,6 +423,25 @@ useHead({ title: isUpdate ? 'НОМБ | Редактирование событ�
                 </UPopover>
               </UFormField>
             </template>
+          </EntityFormCard>
+
+          <EntityFormCard v-if="createdHere.length" title="Создано сейчас" icon="i-lucide-history">
+            <template #trailing>
+              <span class="tabular-nums text-muted">{{ createdHere.length }}</span>
+            </template>
+            <ul class="space-y-1 text-sm">
+              <li v-for="item in createdHere" :key="item.id">
+                <ULink
+                  :to="`/event/admin/${item.id}`"
+                  target="_blank"
+                  class="flex items-center gap-2 text-default hover:text-primary"
+                >
+                  <UIcon name="i-lucide-circle-check" class="size-4 shrink-0 text-success" />
+                  <span class="truncate">{{ formatEventTime(item.eventTime) }}</span>
+                  <UIcon name="i-lucide-external-link" class="ms-auto size-3.5 shrink-0 text-dimmed" />
+                </ULink>
+              </li>
+            </ul>
           </EntityFormCard>
 
           <EntityFormCard title="Тип события" icon="i-lucide-shapes">
