@@ -106,7 +106,7 @@ export const createPageBlock = (type: PageBlockType): PageBlock => {
     case 'richText':
       return { type: 'richText', html: '' };
     case 'archive':
-      return { type: 'archive', title: '', note: '', items: [] };
+      return { type: 'archive', title: '', note: '', items: [], tagIds: [] };
   }
 };
 
