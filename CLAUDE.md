@@ -268,11 +268,24 @@ const handleOpenModal = async (department?: Department) => {
   // форму наполнять реактивно: watch(department, apply, { immediate: true })
   ```
 
-Подключено на модалках department, notification, map-point,
+Подключено на модалках department, notification, map-point, short-link,
 navigation, club (event, slide, game, comic, book, collection переехали на страницы — см. выше). Полный список ссылок — в
 `docs/deep-links.md`. Загрузка одной сущности: `getById<T>(endpoint, id, options?)`
 в `services/api/index.ts` (шлёт куку, разворачивает `{ data }`); в каждом
 `*.api.ts` — метод `getOne<Entity>`.
+
+### Инструменты → Короткие ссылки (`app/pages/short-link/index.vue`)
+
+Группа меню «Инструменты» — для служебных фич, не связанных с контентом.
+Короткие ссылки для промо: `<siteUrl>/go/<slug>` → любой адрес (свой или
+сторонний). Модалка `ModalsAdminShortLink`, адрес строит `useShortLinkUrl()`.
+
+- Бэкенд: модуль `backend/src/short-link` (модель `ShortLink`). Пустой `slug`
+  при создании — генерируется (6 символов без похожих букв/цифр); занятый —
+  409 «Такой адрес уже занят» (текст показывается в тосте).
+- Публичный `GET /api/short-link/resolve/:slug` отдаёт `{ url }` и
+  прибавляет `clicks`. Редирект делает сайт: `frontend/server/routes/go/[...slug].ts`
+  (302, `no-store`); скрытая/несуществующая ссылка → главная.
 
 ### Навигация — дерево с drag-and-drop (`app/pages/navigation/index.vue`)
 

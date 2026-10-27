@@ -36,6 +36,7 @@
 | Отделы          | `/department?editId=<id>`               | `GET /api/departments/:id`       |
 | Уведомления     | `/notification?editId=<id>`             | `GET /api/notification/:id`      |
 | Точки на карте  | `/map-point?editId=<id>`                | `GET /api/map-point/:id`         |
+| Короткие ссылки | `/short-link?editId=<id>`               | `GET /api/short-link/:id`        |
 | Сборники книг   | `/collection?editId=<id>` → `/collection/admin/<id>` | `GET /api/book-collection/:id?isDeleted=true` |
 | Навигация       | `/navigation?editId=<id>`               | `GET /api/navigation-item/:id`   |
 | Клубы           | `/club?editId=<id>`                     | `GET /api/clubs/:id?include=preview` |

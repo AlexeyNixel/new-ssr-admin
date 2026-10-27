@@ -156,8 +156,13 @@ const onSubmit = async () => {
               placeholder="Короткое пояснение к пункту (необязательно)"
               class="w-full"
               :rows="2"
+              :maxlength="200"
               size="md"
             />
+            <p class="text-xs text-neutral-500 dark:text-neutral-400">
+              У разделов верхнего уровня показывается на сайте в карточке
+              выпадающего меню
+            </p>
           </UFormField>
 
           <div class="grid grid-cols-1 md:grid-cols-2 gap-5">

@@ -110,6 +110,17 @@ const navGroups: NavGroup[] = [
       },
     ],
   },
+  {
+    label: 'Инструменты',
+    icon: 'i-lucide-wrench',
+    items: [
+      {
+        label: 'Короткие ссылки',
+        link: '/short-link',
+        icon: 'i-lucide-link',
+      },
+    ],
+  },
 ];
 
 const route = useRoute();
