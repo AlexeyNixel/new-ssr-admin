@@ -18,6 +18,7 @@ export interface EventQuery {
   isDeleted?: boolean;
   limit?: number;
   page?: number;
+  search?: string;
   sortBy?: string;
   sortOrder?: 'asc' | 'desc';
 }
