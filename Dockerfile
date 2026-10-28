@@ -15,6 +15,9 @@ COPY . .
 # переменной NUXT_PUBLIC_API_BASE_URL (ключ runtimeConfig.public.apiBaseUrl)
 ARG NUXT_PUBLIC_API_BASE=https://api2.infomania.ru
 ENV NUXT_PUBLIC_API_BASE=$NUXT_PUBLIC_API_BASE
+# Адрес публичного сайта: короткие ссылки, QR-коды, «Открыть на сайте»
+ARG NUXT_PUBLIC_SITE_URL=https://infomania.ru
+ENV NUXT_PUBLIC_SITE_URL=$NUXT_PUBLIC_SITE_URL
 
 RUN npx nuxt build
 

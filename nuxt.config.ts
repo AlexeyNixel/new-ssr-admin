@@ -49,7 +49,7 @@ export default defineNuxtConfig({
     public: {
       apiBaseUrl: process.env.NUXT_PUBLIC_API_BASE || 'http://localhost:3300',
       // Публичный сайт — кнопка «На сайт» и ссылки «Открыть на сайте»
-      siteUrl: process.env.NUXT_PUBLIC_SITE_URL || 'http://dev.infomania.ru',
+      siteUrl: process.env.NUXT_PUBLIC_SITE_URL || 'https://infomania.ru',
     },
   },
 });

@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import QRCode from 'qrcode';
 import { useShortLinkApi } from '~~/services/api/short-link.api';
 import type { IShortLink, ShortLinkDayStat } from '~~/services/types/short-link.type';
 
@@ -14,27 +13,36 @@ const fullUrl = linkUrl.full(props.shortLink.slug);
 // ---------- QR-код ----------
 
 /** Крупный PNG для печати на афишах; SVG — для типографии (масштабируется без потерь) */
-const QR_OPTIONS = { errorCorrectionLevel: 'M' as const, margin: 2, color: { dark: '#000000', light: '#ffffff' } };
-const qrPreview = ref('');
+const withLogo = ref(true);
+const qrSvg = ref('');
+const qrPreview = computed(() =>
+  qrSvg.value ? `data:image/svg+xml;charset=utf-8,${encodeURIComponent(qrSvg.value)}` : ''
+);
 
-onMounted(async () => {
-  qrPreview.value = await QRCode.toDataURL(fullUrl, { ...QR_OPTIONS, width: 320 });
-});
+watch(
+  withLogo,
+  async (value) => {
+    qrSvg.value = await buildQrSvg(fullUrl, value);
+  },
+  { immediate: true }
+);
+
+const fileName = (extension: string) =>
+  `qr-${props.shortLink.slug}${withLogo.value ? '-logo' : ''}.${extension}`;
 
 const download = (href: string, extension: string) => {
   const link = document.createElement('a');
   link.href = href;
-  link.download = `qr-${props.shortLink.slug}.${extension}`;
+  link.download = fileName(extension);
   link.click();
 };
 
 const downloadPng = async () => {
-  download(await QRCode.toDataURL(fullUrl, { ...QR_OPTIONS, width: 2048 }), 'png');
+  download(await svgToPng(qrSvg.value, 2048), 'png');
 };
 
-const downloadSvg = async () => {
-  const svg = await QRCode.toString(fullUrl, { ...QR_OPTIONS, type: 'svg' });
-  const url = URL.createObjectURL(new Blob([svg], { type: 'image/svg+xml' }));
+const downloadSvg = () => {
+  const url = URL.createObjectURL(new Blob([qrSvg.value], { type: 'image/svg+xml' }));
   download(url, 'svg');
   setTimeout(() => URL.revokeObjectURL(url), 1000);
 };
@@ -175,6 +183,7 @@ const showTable = ref(false);
                 напечатанный код продолжит работать.
               </p>
             </div>
+            <USwitch v-model="withLogo" label="Знак НОМБ в центре" />
             <div class="flex flex-wrap gap-2">
               <UButton icon="i-lucide-download" size="sm" @click="downloadPng">PNG для печати</UButton>
               <UButton icon="i-lucide-download" size="sm" color="neutral" variant="outline" @click="downloadSvg">
