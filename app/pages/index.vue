@@ -28,6 +28,7 @@ const eventApi = useEventApi();
 const auditLogApi = useAuditLogApi();
 
 const cookies = useCookie<User | null>('user_data');
+const { can, canPath } = useAccess();
 const greetingName = computed(() => cookies.value?.name || 'Модератор');
 
 // ---------- Быстрые действия ----------
@@ -106,7 +107,7 @@ const loadAuditLog = async () => {
 loadEvents();
 loadNotifications();
 loadPosts();
-loadAuditLog();
+if (can('audit-log')) loadAuditLog();
 
 // ---------- Афиша на неделю ----------
 
@@ -258,7 +259,10 @@ const attentionGroups = computed<AttentionGroup[]>(() => {
     { key: 'events', label: 'События недели', items: eventItems },
     { key: 'notifications', label: 'Скоро снимутся с сайта', items: notificationItems },
     { key: 'drafts', label: 'Неопубликованные новости', items: draftItems },
-  ].filter((group) => group.items.length);
+  ]
+    // Сотруднику — только то, что он может исправить
+    .map((group) => ({ ...group, items: group.items.filter((item) => canPath(item.to)) }))
+    .filter((group) => group.items.length);
 });
 
 const attentionTotal = computed(() => attentionGroups.value.reduce((sum, group) => sum + group.items.length, 0));
@@ -341,9 +345,9 @@ useHead({ title: 'НОМБ | Панель управления' });
         <h1 class="!mb-0 !text-2xl sm:!text-3xl text-highlighted">Здравствуйте, {{ greetingName }}!</h1>
       </div>
       <div class="flex flex-wrap gap-2">
-        <UButton to="/post/admin" icon="i-lucide-plus" size="lg">Новость</UButton>
+        <UButton v-if="can('posts')" to="/post/admin" icon="i-lucide-plus" size="lg">Новость</UButton>
         <UButton
-          v-for="action in quickActions.slice(1)"
+          v-for="action in quickActions.slice(1).filter((a) => canPath(a.to))"
           :key="action.to"
           :to="action.to"
           :icon="action.icon"
@@ -354,7 +358,15 @@ useHead({ title: 'НОМБ | Панель управления' });
         >
           {{ action.label }}
         </UButton>
-        <UButton icon="i-heroicons-bell" size="lg" color="neutral" variant="outline" class="bg-default" @click="createNotification">
+        <UButton
+          v-if="can('notifications')"
+          icon="i-heroicons-bell"
+          size="lg"
+          color="neutral"
+          variant="outline"
+          class="bg-default"
+          @click="createNotification"
+        >
           Уведомление
         </UButton>
       </div>
@@ -416,7 +428,7 @@ useHead({ title: 'НОМБ | Панель управления' });
       </section>
 
       <!-- На сайте сейчас -->
-      <section class="rounded-2xl bg-default ring-1 ring-default p-5">
+      <section v-if="can('notifications')" class="rounded-2xl bg-default ring-1 ring-default p-5">
         <div class="mb-3 flex items-center justify-between gap-2">
           <h2 class="!mb-0 !text-base !font-semibold text-highlighted">На сайте сейчас</h2>
           <UButton to="/notification" variant="link" size="sm" class="px-0">Все уведомления</UButton>
@@ -455,7 +467,7 @@ useHead({ title: 'НОМБ | Панель управления' });
     </div>
 
     <!-- Афиша на неделю -->
-    <section class="rounded-2xl bg-default ring-1 ring-default p-5">
+    <section v-if="can('events')" class="rounded-2xl bg-default ring-1 ring-default p-5">
       <div class="mb-4 flex flex-wrap items-center justify-between gap-x-6 gap-y-2">
         <div class="flex items-baseline gap-2">
           <h2 class="!mb-0 !text-base !font-semibold text-highlighted">Афиша на неделю</h2>
@@ -527,7 +539,7 @@ useHead({ title: 'НОМБ | Панель управления' });
 
     <!-- Новости + журнал -->
     <div class="grid grid-cols-1 lg:grid-cols-2 gap-5 items-start">
-      <section class="rounded-2xl bg-default ring-1 ring-default p-5">
+      <section v-if="can('posts')" class="rounded-2xl bg-default ring-1 ring-default p-5">
         <div class="mb-3 flex items-center justify-between gap-2">
           <h2 class="!mb-0 !text-base !font-semibold text-highlighted">Последние новости</h2>
           <UButton to="/post" variant="link" size="sm" class="px-0">Все новости</UButton>
@@ -561,7 +573,7 @@ useHead({ title: 'НОМБ | Панель управления' });
         </ul>
       </section>
 
-      <section class="rounded-2xl bg-default ring-1 ring-default p-5">
+      <section v-if="can('audit-log')" class="rounded-2xl bg-default ring-1 ring-default p-5">
         <div class="mb-3 flex items-center justify-between gap-2">
           <h2 class="!mb-0 !text-base !font-semibold text-highlighted">Последние изменения</h2>
           <UButton to="/audit-log" variant="link" size="sm" trailing-icon="i-lucide-arrow-right" class="px-0">

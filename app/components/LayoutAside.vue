@@ -154,10 +154,13 @@ const route = useRoute();
 const siteUrl = useRuntimeConfig().public.siteUrl as string;
 
 const cookies = useCookie<User | null>('user_data');
+const { canPath } = useAccess();
 
 const navItems = computed<NavigationMenuItem[]>(() =>
   navGroups.map((group) => {
-    const visible = group.items.filter((item) => !item.managersOnly || cookies.value?.canManageUsers);
+    const visible = group.items.filter((item) =>
+      item.managersOnly ? cookies.value?.canManageUsers : canPath(item.link)
+    );
     const children = visible.map((item) => {
       const active = route.path.startsWith(item.link);
       return {
@@ -175,7 +178,7 @@ const navItems = computed<NavigationMenuItem[]>(() =>
       defaultOpen: children.some((child) => child.active),
       children,
     };
-  }),
+  }).filter((group) => group.children.length),
 );
 
 const authApi = useAuth();
@@ -183,7 +186,7 @@ const user = computed(() => {
   return {
     name: cookies.value?.name || '',
     email: cookies.value?.username,
-    role: cookies.value?.canManageUsers ? 'Администратор' : 'Редактор',
+    role: cookies.value?.canManageUsers ? 'Администратор' : 'Сотрудник',
     avatar: 'i-heroicons-user-circle',
   };
 });

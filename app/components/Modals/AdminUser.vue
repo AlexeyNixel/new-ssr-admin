@@ -15,7 +15,11 @@ const form = reactive({
   username: props.user?.username ?? '',
   name: props.user?.name ?? '',
   password: '',
+  // Новому сотруднику — ничего, пока не отметят; существующему — как сохранено (null = всё)
+  sections: (props.user ? props.user.sections : []) as string[] | null,
 });
+/** Администраторам доступно всё — разделы им не настраиваются */
+const isManager = !!props.user?.canManageUsers;
 const saving = ref(false);
 const showPassword = ref(false);
 
@@ -51,12 +55,14 @@ const onSubmit = async () => {
       await userApi.update(props.user.id, {
         name: form.name.trim() || null,
         ...(form.password && { password: form.password }),
+        ...(!isManager && { sections: form.sections }),
       });
     } else {
       await userApi.create({
         username: form.username.trim().toLowerCase(),
         name: form.name.trim() || null,
         password: form.password,
+        sections: form.sections,
       });
     }
     if (form.password) {
@@ -86,8 +92,9 @@ const onSubmit = async () => {
 <template>
   <UModal
     :title="isUpdate ? `Сотрудник ${user!.username}` : 'Новый сотрудник'"
-    :description="isUpdate ? 'Имя и сброс пароля. Логин не меняется' : 'Учётная запись для входа в админку'"
+    :description="isUpdate ? 'Имя, пароль и доступ к разделам. Логин не меняется' : 'Учётная запись для входа в админку'"
     :dismissible="false"
+    :ui="{ content: 'sm:max-w-2xl' }"
   >
     <template #body>
       <form class="space-y-5" autocomplete="off" @submit.prevent="onSubmit">
@@ -127,6 +134,17 @@ const onSubmit = async () => {
               Придумать
             </UButton>
           </UFieldGroup>
+        </UFormField>
+
+        <UFormField label="Доступ к разделам">
+          <UAlert
+            v-if="isManager"
+            color="primary"
+            variant="subtle"
+            icon="i-lucide-shield-check"
+            description="Администратор — доступ ко всем разделам и к управлению пользователями"
+          />
+          <AdminUserSections v-else v-model="form.sections" />
         </UFormField>
 
         <div class="flex justify-end gap-3 border-t border-default pt-4">

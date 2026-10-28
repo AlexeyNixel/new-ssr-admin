@@ -5,6 +5,8 @@ export interface User {
   createdAt: string;
   /** Может управлять пользователями (slip, mgairat) — приходит из /auth/me */
   canManageUsers?: boolean;
+  /** Доступные разделы админки (app/constants/sections.ts); null — все */
+  sections?: string[] | null;
 }
 
 /** Сотрудник в разделе «Пользователи» */
@@ -18,4 +20,6 @@ export interface AdminUser {
   /** Сколько изменений в журнале */
   changes: number;
   canManageUsers: boolean;
+  /** null — все разделы */
+  sections: string[] | null;
 }

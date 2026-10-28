@@ -3,6 +3,7 @@ import type { TableColumn, TableRow } from '@nuxt/ui';
 import { ListRowActions, UBadge, ModalsAdminUser } from '#components';
 import { useUserApi } from '~~/services/api/user.api';
 import type { AdminUser, User } from '~~/services/types/user.type';
+import { ALL_SECTIONS } from '~/constants/sections';
 
 // Раздел только для управляющих пользователями (slip, mgairat) — бэкенд проверяет то же самое
 definePageMeta({
@@ -69,7 +70,7 @@ const setBlocked = async (user: AdminUser, isBlocked: boolean) => {
 
 const rowActions = (user: AdminUser) => [
   [
-    { label: 'Изменить имя или пароль', icon: 'i-lucide-pencil', onSelect: () => openModal(user) },
+    { label: 'Доступ, имя, пароль', icon: 'i-lucide-pencil', onSelect: () => openModal(user) },
     { label: 'Изменения в журнале', icon: 'i-lucide-history', to: `/audit-log?user=${user.id}` },
   ],
   // Себя и администраторов не блокируем — иначе можно остаться без доступа
@@ -109,10 +110,28 @@ const columns: TableColumn<AdminUser>[] = [
     header: 'Роль',
     cell: ({ row }) =>
       h(UBadge, {
-        label: row.original.canManageUsers ? 'Администратор' : 'Редактор',
+        label: row.original.canManageUsers ? 'Администратор' : 'Сотрудник',
         color: row.original.canManageUsers ? 'primary' : 'neutral',
         variant: 'subtle',
       }),
+  },
+  {
+    id: 'access',
+    header: 'Доступ',
+    cell: ({ row }) => {
+      const user = row.original;
+      if (user.canManageUsers || user.sections === null) {
+        return h('span', { class: 'text-sm text-muted' }, 'все разделы');
+      }
+      if (!user.sections.length) return h('span', { class: 'text-sm text-warning' }, 'нет разделов');
+      const labels = user.sections.map((key) => ALL_SECTIONS.find((s) => s.key === key)?.label ?? key);
+      const shown = labels.slice(0, 3).join(', ');
+      return h(
+        'span',
+        { class: 'block max-w-56 truncate text-sm', title: labels.join(', ') },
+        labels.length > 3 ? `${shown} и ещё ${labels.length - 3}` : shown
+      );
+    },
   },
   {
     id: 'lastLoginAt',

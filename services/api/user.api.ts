@@ -7,6 +7,7 @@ export interface UserPayload {
   name?: string | null;
   password?: string;
   isBlocked?: boolean;
+  sections?: string[] | null;
 }
 
 export const useUserApi = () => {
