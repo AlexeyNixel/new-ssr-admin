@@ -2,6 +2,7 @@ import { useFeedbackApi } from '~~/services/api/feedback.api';
 import type { Feedback, FeedbackSummary } from '~~/services/types/feedback.type';
 import type { User } from '~~/services/types/user.type';
 import AdminFeedback from '~/components/Modals/AdminFeedback.vue';
+import FeedbackIntroModal from '~/components/Feedback/IntroModal.vue';
 
 /*
  * «Ошибки и пожелания» — общее состояние для меню (чип с числом открытых),
@@ -59,6 +60,14 @@ export const useFeedback = () => {
     return !!saved;
   };
 
+  /** Объявление о разделе с краткой инструкцией; «Сообщить сейчас» сразу открывает форму */
+  const openIntro = async () => {
+    const intro = overlay.create(FeedbackIntroModal, { destroyOnClose: true });
+    const choice = await intro.open().result;
+    if (choice === 'report') await openReport();
+    return choice;
+  };
+
   return {
     summary,
     openCount: computed(() => summary.value?.open ?? 0),
@@ -66,6 +75,7 @@ export const useFeedback = () => {
     currentUserId: computed(() => user.value?.id),
     loadSummary,
     openReport,
+    openIntro,
     storage,
     userKey,
   };

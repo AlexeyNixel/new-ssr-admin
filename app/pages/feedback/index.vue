@@ -15,7 +15,7 @@ const feedbackApi = useFeedbackApi();
 const toast = useToast();
 const overlay = useOverlay();
 const modal = overlay.create(AdminFeedback);
-const { canManage, openCount, currentUserId, loadSummary, openReport, storage, userKey } = useFeedback();
+const { canManage, openCount, currentUserId, loadSummary, openReport, openIntro, storage, userKey } = useFeedback();
 
 const { page, search, filters } = useListQuery({ status: 'open', type: 'all', mine: 'all' });
 
@@ -129,6 +129,18 @@ useHead({ title: 'НОМБ | Ошибки и пожелания' });
     search-placeholder="Поиск по обращениям…"
     :event-create="handleCreate"
   >
+    <template #actions>
+      <UButton
+        icon="i-lucide-circle-help"
+        color="neutral"
+        variant="ghost"
+        aria-label="Как это работает"
+        @click="openIntro()"
+      >
+        <span class="hidden md:inline">Как это работает</span>
+      </UButton>
+    </template>
+
     <template #filters>
       <UTabs v-model="filters.status" :items="statusTabs" :content="false" size="sm" />
       <USelect v-model="filters.type" :items="typeOptions" size="sm" class="w-36" />

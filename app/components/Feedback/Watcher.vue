@@ -6,23 +6,29 @@
  *   — разработчику: появились новые обращения;
  *   — автору: его обращение выполнено.
  */
-import FeedbackIntroModal from '~/components/Feedback/IntroModal.vue';
-
 const POLL_MS = 2 * 60 * 1000;
+// Сменить версию — объявление покажется всем ещё раз
+const INTRO_KEY = 'intro-v2';
 
 const { isAuthenticated } = useAuth();
-const { loadSummary, openReport, storage, userKey } = useFeedback();
-const overlay = useOverlay();
+const { loadSummary, openIntro, storage, userKey } = useFeedback();
+const route = useRoute();
 const toast = useToast();
 const visibility = useDocumentVisibility();
 
+// Объявление — один раз на пользователя, только на рабочих страницах (не на
+// /login, откуда сразу уходит редирект). Просмотренным считаем лишь после
+// нажатия кнопки в окне: перезагрузили страницу раньше — покажем снова.
+let introOpened = false;
 const showIntro = async () => {
-  if (storage.get(userKey('intro'))) return;
-  const intro = overlay.create(FeedbackIntroModal, { destroyOnClose: true });
-  const choice = await intro.open().result;
-  storage.set(userKey('intro'), '1');
-  if (choice === 'report') await openReport();
+  if (introOpened || !isAuthenticated.value || route.path === '/login') return;
+  if (storage.get(userKey(INTRO_KEY))) return;
+  introOpened = true;
+  await openIntro();
+  storage.set(userKey(INTRO_KEY), '1');
 };
+
+watch([isAuthenticated, () => route.path], () => nextTick(showIntro), { immediate: true });
 
 const check = async () => {
   const key = userKey('checked');
@@ -71,10 +77,8 @@ watch(
       pause();
       return;
     }
-    const available = await check();
+    await check();
     resume();
-    // Пока бэкенд без /api/feedback — не рекламируем то, что не сработает
-    if (available) await showIntro();
   },
   { immediate: true }
 );

@@ -1,52 +1,79 @@
 <script setup lang="ts">
 import { FEEDBACK_TYPES } from '~/utils/feedbackTypes';
 
-// Знакомство с «Ошибками и пожеланиями» — показывается один раз каждому пользователю
+// Объявление о разделе «Ошибки и пожелания»: для чего он и как им пользоваться.
+// Само показывается один раз после входа, повторно — кнопкой «Как это работает» на /feedback.
 const emit = defineEmits<{ close: ['report' | 'later'] }>();
 
-const points = [
-  { icon: FEEDBACK_TYPES.BUG.icon, color: 'text-error', title: 'Что-то работает не так', text: 'Не сохраняется, пропало, выдаёт ошибку' },
-  { icon: FEEDBACK_TYPES.CHANGE.icon, color: 'text-warning', title: 'Что нужно переделать', text: 'Неудобно, долго, непонятно' },
-  { icon: FEEDBACK_TYPES.IDEA.icon, color: 'text-info', title: 'Новые идеи', text: 'Чего не хватает в работе с сайтом' },
+const types = [
+  { ...FEEDBACK_TYPES.BUG, colorClass: 'text-error bg-error/10', text: 'не сохраняется, пропало, выдаёт ошибку' },
+  { ...FEEDBACK_TYPES.CHANGE, colorClass: 'text-warning bg-warning/10', text: 'неудобно, долго, непонятно' },
+  { ...FEEDBACK_TYPES.IDEA, colorClass: 'text-info bg-info/10', text: 'чего не хватает в работе с сайтом' },
+];
+
+const steps = [
+  { title: 'Нажмите «Сообщить об ошибке»', text: 'Кнопка внизу меню слева, работает на любой странице.' },
+  { title: 'Выберите тип и опишите суть', text: 'Одной фразой, подробности и скриншот — по желанию. Адрес страницы подставится сам.' },
+  { title: 'Отправьте', text: 'Обращение попадёт в список задач разработчика.' },
+  { title: 'Получите уведомление', text: 'Когда задачу выполнят, придёт сообщение. Все обращения — в разделе «Ошибки и пожелания».' },
 ];
 </script>
 
 <template>
-  <UModal :dismissible="false" :close="false" :ui="{ content: 'max-w-md' }">
+  <UModal :dismissible="false" :close="false">
     <template #content>
-      <div class="p-6 sm:p-7">
-        <div class="mb-4 flex size-12 items-center justify-center rounded-2xl bg-primary/10 text-primary">
-          <UIcon name="i-lucide-message-square-warning" class="size-6" />
+      <div class="max-h-[90vh] overflow-y-auto p-6 sm:p-7">
+        <div class="mb-4 flex items-center gap-3">
+          <div class="flex size-11 shrink-0 items-center justify-center rounded-2xl bg-primary/10 text-primary">
+            <UIcon name="i-lucide-megaphone" class="size-6" />
+          </div>
+          <div>
+            <UBadge label="Новое в админке" color="primary" variant="subtle" size="sm" />
+            <h2 class="mt-1 mb-0! text-xl! font-semibold! text-highlighted">Ошибки и пожелания</h2>
+          </div>
         </div>
 
-        <h2 class="mb-1! text-xl! font-semibold! text-highlighted">Новое: ошибки и пожелания</h2>
-        <p class="text-sm text-muted">
+        <!-- Для чего -->
+        <p class="text-sm text-default">
           Теперь о проблемах в админке можно сообщить прямо отсюда — не нужно ловить разработчика лично
-          или писать в мессенджер.
+          или писать в мессенджер. Сообщайте обо всём, что мешает работать:
         </p>
 
-        <ul class="my-5 space-y-3">
-          <li v-for="point in points" :key="point.title" class="flex gap-3">
-            <UIcon :name="point.icon" :class="['mt-0.5 size-5 shrink-0', point.color]" />
-            <div>
-              <p class="text-sm font-medium text-highlighted">{{ point.title }}</p>
-              <p class="text-xs text-muted">{{ point.text }}</p>
-            </div>
+        <ul class="my-4 space-y-2">
+          <li v-for="type in types" :key="type.label" class="flex items-center gap-3">
+            <span :class="['flex size-7 shrink-0 items-center justify-center rounded-lg', type.colorClass]">
+              <UIcon :name="type.icon" class="size-4" />
+            </span>
+            <p class="text-sm">
+              <b class="text-highlighted">{{ type.label }}</b>
+              <span class="text-muted"> — {{ type.text }}</span>
+            </p>
           </li>
         </ul>
 
         <div class="mb-5 flex gap-3 rounded-xl border border-success/30 bg-success/5 p-3 text-sm">
           <UIcon name="i-lucide-zap" class="mt-0.5 size-5 shrink-0 text-success" />
           <p class="text-default">
-            <b>Обращения из этого списка исправляются намного быстрее</b> — они не теряются, а когда задача
-            будет выполнена, вы получите уведомление.
+            <b>Обращения из этого списка исправляются намного быстрее</b> — они не теряются, и разработчик
+            видит их все в одном месте.
           </p>
         </div>
 
-        <p class="mb-5 text-xs text-muted">
-          Кнопка <b>«Сообщить об ошибке»</b> всегда внизу меню слева, адрес текущей страницы подставится сам.
-          Все обращения — в разделе <b>«Ошибки и пожелания»</b>.
-        </p>
+        <!-- Краткая инструкция -->
+        <p class="mb-3 text-xs font-semibold uppercase tracking-wide text-muted">Как сообщить</p>
+        <ol class="mb-6 space-y-3">
+          <li v-for="(step, index) in steps" :key="step.title" class="flex gap-3">
+            <span
+              class="flex size-6 shrink-0 items-center justify-center rounded-full bg-primary text-xs font-semibold text-inverted tabular-nums"
+            >
+              {{ index + 1 }}
+            </span>
+            <div>
+              <p class="text-sm font-medium text-highlighted">{{ step.title }}</p>
+              <p class="text-xs text-muted">{{ step.text }}</p>
+            </div>
+          </li>
+        </ol>
 
         <div class="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
           <UButton color="neutral" variant="outline" label="Понятно" block class="sm:w-auto" @click="emit('close', 'later')" />
