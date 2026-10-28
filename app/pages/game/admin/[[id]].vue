@@ -215,6 +215,7 @@ useHead({ title: isUpdate ? 'НОМБ | Редактирование игры' :
             <template #hint>
               <AiSuggestText
                 :source="htmlToText(form.description)"
+                :max-length="300"
                 label="Из полного описания"
                 @apply="form.shortDescription = $event"
               />

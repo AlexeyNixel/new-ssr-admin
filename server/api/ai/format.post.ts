@@ -18,7 +18,7 @@ export default defineEventHandler(async (event) => {
     throw createError({ statusCode: 500, statusMessage: 'AI: токен не настроен (NUXT_AI_TOKEN)' });
   }
 
-  const body = await readBody<{ mode?: string; text?: string }>(event);
+  const body = await readBody<{ mode?: string; text?: string; maxLength?: number }>(event);
   const text = (body?.text ?? '').toString().trim();
   const mode = AI_MODES[body?.mode as AiModeId] ? (body!.mode as AiModeId) : 'proofread';
 
@@ -32,6 +32,14 @@ export default defineEventHandler(async (event) => {
 
   const preset = AI_MODES[mode];
 
+  // Страховка для полей с лимитом длины: ограничиваем генерацию по токенам
+  // (в русском ~2,4 символа на токен), точную обрезку по предложению делает клиент
+  const maxLength = Number(body?.maxLength);
+  const numPredict =
+    preset.output === 'text' && Number.isFinite(maxLength) && maxLength > 0
+      ? Math.ceil(Math.min(maxLength, 4000) / 2) + 20
+      : undefined;
+
   const upstream = await fetch(`${ai.baseUrl.replace(/\/$/, '')}/api/chat`, {
     method: 'POST',
     headers: {
@@ -42,10 +50,10 @@ export default defineEventHandler(async (event) => {
       model: ai.model,
       stream: true,
       think: false, // qwen3 поддерживает «размышления» — для форматирования они лишние и замедляют
-      options: { temperature: preset.temperature },
+      options: { temperature: preset.temperature, ...(numPredict && { num_predict: numPredict }) },
       messages: [
         { role: 'system', content: preset.system },
-        { role: 'user', content: text },
+        { role: 'user', content: preset.task ? `Текст:\n${text}\n\n${preset.task}` : text },
       ],
     }),
   });

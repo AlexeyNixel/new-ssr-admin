@@ -21,7 +21,7 @@ export function useAiFormat() {
     loading.value = false;
   };
 
-  const run = async (mode: AiModeId, text: string) => {
+  const run = async (mode: AiModeId, text: string, options: { maxLength?: number } = {}) => {
     abort();
     result.value = '';
     error.value = null;
@@ -32,7 +32,7 @@ export function useAiFormat() {
       const res = await fetch('/api/ai/format', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ mode, text }),
+        body: JSON.stringify({ mode, text, maxLength: options.maxLength }),
         signal: controller.signal,
       });
 

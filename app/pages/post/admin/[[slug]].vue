@@ -472,6 +472,7 @@ useHead({ title: isUpdate ? 'НОМБ | Редактирование новос�
                 <div class="flex items-center gap-2">
                   <AiSuggestText
                     :source="htmlToText(form.content)"
+                    :max-length="POST_DESCRIPTION_MAX"
                     label="Предложить"
                     @apply="form.description = $event"
                   />

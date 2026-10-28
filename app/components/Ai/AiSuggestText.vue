@@ -13,6 +13,8 @@ const props = withDefaults(
     label?: string;
     /** Минимальная длина исходного текста, чтобы было что сжимать. */
     minLength?: number;
+    /** Лимит поля в символах: длинный ответ обрезается по границе предложения. */
+    maxLength?: number;
   }>(),
   { mode: 'announce', label: 'Предложить', minLength: 40 }
 );
@@ -25,12 +27,26 @@ const toast = useToast();
 
 const enabled = computed(() => props.source.trim().length >= props.minLength);
 
+/** Укладывает текст в лимит: режет по концу последнего влезающего предложения, иначе по слову. */
+const fitLength = (text: string, max?: number) => {
+  if (!max || text.length <= max) return text;
+  const cut = text.slice(0, max);
+  const ends = [...cut.matchAll(/[.!?…](?=\s|$)/g)];
+  const lastEnd = ends.length ? ends[ends.length - 1]!.index! + 1 : 0;
+  if (lastEnd >= max * 0.4) return cut.slice(0, lastEnd);
+  return cut.slice(0, cut.lastIndexOf(' ') > 0 ? cut.lastIndexOf(' ') : max - 1).trimEnd() + '…';
+};
+
 const cleaned = computed(() =>
-  result.value
-    .replace(/<think>[\s\S]*?<\/think>/gi, '')
-    .replace(/^```(?:\w+)?\s*/i, '')
-    .replace(/\s*```\s*$/i, '')
-    .trim()
+  fitLength(
+    result.value
+      .replace(/<think>[\s\S]*?<\/think>/gi, '')
+      .replace(/^```(?:\w+)?\s*/i, '')
+      .replace(/\s*```\s*$/i, '')
+      .replace(/^[«"'](.*)[»"']$/s, '$1')
+      .trim(),
+    props.maxLength
+  )
 );
 
 const start = () => {
@@ -38,7 +54,7 @@ const start = () => {
     toast.add({ title: 'Сначала напишите текст — из него сформируем описание', color: 'warning' });
     return;
   }
-  run(props.mode, props.source);
+  run(props.mode, props.source, { maxLength: props.maxLength });
 };
 
 const onToggle = (v: boolean) => {
@@ -68,9 +84,14 @@ const apply = () => {
 
     <template #content>
       <div class="w-80 max-w-[90vw] p-3">
-        <div class="mb-2 flex items-center gap-1.5 text-xs font-medium text-muted">
-          <UIcon name="i-lucide-sparkles" class="size-3.5" />
-          Предложение ИИ
+        <div class="mb-2 flex items-center justify-between gap-2 text-xs font-medium text-muted">
+          <span class="flex items-center gap-1.5">
+            <UIcon name="i-lucide-sparkles" class="size-3.5" />
+            Предложение ИИ
+          </span>
+          <span v-if="cleaned" class="tabular-nums font-normal">
+            {{ cleaned.length }}{{ maxLength ? ` / ${maxLength}` : '' }} симв.
+          </span>
         </div>
 
         <div
