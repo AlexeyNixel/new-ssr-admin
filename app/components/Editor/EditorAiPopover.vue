@@ -8,7 +8,7 @@ import { useAiFormat } from '~/composables/useAiFormat';
 const props = defineProps<{ editor: Editor }>();
 
 const open = ref(false);
-const mode = ref<AiModeId>('proofread');
+const mode = ref<AiModeId>('format');
 const { result, loading, error, run, abort } = useAiFormat();
 const toast = useToast();
 const clipboard = useClipboard();

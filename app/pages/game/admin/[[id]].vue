@@ -212,6 +212,13 @@ useHead({ title: isUpdate ? 'НОМБ | Редактирование игры' :
             label="Краткое описание"
             description="Показывается в карточке игры в каталоге"
           >
+            <template #hint>
+              <AiSuggestText
+                :source="htmlToText(form.description)"
+                label="Из полного описания"
+                @apply="form.shortDescription = $event"
+              />
+            </template>
             <UTextarea
               id="game-short-description"
               v-model="form.shortDescription"

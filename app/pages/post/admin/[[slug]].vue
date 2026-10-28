@@ -469,12 +469,19 @@ useHead({ title: isUpdate ? 'НОМБ | Редактирование новос�
               required
             >
               <template #hint>
-                <span
-                  class="tabular-nums"
-                  :class="descriptionLength > POST_DESCRIPTION_MAX ? 'text-error' : 'text-muted'"
-                >
-                  {{ descriptionLength }} / {{ POST_DESCRIPTION_MAX }}
-                </span>
+                <div class="flex items-center gap-2">
+                  <AiSuggestText
+                    :source="htmlToText(form.content)"
+                    label="Предложить"
+                    @apply="form.description = $event"
+                  />
+                  <span
+                    class="tabular-nums"
+                    :class="descriptionLength > POST_DESCRIPTION_MAX ? 'text-error' : 'text-muted'"
+                  >
+                    {{ descriptionLength }} / {{ POST_DESCRIPTION_MAX }}
+                  </span>
+                </div>
               </template>
               <UTextarea
                 id="post-description"
@@ -666,7 +673,13 @@ useHead({ title: isUpdate ? 'НОМБ | Редактирование новос�
             </UFormField>
 
             <UFormField label="Теги" description="Можно создать новый тег — просто введите его название">
-              <UiSelectTag v-model="form.tags" />
+              <div class="space-y-2">
+                <UiSelectTag v-model="form.tags" />
+                <AiSuggestTags
+                  v-model="form.tags"
+                  :source="`${form.title}. ${htmlToText(form.content)}`"
+                />
+              </div>
             </UFormField>
           </section>
 
