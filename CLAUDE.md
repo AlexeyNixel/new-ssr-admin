@@ -327,7 +327,7 @@ title: z.string('Обязательное поле').min(1, 'Обязатель�
 `UiUploadImage` — обёртка над `UFileUpload`, при выборе файла грузит его
 через `useUploadApi().uploadImage()` и эмитит `update:modelValue` с `id`
 загруженного файла. Превью рендерится по адресу
-`http://static.infomania.ru${path}` (см. «Известные особенности» ниже).
+`staticUrl(path)` из `app/utils/listFormat.ts` (хранилище Silo, `https://s3.infomania.ru`).
 
 Аналогичные компоненты: `UploadDocument.vue`, `UploadExhibition.vue`.
 
@@ -369,7 +369,7 @@ Tiptap). Расширения: таблицы, картинки с ресайз�
 - `.env` → `NUXT_PUBLIC_API_BASE` — базовый URL API (используется в
   `useApi()` через `runtimeConfig.public.apiBaseUrl`).
 - В `nuxt.config.ts` настроены dev-прокси (`/site`, `/dev`, `/media`) на
-  `http://192.168.0.41:10001` — внутренний адрес дев-бэкенда в локальной сети.
+  S3-хранилище Silo `https://s3.infomania.ru` (веб-консоль — `https://silo.infomania.ru`).
 
 ### Ошибки и пожелания (`/feedback`)
 
@@ -401,9 +401,9 @@ Tiptap). Расширения: таблицы, картинки с ресайз�
   содержит `getAllClubs` / `getOneClub` / `createClub` / `updateClub`.
   `club?.preview?.path` теперь через optional chaining. Осталось проверить
   раздел вживую на реальных данных.
-- **Хардкод хостов**: `http://static.infomania.ru` в `UploadImage.vue` и
-  `http://localhost:3300` + `http://static.infomania.ru` в
-  `app/utils/uploadAdapter.ts` (похоже, не используется — legacy-адаптер для
+- **Хардкод хостов**: адрес хранилища задан только в `STATIC_HOST`
+  (`app/utils/listFormat.ts`), везде используется `staticUrl()`.
+  `http://localhost:3300` в `app/utils/uploadAdapter.ts` (похоже, не используется — legacy-адаптер для
   старого редактора). Ссылка `http://dev.infomania.ru/...` в
   `app/pages/page/index.vue`.
 - **`app/pages/page/create.vue`** vs **`app/pages/page/admin/[[slug]].vue`**

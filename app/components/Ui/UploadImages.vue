@@ -7,7 +7,7 @@
     >
       <img
         v-if="image.path"
-        :src="`http://static.infomania.ru${image.path}`"
+        :src="staticUrl(image.path)"
         class="h-full w-full object-cover"
         alt=""
       >

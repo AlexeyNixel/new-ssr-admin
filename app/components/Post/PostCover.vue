@@ -25,7 +25,7 @@ const toast = useToast();
 const file = ref<File | null>(null);
 const loading = ref(false);
 
-const src = computed(() => (path.value ? `http://static.infomania.ru${path.value}` : ''));
+const src = computed(() => staticUrl(path.value));
 
 watch(file, async (value) => {
   if (!value) return;

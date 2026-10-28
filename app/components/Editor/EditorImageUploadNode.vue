@@ -25,7 +25,7 @@ watch(file, async (newFile) => {
       .chain()
       .focus()
       .deleteRange({ from: pos, to: pos + 1 })
-      .setImage({ src: `http://static.infomania.ru${res.path}` })
+      .setImage({ src: staticUrl(res.path) })
       .run();
   } catch {
     toast.add({ title: 'Не удалось загрузить изображение', color: 'error' });

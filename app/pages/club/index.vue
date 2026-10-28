@@ -41,7 +41,7 @@ const columns: TableColumn<Club>[] = [
     cell: ({ row }) => {
       if (!row.original?.preview?.path) return h('div', { class: 'w-16 h-16 rounded-lg bg-neutral-100 dark:bg-neutral-800 flex items-center justify-center text-neutral-400 text-xs' }, 'Нет фото');
       return h('img', {
-        src: `http://static.infomania.ru${row.original.preview.path}`,
+        src: staticUrl(row.original.preview.path),
         class: 'w-16 h-16 object-cover rounded-lg',
         alt: row.original.name,
       });

@@ -10,7 +10,7 @@
     <img
       v-if="preview"
       class="h-56 w-full"
-      :src="`http://static.infomania.ru${newPreview.path}`"
+      :src="staticUrl(newPreview.path)"
       alt=""
       @click="open()"
     >

@@ -2,7 +2,7 @@
  * Форматирование для списков админки (авто-импорт из app/utils).
  */
 
-const STATIC_HOST = 'http://static.infomania.ru';
+const STATIC_HOST = 'https://s3.infomania.ru';
 
 /** Полный адрес загруженного файла по его path из API. */
 export const staticUrl = (path?: string | null) => (path ? `${STATIC_HOST}${path}` : '');

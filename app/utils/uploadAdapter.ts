@@ -36,7 +36,7 @@ class UploadAdapter {
       })
         .then(async (response) => {
           const result = await response.json();
-          resolve({ default: `http://static.infomania.ru${result.path}` });
+          resolve({ default: staticUrl(result.path) });
         })
         .catch((err) => {
           reject(err);

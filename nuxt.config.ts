@@ -21,15 +21,15 @@ export default defineNuxtConfig({
     server: {
       proxy: {
         '/site': {
-          target: 'http://192.168.0.41:10001',
+          target: 'https://s3.infomania.ru',
           changeOrigin: true,
         },
         '/dev': {
-          target: 'http://192.168.0.41:10001/',
+          target: 'https://s3.infomania.ru/',
           changeOrigin: true,
         },
         '/media': {
-          target: 'http://192.168.0.41:10001/site',
+          target: 'https://s3.infomania.ru/site',
           changeOrigin: true,
         },
       },
