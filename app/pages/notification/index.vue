@@ -19,7 +19,14 @@ const modal = overlay.create(AdminNotification);
 const notifications = ref();
 const page = ref(1);
 
-const isExpired = (endTime: string) => new Date().toISOString() > endTime;
+const isExpired = (endTime?: string | null) => !!endTime && new Date().toISOString() > endTime;
+
+const getStatus = (notification: Notification) => {
+  if (notification.isDeleted) return { label: 'Скрыто', color: 'neutral' as const };
+  if (isExpired(notification.endTime)) return { label: 'Истекло', color: 'neutral' as const };
+  if (new Date().toISOString() < notification.startTime) return { label: 'Запланировано', color: 'info' as const };
+  return { label: 'Активно', color: 'success' as const };
+};
 
 const columns: TableColumn<Notification>[] = [
   {
@@ -29,8 +36,8 @@ const columns: TableColumn<Notification>[] = [
       h('div', { class: 'flex flex-col gap-1' }, [
         h(UBadge, {
           variant: 'subtle',
-          color: isExpired(row.original.endTime) ? 'neutral' : 'success',
-          label: isExpired(row.original.endTime) ? 'Истекло' : 'Активно',
+          ...getStatus(row.original),
+          class: 'w-max',
         }),
         h(UBadge, {
           variant: 'subtle',
@@ -91,6 +98,8 @@ const fetchData = async () => {
   notifications.value = await notificationApi.getAllNotifications({
     limit: 15,
     page: page.value,
+    // Все уведомления, а не только актуальные сейчас (прошедшие и запланированные тоже)
+    isDeleted: true,
   });
 };
 
