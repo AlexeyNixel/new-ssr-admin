@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import slugify from 'slugify';
-import { CalendarDate } from '@internationalized/date';
+import { CalendarDate, Time, parseDate } from '@internationalized/date';
 import type { FormErrorEvent } from '@nuxt/ui';
 import { usePostApi } from '~~/services/api/post.api';
 import { useDepartmentApi } from '~~/services/api/department.api';
@@ -11,14 +11,14 @@ import EditorCustom from '~/components/Editor/EditorCustom.vue';
 
 // Параметр маршрута называется slug, но в него передаётся id новости
 const route = useRoute();
-const postId = route.params.slug as string | undefined;
+const postId = (route.params.slug as string | undefined) || undefined;
 const isUpdate = !!postId;
 
 const toast = useToast();
 const postApi = usePostApi();
 const departmentApi = useDepartmentApi();
 
-const SITE_URL = `${useRuntimeConfig().public.siteUrl}/entry/`;
+const SITE_URL = `${useRuntimeConfig().public.siteUrl}/post/`;
 
 const form = reactive({
   title: '',
@@ -33,39 +33,59 @@ const form = reactive({
 });
 const previewPath = ref('');
 const publishedAt = ref(new Date());
+// Дата мероприятия у новости-анонса; shallowRef — у CalendarDate приватные поля
+const eventDate = shallowRef<CalendarDate>();
 
 const loaded = ref<Post>();
 const loadError = ref(false);
 const departments = ref<Department[]>([]);
 
+// «Создать копию»: /post/admin?copyFrom=<id> — новая новость, заполненная копией
+const copyFromId = isUpdate ? undefined : (route.query.copyFrom as string | undefined);
+const copiedFrom = ref<Post>();
+
+const sourceId = postId ?? copyFromId;
 const [departmentsRes, postRes] = await Promise.allSettled([
   departmentApi.getAllDepartments({ limit: 100 }),
-  postId ? postApi.getPostById(postId) : Promise.resolve(undefined),
+  sourceId ? postApi.getPostById(sourceId) : Promise.resolve(undefined),
 ]);
 
 if (departmentsRes.status === 'fulfilled') {
   departments.value = departmentsRes.value.data ?? [];
 }
 
-if (postId) {
+if (sourceId) {
   if (postRes.status === 'fulfilled' && postRes.value) {
     const data = postRes.value;
-    loaded.value = data;
+    if (isUpdate) loaded.value = data;
+    else copiedFrom.value = data;
     Object.assign(form, {
-      title: data.title ?? '',
+      title: isUpdate ? (data.title ?? '') : `${data.title ?? ''} (копия)`,
       description: data.description ?? '',
       content: data.content ?? '',
-      slug: data.slug ?? '',
+      // у копии свой адрес — сформируется из заголовка при сохранении
+      slug: isUpdate ? (data.slug ?? '') : '',
       tags: (data.tags ?? []).map((tag) => tag.id),
       departmentId: data.departmentId ?? data.department?.id,
-      isDeleted: !!data.isDeleted,
-      isPinned: !!data.isPinned,
+      // копия создаётся скрытой, чтобы не попасть на сайт недоделанной
+      isDeleted: isUpdate ? !!data.isDeleted : true,
+      isPinned: isUpdate ? !!data.isPinned : false,
       previewFileId: data.previewFileId ?? data.preview?.id,
     });
     previewPath.value = data.preview?.path ?? '';
-    if (data.publishedAt) publishedAt.value = new Date(data.publishedAt);
-  } else {
+    if (isUpdate && data.publishedAt) publishedAt.value = new Date(data.publishedAt);
+    // только дата, без перевода поясов: «2026-10-25T00:00:00.000Z» → 25 октября
+    if (data.eventDate) {
+      try {
+        eventDate.value = parseDate(data.eventDate.slice(0, 10));
+      } catch {
+        eventDate.value = undefined;
+      }
+    }
+  } else if (isUpdate) {
     loadError.value = true;
+  } else {
+    toast.add({ title: 'Не удалось загрузить новость для копии', color: 'error' });
   }
 }
 
@@ -83,7 +103,12 @@ watch(
 // ---------- Несохранённые изменения ----------
 
 const snapshot = () =>
-  JSON.stringify({ ...form, previewPath: previewPath.value, publishedAt: publishedAt.value.getTime() });
+  JSON.stringify({
+    ...form,
+    previewPath: previewPath.value,
+    publishedAt: publishedAt.value.getTime(),
+    eventDate: eventDate.value?.toString(),
+  });
 
 const savedState = ref(snapshot());
 const isDirty = computed(() => savedState.value !== snapshot());
@@ -96,6 +121,24 @@ onBeforeRouteLeave(() => {
 
 useEventListener(window, 'beforeunload', (event: BeforeUnloadEvent) => {
   if (isDirty.value) event.preventDefault();
+});
+
+// Автосохранение черновика в браузере — на случай закрытой вкладки или сбоя
+const draft = useDraftAutosave({
+  key: `post:${postId ?? (copyFromId ? `copy:${copyFromId}` : 'new')}`,
+  data: () => ({
+    form: { ...form, tags: [...form.tags] },
+    previewPath: previewPath.value,
+    publishedAt: publishedAt.value.toISOString(),
+    eventDate: eventDate.value?.toString(),
+  }),
+  apply: (data) => {
+    Object.assign(form, data.form);
+    previewPath.value = data.previewPath;
+    publishedAt.value = new Date(data.publishedAt);
+    eventDate.value = data.eventDate ? parseDate(data.eventDate) : undefined;
+  },
+  isDirty,
 });
 
 // ---------- Дата публикации ----------
@@ -116,6 +159,17 @@ const publishedDate = computed({
   },
 });
 
+// Время публикации — для отложенной публикации (дата не меняется)
+const publishedTime = computed({
+  get: () => new Time(publishedAt.value.getHours(), publishedAt.value.getMinutes()),
+  set: (value) => {
+    if (!value) return;
+    const next = new Date(publishedAt.value);
+    next.setHours(value.hour, value.minute, 0, 0);
+    publishedAt.value = next;
+  },
+});
+
 const datePopoverOpen = ref(false);
 const setToday = () => {
   publishedAt.value = new Date();
@@ -129,6 +183,29 @@ const dateFormatter = new Intl.DateTimeFormat('ru-RU', {
 });
 const isFuture = computed(() => publishedAt.value.getTime() > Date.now() + 60_000);
 
+const scheduleFormatter = new Intl.DateTimeFormat('ru-RU', {
+  day: 'numeric',
+  month: 'long',
+  hour: '2-digit',
+  minute: '2-digit',
+});
+/** «25 октября в 09:00» */
+const scheduledLabel = computed(() => scheduleFormatter.format(publishedAt.value).replace(', ', ' в '));
+const isScheduled = computed(() => !form.isDeleted && isFuture.value);
+
+// ---------- Дата мероприятия (анонс) ----------
+
+const eventDatePopoverOpen = ref(false);
+const eventDateLabel = computed(() =>
+  eventDate.value ? dateFormatter.format(eventDate.value.toDate('UTC')) : 'Не указана'
+);
+// Анонс с датой раньше публикации — скорее всего опечатка
+const isEventBeforePublish = computed(() => !!eventDate.value && eventDate.value.compare(publishedDate.value) < 0);
+const clearEventDate = () => {
+  eventDate.value = undefined;
+  eventDatePopoverOpen.value = false;
+};
+
 // ---------- Статус ----------
 
 const isPublished = computed({
@@ -140,6 +217,7 @@ const isPublished = computed({
 
 const status = computed(() => {
   if (!isUpdate) return { label: 'Новая', color: 'neutral' as const };
+  if (isScheduled.value) return { label: 'Запланирована', color: 'info' as const };
   return form.isDeleted
     ? { label: 'Скрыта', color: 'warning' as const }
     : { label: 'Опубликована', color: 'success' as const };
@@ -191,17 +269,24 @@ const onSubmit = async () => {
     // или оставит прежний (при редактировании)
     slug: form.slug.trim() || undefined,
     publishedAt: publishedAt.value.toISOString(),
+    // null — явно убрать дату (без ключа бэкенд оставил бы прежнюю)
+    eventDate: eventDate.value?.toString() ?? null,
   };
 
   try {
     if (isUpdate) {
       await postApi.updatePost(postId!, payload);
-      toast.add({ title: 'Новость обновлена', color: 'success', icon: 'i-lucide-circle-check' });
     } else {
       await postApi.createPost(payload);
-      toast.add({ title: 'Новость создана', color: 'success', icon: 'i-lucide-circle-check' });
     }
+    toast.add({
+      title: isUpdate ? 'Новость обновлена' : 'Новость создана',
+      description: isScheduled.value ? `Появится на сайте ${scheduledLabel.value}` : undefined,
+      color: 'success',
+      icon: isScheduled.value ? 'i-lucide-clock' : 'i-lucide-circle-check',
+    });
     savedState.value = snapshot();
+    draft.clear();
     await navigateTo('/post');
   } catch {
     toast.add({
@@ -305,7 +390,22 @@ useHead({ title: isUpdate ? 'НОМБ | Редактирование новос�
             class="hidden sm:inline-flex"
           />
 
-          <UTooltip v-if="siteUrl" text="Открыть на сайте">
+          <UTooltip v-if="isUpdate" text="Новая новость с тем же текстом, обложкой и рубрикацией">
+            <UButton
+              :to="`/post/admin?copyFrom=${postId}`"
+              icon="i-lucide-copy"
+              color="neutral"
+              variant="outline"
+              aria-label="Создать копию"
+            >
+              <span class="hidden lg:inline">Создать копию</span>
+            </UButton>
+          </UTooltip>
+
+          <UTooltip
+            v-if="siteUrl"
+            :text="form.isDeleted || isFuture ? 'Открыть на сайте (пока видна только по прямой ссылке)' : 'Открыть на сайте'"
+          >
             <UButton
               :to="siteUrl"
               target="_blank"
@@ -334,6 +434,17 @@ useHead({ title: isUpdate ? 'НОМБ | Редактирование новос�
       >
         <!-- Основное -->
         <main class="min-w-0 space-y-6">
+          <EntityFormDraftBanner :draft="draft" />
+
+          <UAlert
+            v-if="copiedFrom"
+            color="info"
+            variant="subtle"
+            icon="i-lucide-copy"
+            :title="`Копия новости «${copiedFrom.title}»`"
+            description="Копия создаётся скрытой: поправьте заголовок и текст, затем включите «Показывать на сайте»."
+          />
+
           <section class="space-y-5 rounded-xl border border-default bg-default p-4 shadow-xs sm:p-6">
             <UFormField name="title" data-field="title" :ui="{ error: 'mt-1' }">
               <UTextarea
@@ -400,7 +511,13 @@ useHead({ title: isUpdate ? 'НОМБ | Редактирование новос�
             <USwitch
               v-model="isPublished"
               label="Показывать на сайте"
-              :description="isPublished ? 'Новость видна посетителям' : 'Новость скрыта от посетителей'"
+              :description="
+                !isPublished
+                  ? 'Новость скрыта от посетителей'
+                  : isFuture
+                    ? `Появится на сайте ${scheduledLabel}`
+                    : 'Новость видна посетителям'
+              "
             />
             <USwitch
               v-model="form.isPinned"
@@ -408,34 +525,105 @@ useHead({ title: isUpdate ? 'НОМБ | Редактирование новос�
               description="Новость будет выше остальных в ленте"
             />
 
-            <UFormField label="Дата публикации" :help="isFuture ? 'Дата в будущем' : undefined">
-              <UPopover v-model:open="datePopoverOpen">
-                <UButton
-                  color="neutral"
-                  variant="outline"
-                  icon="i-lucide-calendar"
-                  trailing-icon="i-lucide-chevron-down"
-                  class="w-full"
-                  :ui="{ trailingIcon: 'ms-auto text-dimmed' }"
-                >
-                  {{ dateFormatter.format(publishedAt) }}
-                </UButton>
+            <UFormField
+              label="Дата и время публикации"
+              :help="
+                isFuture
+                  ? isPublished
+                    ? 'Отложенная публикация: до этого времени новости не будет в ленте и поиске'
+                    : 'Дата в будущем. Включите «Показывать на сайте», чтобы новость вышла в это время'
+                  : undefined
+              "
+              :ui="{ help: isFuture ? 'text-info' : undefined }"
+            >
+              <div class="flex gap-2">
+                <UPopover v-model:open="datePopoverOpen">
+                  <UButton
+                    color="neutral"
+                    variant="outline"
+                    icon="i-lucide-calendar"
+                    trailing-icon="i-lucide-chevron-down"
+                    class="min-w-0 flex-1"
+                    :ui="{ trailingIcon: 'ms-auto text-dimmed' }"
+                  >
+                    <span class="truncate">{{ dateFormatter.format(publishedAt) }}</span>
+                  </UButton>
 
-                <template #content>
-                  <div class="p-2">
-                    <UCalendar v-model="publishedDate" />
-                    <UButton
-                      label="Сегодня"
-                      color="neutral"
-                      variant="soft"
-                      size="sm"
-                      block
-                      class="mt-2"
-                      @click="setToday"
-                    />
-                  </div>
-                </template>
-              </UPopover>
+                  <template #content>
+                    <div class="p-2">
+                      <UCalendar v-model="publishedDate" />
+                      <UButton
+                        label="Сейчас"
+                        color="neutral"
+                        variant="soft"
+                        size="sm"
+                        block
+                        class="mt-2"
+                        @click="setToday"
+                      />
+                    </div>
+                  </template>
+                </UPopover>
+                <UInputTime
+                  v-model="publishedTime"
+                  :hour-cycle="24"
+                  class="w-24 shrink-0"
+                  aria-label="Время публикации"
+                />
+              </div>
+            </UFormField>
+          </section>
+
+          <!-- Анонс мероприятия -->
+          <section class="space-y-3 rounded-xl border border-default bg-default p-4 shadow-xs">
+            <div class="flex items-center gap-2 text-sm font-semibold text-highlighted">
+              <UIcon name="i-lucide-calendar-heart" class="size-4 text-muted" />
+              Анонс мероприятия
+            </div>
+
+            <UFormField
+              label="Дата мероприятия"
+              :help="
+                isEventBeforePublish
+                  ? 'Мероприятие раньше даты публикации — проверьте дату'
+                  : 'Необязательно. Если указана, на сайте покажется она вместо даты публикации. Порядок в ленте — по дате публикации.'
+              "
+              :ui="{ help: isEventBeforePublish ? 'text-warning' : undefined }"
+            >
+              <div class="flex gap-2">
+                <UPopover v-model:open="eventDatePopoverOpen">
+                  <UButton
+                    color="neutral"
+                    variant="outline"
+                    icon="i-lucide-calendar-days"
+                    trailing-icon="i-lucide-chevron-down"
+                    class="min-w-0 flex-1"
+                    :class="!eventDate && 'text-dimmed'"
+                    :ui="{ trailingIcon: 'ms-auto text-dimmed' }"
+                  >
+                    <span class="truncate">{{ eventDateLabel }}</span>
+                  </UButton>
+
+                  <template #content>
+                    <div class="p-2">
+                      <UCalendar
+                        v-model="eventDate"
+                        @update:model-value="eventDatePopoverOpen = false"
+                      />
+                    </div>
+                  </template>
+                </UPopover>
+
+                <UTooltip v-if="eventDate" text="Убрать дату мероприятия">
+                  <UButton
+                    icon="i-lucide-x"
+                    color="neutral"
+                    variant="ghost"
+                    aria-label="Убрать дату мероприятия"
+                    @click="clearEventDate"
+                  />
+                </UTooltip>
+              </div>
             </UFormField>
           </section>
 
@@ -502,7 +690,7 @@ useHead({ title: isUpdate ? 'НОМБ | Редактирование новос�
                 :ui="{ base: 'ps-14', leading: 'pointer-events-none' }"
               >
                 <template #leading>
-                  <span class="text-sm text-dimmed">/entry/</span>
+                  <span class="text-sm text-dimmed">/post/</span>
                 </template>
               </UInput>
             </UFormField>

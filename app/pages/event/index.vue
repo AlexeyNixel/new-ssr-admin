@@ -15,7 +15,7 @@ const eventApi = useEventApi();
 
 await redirectEditIdToPage('/event');
 
-const { page, filters } = useListQuery({ sort: 'late' });
+const { page, search, filters } = useListQuery({ sort: 'late' });
 
 const events = ref<IEvent[]>([]);
 const meta = ref<Meta>();
@@ -28,6 +28,7 @@ const fetchData = async () => {
       isDeleted: true,
       limit: PAGE_SIZE,
       page: page.value,
+      search: search.value || undefined,
       sortBy: 'eventTime',
       sortOrder: filters.sort === 'early' ? 'asc' : 'desc',
     });
@@ -41,7 +42,7 @@ const fetchData = async () => {
 };
 
 await fetchData();
-watch([page, () => ({ ...filters })], fetchData);
+watch([page, search, () => ({ ...filters })], fetchData);
 
 // ---------- Дата ----------
 
@@ -95,7 +96,10 @@ const setVisibility = async (event: IEvent, isDeleted: boolean) => {
 };
 
 const rowActions = (event: IEvent) => [
-  [{ label: 'Редактировать', icon: 'i-lucide-pencil', to: `/event/admin/${event.id}` }],
+  [
+    { label: 'Редактировать', icon: 'i-lucide-pencil', to: `/event/admin/${event.id}` },
+    { label: 'Дублировать', icon: 'i-lucide-copy', to: `/event/admin?copyFrom=${event.id}` },
+  ],
   [
     {
       label: event.isDeleted ? 'Опубликовать' : 'Скрыть с сайта',
@@ -172,16 +176,23 @@ const sortItems = [
   { label: 'Сначала ранние', value: 'early', icon: 'i-lucide-arrow-up-narrow-wide' },
 ];
 
+const resetFilters = () => {
+  search.value = '';
+  filters.sort = 'late';
+};
+
 useHead({ title: 'НОМБ | События' });
 </script>
 
 <template>
   <NuxtLayout
     v-model="page"
+    v-model:search="search"
     name="table"
     title="События"
     :description="meta ? `${meta.total.toLocaleString('ru-RU')} ${plural(meta.total, ['событие', 'события', 'событий'])} в афише` : undefined"
     create-label="Новое событие"
+    search-placeholder="Поиск по названию…"
     :meta="meta"
     :loading="loading"
     :event-create="() => navigateTo('/event/admin')"
@@ -198,7 +209,7 @@ useHead({ title: 'НОМБ | События' });
       @select="onSelect"
     >
       <template #empty>
-        <ListEmpty title="Событий пока нет" icon="i-lucide-calendar-x" />
+        <ListEmpty :searching="!!search" title="Событий пока нет" icon="i-lucide-calendar-x" @reset="resetFilters" />
       </template>
     </UTable>
   </NuxtLayout>

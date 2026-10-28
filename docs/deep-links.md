@@ -36,13 +36,13 @@
 | Отделы          | `/department?editId=<id>`               | `GET /api/departments/:id`       |
 | Уведомления     | `/notification?editId=<id>`             | `GET /api/notification/:id`      |
 | Точки на карте  | `/map-point?editId=<id>`                | `GET /api/map-point/:id`         |
-| Книги           | `/book?editId=<id>`                     | `GET /api/book/:id?include=preview` |
+| Короткие ссылки | `/short-link?editId=<id>`               | `GET /api/short-link/:id`        |
 | Сборники книг   | `/collection?editId=<id>` → `/collection/admin/<id>` | `GET /api/book-collection/:id?isDeleted=true` |
 | Навигация       | `/navigation?editId=<id>`               | `GET /api/navigation-item/:id`   |
 | Клубы           | `/club?editId=<id>`                     | `GET /api/clubs/:id?include=preview` |
 
-Пример: `https://admin.infomania.ru/book?editId=1f0c...` — откроется страница
-«Книги» с уже открытой модалкой редактирования этой книги.
+Пример: `https://admin.infomania.ru/club?editId=1f0c...` — откроется страница
+«Клубы» с уже открытой модалкой редактирования этого клуба.
 
 ## Разделы с отдельной страницей редактирования
 
@@ -53,13 +53,14 @@
 | -------- | ------------------------ | ----------------- |
 | Посты    | `/post/admin/<id>`       | `/post/admin`     |
 | Страницы | `/page/admin/<slug>`     | `/page/admin`     |
-| События  | `/event/admin/<id>`      | `/event/admin`    |
+| События  | `/event/admin/<id>`      | `/event/admin`, копия — `/event/admin?copyFrom=<id>` |
 | Слайды   | `/slide/admin/<id>`      | `/slide/admin`    |
 | Игры     | `/game/admin/<id>`       | `/game/admin`     |
 | Комиксы  | `/comic/admin/<id>`      | `/comic/admin`    |
+| Книги    | `/book/admin/<id>`       | `/book/admin`     |
 
 Старые ссылки `/event?editId=<id>`, `/slide?editId=<id>`, `/game?editId=<id>`,
-`/comic?editId=<id>` продолжают работать: список перенаправляет на
+`/comic?editId=<id>`, `/book?editId=<id>` продолжают работать: список перенаправляет на
 `/<раздел>/admin/<id>` (`redirectEditIdToPage` в `useEntityForm.ts`).
 
 ## Как подключить к новой сущности

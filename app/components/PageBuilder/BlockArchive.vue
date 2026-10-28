@@ -6,6 +6,9 @@ const props = defineProps<{
   block: PageArchiveBlock;
 }>();
 
+// У блоков, созданных до появления тегов, поля нет — UiSelectTag ждёт массив
+if (!Array.isArray(props.block.tagIds)) props.block.tagIds = [];
+
 const addItem = () => {
   props.block.items.push({ date: '', text: '', url: '' });
 };
@@ -18,16 +21,40 @@ const removeItem = (index: number) => {
 <template>
   <div class="space-y-4">
     <UFormField label="Заголовок блока" required>
-      <UInput v-model="props.block.title" placeholder="Выпуски проекта" class="w-full" />
+      <UInput
+        v-model="props.block.title"
+        placeholder="Выпуски проекта"
+        class="w-full"
+      />
     </UFormField>
-    <UFormField label="Пояснение" description="Необязательно, выводится под заголовком">
+    <UFormField
+      label="Пояснение"
+      description="Необязательно, выводится под заголовком"
+    >
       <UInput
         v-model="props.block.note"
         placeholder="Все выпуски проекта по порядку"
         class="w-full"
       />
     </UFormField>
-    <UFormField label="Ссылки">
+    <UFormField
+      label="Новости по тегам"
+      description="Новости хотя бы с одним из тегов попадут в архив на сайте сами — от новых к старым, вместе с ручными ссылками ниже"
+    >
+      <UiSelectTag v-model="props.block.tagIds!" />
+      <p
+        v-if="props.block.tagIds?.length && props.block.tagItems"
+        class="mt-1.5 text-xs text-neutral-500 dark:text-neutral-400"
+      >
+        Сейчас по тегам найдено новостей: {{ props.block.tagItems.length }}
+        (после смены тегов число обновится, когда страницу сохранят и откроют
+        заново)
+      </p>
+    </UFormField>
+    <UFormField
+      label="Ссылки вручную"
+      description="Для публикаций без тега или ссылок на другие сайты"
+    >
       <div class="space-y-3">
         <div
           v-for="(item, index) in props.block.items"
@@ -35,8 +62,16 @@ const removeItem = (index: number) => {
           class="p-3 rounded-lg border border-neutral-200 dark:border-neutral-700 space-y-2"
         >
           <div class="flex items-center gap-2">
-            <UInput v-model="item.date" placeholder="17.04.2026" class="w-32 shrink-0" />
-            <UInput v-model="item.text" placeholder="Текст ссылки" class="flex-1" />
+            <UInput
+              v-model="item.date"
+              placeholder="17.04.2026"
+              class="w-32 shrink-0"
+            />
+            <UInput
+              v-model="item.text"
+              placeholder="Текст ссылки"
+              class="flex-1"
+            />
             <UButton
               icon="i-heroicons-x-mark-20-solid"
               color="neutral"
@@ -45,7 +80,11 @@ const removeItem = (index: number) => {
               @click="removeItem(index)"
             />
           </div>
-          <UInput v-model="item.url" placeholder="/post/slug-novosti или https://..." class="w-full" />
+          <UInput
+            v-model="item.url"
+            placeholder="/post/slug-novosti или https://..."
+            class="w-full"
+          />
         </div>
         <UButton
           icon="i-heroicons-plus-20-solid"
@@ -55,7 +94,10 @@ const removeItem = (index: number) => {
           label="Добавить ссылку"
           @click="addItem"
         />
-        <p v-if="!props.block.items.length" class="text-xs text-neutral-500 dark:text-neutral-400">
+        <p
+          v-if="!props.block.items.length"
+          class="text-xs text-neutral-500 dark:text-neutral-400"
+        >
           Пока нет ни одной ссылки
         </p>
       </div>

@@ -6,6 +6,12 @@ export interface Post {
   slug: string;
 
   publishedAt: string;
+  /**
+   * Дата мероприятия для новости-анонса (только дата, приходит как
+   * «2026-10-25T00:00:00.000Z», шлём «2026-10-25»; null — нет). Сайт
+   * показывает её вместо даты публикации, сортировка — по publishedAt.
+   */
+  eventDate?: string | null;
   createdAt: string;
   updatedAt: string;
 

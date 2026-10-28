@@ -77,9 +77,14 @@ if (gameId) {
 
 const formRef = useTemplateRef('formRef');
 
-const { isDirty, markSaved, onError } = useEntityForm({
+const { isDirty, markSaved, onError, draft } = useEntityForm({
   snapshot: () => form,
   submit: () => formRef.value?.submit(),
+  // картинки не восстанавливаем: их превью хранятся отдельно от формы
+  draft: {
+    key: `game:${gameId || 'new'}`,
+    restore: ({ imageFileIds: _images, ...fields }) => Object.assign(form, fields),
+  },
   fieldLabels: {
     title: 'Название',
     status: 'Наличие',
@@ -95,6 +100,12 @@ const { isDirty, markSaved, onError } = useEntityForm({
 
 const status = computed(() =>
   publicationStatus(isUpdate, form.isDeleted, { shown: 'Опубликована', hidden: 'Скрыта', created: 'Новая' })
+);
+
+const config = useRuntimeConfig();
+// Ссылка — по сохранённому адресу; скрытое сайт не покажет
+const siteUrl = computed(() =>
+  loaded.value?.slug && !loaded.value.isDeleted ? `${config.public.siteUrl}/games/${loaded.value.slug}` : undefined
 );
 
 const checklist = computed(() => [
@@ -182,9 +193,12 @@ useHead({ title: isUpdate ? 'НОМБ | Редактирование игры' :
         :is-dirty="isDirty"
         :saving="saving"
         :submit-label="isUpdate ? 'Сохранить' : 'Создать игру'"
+        :site-url="siteUrl"
       />
 
       <EntityFormBody>
+        <EntityFormDraftBanner v-if="draft" :draft="draft" />
+
         <section class="space-y-5 rounded-xl border border-default bg-default p-4 shadow-xs sm:p-6">
           <EntityFormTitleInput
             v-model="form.title"

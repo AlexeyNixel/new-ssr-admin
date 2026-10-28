@@ -61,9 +61,14 @@ if (comicId) {
 
 const formRef = useTemplateRef('formRef');
 
-const { isDirty, markSaved, onError } = useEntityForm({
+const { isDirty, markSaved, onError, draft } = useEntityForm({
   snapshot: () => form,
   submit: () => formRef.value?.submit(),
+  // картинки не восстанавливаем: их превью хранятся отдельно от формы
+  draft: {
+    key: `comic:${comicId || 'new'}`,
+    restore: ({ imageFileIds: _images, ...fields }) => Object.assign(form, fields),
+  },
   fieldLabels: {
     title: 'Название',
     volumeNumber: 'Номер тома',
@@ -75,6 +80,12 @@ const { isDirty, markSaved, onError } = useEntityForm({
 
 const status = computed(() =>
   publicationStatus(isUpdate, form.isDeleted, { shown: 'Опубликован', hidden: 'Скрыт', created: 'Новый' })
+);
+
+const config = useRuntimeConfig();
+// Ссылка — по сохранённому адресу; скрытое сайт не покажет
+const siteUrl = computed(() =>
+  loaded.value?.slug && !loaded.value.isDeleted ? `${config.public.siteUrl}/comics/${loaded.value.slug}` : undefined
 );
 
 const descriptionLength = computed(() => form.description.trim().length);
@@ -160,9 +171,12 @@ useHead({ title: isUpdate ? 'НОМБ | Редактирование комик�
         :is-dirty="isDirty"
         :saving="saving"
         :submit-label="isUpdate ? 'Сохранить' : 'Создать комикс'"
+        :site-url="siteUrl"
       />
 
       <EntityFormBody>
+        <EntityFormDraftBanner v-if="draft" :draft="draft" />
+
         <section class="space-y-5 rounded-xl border border-default bg-default p-4 shadow-xs sm:p-6">
           <EntityFormTitleInput
             v-model="form.title"
