@@ -149,6 +149,7 @@ const user = computed(() => {
 });
 
 const isAuth = ref(authApi.isAuthenticated);
+const { openCount, openReport } = useFeedback();
 
 const handleLogout = async () => {
   await authApi.clearAuth();
@@ -199,7 +200,43 @@ const handleLogout = async () => {
 
       <UploadExhibition class="mt-2" />
     </nav>
-    <div v-if="isAuth" class="p-4 border-t border-gray-700">
+
+    <!-- Ошибки и пожелания: чип — сколько обращений ещё не выполнено -->
+    <div v-if="isAuth" class="px-4 pt-3 space-y-1 border-t border-gray-700">
+      <UButton
+        to="/feedback"
+        color="neutral"
+        variant="ghost"
+        icon="i-lucide-list-checks"
+        block
+        class="justify-start cursor-pointer"
+        :class="route.path.startsWith('/feedback') ? 'bg-gray-800' : ''"
+      >
+        Ошибки и пожелания
+        <template #trailing>
+          <UBadge
+            v-if="openCount"
+            :label="openCount"
+            color="warning"
+            variant="solid"
+            size="sm"
+            class="ms-auto tabular-nums"
+            :title="`Не выполнено: ${openCount}`"
+          />
+        </template>
+      </UButton>
+      <UButton
+        color="warning"
+        variant="soft"
+        icon="i-lucide-message-square-warning"
+        block
+        class="justify-start cursor-pointer"
+        @click="openReport()"
+      >
+        Сообщить об ошибке
+      </UButton>
+    </div>
+    <div v-if="isAuth" class="p-4">
       <div class="flex items-center gap-3 mb-4 p-3 rounded-lg bg-gray-800">
         <Icon :name="user.avatar" class="text-2xl text-gray-400" />
         <div class="flex-1 min-w-0">

@@ -10,6 +10,8 @@ const route = useRoute();
 watch(() => route.fullPath, () => {
   menuOpen.value = false;
 });
+
+const { openCount } = useFeedback();
 </script>
 
 <template>
@@ -19,14 +21,16 @@ watch(() => route.fullPath, () => {
     </div>
 
     <div class="lg:hidden flex items-center gap-3 h-14 px-4 bg-gray-900 text-white">
-      <UButton
-        icon="i-lucide-menu"
-        color="neutral"
-        variant="ghost"
-        class="text-white hover:bg-gray-800"
-        aria-label="Открыть меню"
-        @click="openMenu"
-      />
+      <UChip :text="openCount" :show="openCount > 0" color="warning" size="xl">
+        <UButton
+          icon="i-lucide-menu"
+          color="neutral"
+          variant="ghost"
+          class="text-white hover:bg-gray-800"
+          aria-label="Открыть меню"
+          @click="openMenu"
+        />
+      </UChip>
       <NuxtLink to="/" class="font-bold tracking-wide">INFOMANIA</NuxtLink>
     </div>
 
@@ -44,6 +48,8 @@ watch(() => route.fullPath, () => {
     <div class="w-full min-w-0">
       <slot />
     </div>
+
+    <FeedbackWatcher />
   </div>
 </template>
 
