@@ -46,6 +46,13 @@ export default defineNuxtConfig({
     },
   },
   runtimeConfig: {
+    // Приватная секция — доступна только на сервере (Nitro), в браузер не отдаётся.
+    // Используется прокси-роутом server/api/ai/* для обращения к модели.
+    ai: {
+      baseUrl: process.env.NUXT_AI_BASE_URL || 'https://ai.infomania.ru',
+      token: process.env.NUXT_AI_TOKEN || '',
+      model: process.env.NUXT_AI_MODEL || 'qwen3:1.7b',
+    },
     public: {
       apiBaseUrl: process.env.NUXT_PUBLIC_API_BASE || 'http://localhost:3300',
       // Публичный сайт — кнопка «На сайт» и ссылки «Открыть на сайте»

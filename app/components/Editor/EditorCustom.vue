@@ -168,6 +168,7 @@ const items: EditorToolbarItem[][] = [
     { slot: 'details' as const },
     { slot: 'iframe' as const },
   ],
+  [{ slot: 'ai' as const }],
 ];
 
 // Меню команд по «/» в начале строки или после пробела.
@@ -426,6 +427,10 @@ const customHandlers = {
 
       <template #iframe>
         <EditorIframePopover :editor="editor" />
+      </template>
+
+      <template #ai>
+        <EditorAiPopover :editor="editor" />
       </template>
     </UEditorToolbar>
 
