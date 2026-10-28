@@ -52,6 +52,8 @@ export default defineNuxtConfig({
       baseUrl: process.env.NUXT_AI_BASE_URL || 'https://ai.infomania.ru',
       token: process.env.NUXT_AI_TOKEN || '',
       model: process.env.NUXT_AI_MODEL || 'qwen3:1.7b',
+      // Модель эмбеддингов для подбора тегов по смыслу
+      embedModel: process.env.NUXT_AI_EMBED_MODEL || 'bge-m3',
     },
     public: {
       apiBaseUrl: process.env.NUXT_PUBLIC_API_BASE || 'http://localhost:3300',

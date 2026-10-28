@@ -678,6 +678,8 @@ useHead({ title: isUpdate ? 'НОМБ | Редактирование новос�
                 <AiSuggestTags
                   v-model="form.tags"
                   :source="`${form.title}. ${htmlToText(form.content)}`"
+                  :published-date="publishedDate.toString()"
+                  :event-date="eventDate?.toString()"
                 />
               </div>
             </UFormField>
