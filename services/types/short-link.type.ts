@@ -16,3 +16,9 @@ export interface ShortLinkQuery {
   page?: number;
   search?: string;
 }
+
+export interface ShortLinkDayStat {
+  /** YYYY-MM-DD */
+  day: string;
+  clicks: number;
+}

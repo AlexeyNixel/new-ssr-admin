@@ -65,7 +65,6 @@ export const useApi = () => {
   };
 
   const postFile = async (endpoint: string, body: FormData): Promise<File> => {
-    console.log(baseApi);
     return await $fetch<File>(baseApi + endpoint, {
       method: 'POST',
       credentials: 'include',
@@ -88,6 +87,13 @@ export const useApi = () => {
       body: data,
     });
     return res.data;
+  };
+
+  const del = async (endpoint: string, id: string): Promise<unknown> => {
+    return await $fetch<unknown>(baseApi + endpoint + id, {
+      method: 'DELETE',
+      credentials: 'include',
+    });
   };
 
   /** PUT целиком заменяет вложенный ресурс (например, состав книг подборки) */
@@ -181,5 +187,6 @@ export const useApi = () => {
     postFile,
     patch,
     put,
+    del,
   };
 };

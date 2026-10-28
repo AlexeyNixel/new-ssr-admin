@@ -16,9 +16,21 @@ export interface AuditLogEntry {
   userId: string | null;
   createdAt: string;
   user: AuditLogUser | null;
+  /** Название записи (бэкенд подставляет по id); null — запись удалена или тип без названия */
+  entityTitle?: string | null;
+  /** Slug — для страниц, которые открываются по нему */
+  entitySlug?: string | null;
+}
+
+export interface AuditLogAuthor extends AuditLogUser {
+  changes: number;
 }
 
 export interface AuditLogQuery extends IQuery {
   entityType?: string;
   entityId?: string;
+  userId?: string;
+  /** ISO-дата, включительно */
+  from?: string;
+  to?: string;
 }

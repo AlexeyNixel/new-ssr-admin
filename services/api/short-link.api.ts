@@ -1,5 +1,6 @@
 import { useApi } from './index';
-import type { IShortLink, ShortLinkQuery } from '../types/short-link.type';
+import type { IShortLink, ShortLinkDayStat, ShortLinkQuery } from '../types/short-link.type';
+import type { IQuery } from '../types/query.type';
 import { API_ENDPOINTS } from '../endpoints';
 
 export const useShortLinkApi = () => {
@@ -14,5 +15,9 @@ export const useShortLinkApi = () => {
       api.patch(API_ENDPOINTS.shortLink, id, data),
     createShortLink: (data: Partial<IShortLink>) =>
       api.post(API_ENDPOINTS.shortLink, data),
+    getStats: (id: string, days = 30) =>
+      api.getWithoutPagination<ShortLinkDayStat[]>(`${API_ENDPOINTS.shortLink}${id}/stats`, {
+        params: { days },
+      } as unknown as IQuery),
   };
 };

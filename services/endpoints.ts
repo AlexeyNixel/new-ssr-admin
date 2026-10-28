@@ -23,6 +23,12 @@ export const API_ENDPOINTS = {
   comicGenre: '/api/comics/genres/',
   comicSeries: '/api/comics/series/',
   auditLog: '/api/audit-log/',
+  auditLogAuthors: '/api/audit-log/authors',
+  exhibitions: '/api/files/exhibitions/',
+  exhibitionsAdmin: '/api/files/exhibitions/admin',
+  media: '/api/files/media/',
+  linkCheck: '/api/link-check/',
+  user: '/api/user/',
   feedback: '/api/feedback/',
 
   shortLink: '/api/short-link/',

@@ -1,12 +1,13 @@
 <script setup lang="ts">
 import type { NavigationMenuItem } from '@nuxt/ui';
-import UploadExhibition from '~/components/Ui/UploadExhibition.vue';
 import type { User } from '~~/services/types/user.type';
 
 interface NavLink {
   label: string;
   link: string;
   icon: string;
+  /** Только для управляющих пользователями (slip, mgairat) */
+  managersOnly?: boolean;
 }
 
 interface NavGroup {
@@ -39,6 +40,16 @@ const navGroups: NavGroup[] = [
         label: 'Тэги',
         link: '/tag',
         icon: 'i-mdi-tag-outline',
+      },
+      {
+        label: 'Выставки',
+        link: '/exhibition',
+        icon: 'i-lucide-gallery-horizontal',
+      },
+      {
+        label: 'Медиатека',
+        link: '/media',
+        icon: 'i-lucide-images',
       },
     ],
   },
@@ -119,6 +130,22 @@ const navGroups: NavGroup[] = [
         link: '/short-link',
         icon: 'i-lucide-link',
       },
+      {
+        label: 'Проверка ссылок',
+        link: '/link-check',
+        icon: 'i-lucide-link-2-off',
+      },
+      {
+        label: 'Журнал изменений',
+        link: '/audit-log',
+        icon: 'i-lucide-history',
+      },
+      {
+        label: 'Пользователи',
+        link: '/user',
+        icon: 'i-lucide-users',
+        managersOnly: true,
+      },
     ],
   },
 ];
@@ -126,9 +153,12 @@ const navGroups: NavGroup[] = [
 const route = useRoute();
 const siteUrl = useRuntimeConfig().public.siteUrl as string;
 
+const cookies = useCookie<User | null>('user_data');
+
 const navItems = computed<NavigationMenuItem[]>(() =>
   navGroups.map((group) => {
-    const children = group.items.map((item) => {
+    const visible = group.items.filter((item) => !item.managersOnly || cookies.value?.canManageUsers);
+    const children = visible.map((item) => {
       const active = route.path.startsWith(item.link);
       return {
         label: item.label,
@@ -148,13 +178,12 @@ const navItems = computed<NavigationMenuItem[]>(() =>
   }),
 );
 
-const cookies = useCookie<User | null>('user_data');
 const authApi = useAuth();
 const user = computed(() => {
   return {
     name: cookies.value?.name || '',
     email: cookies.value?.username,
-    role: 'Администратор',
+    role: cookies.value?.canManageUsers ? 'Администратор' : 'Редактор',
     avatar: 'i-heroicons-user-circle',
   };
 });
@@ -208,8 +237,6 @@ const handleLogout = async () => {
         color="primary"
         class="w-full"
       />
-
-      <UploadExhibition class="mt-2" />
     </nav>
 
     <!-- Ошибки и пожелания: чип — сколько обращений ещё не выполнено -->

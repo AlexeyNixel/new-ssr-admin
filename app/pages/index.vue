@@ -22,57 +22,6 @@ const TYPE_LABELS: Record<Notification['type'], { label: string; color: string }
   festive: { label: 'Праздничное', color: 'purple' },
 };
 
-// Человекочитаемые названия сущностей для журнала изменений (GET /audit-log).
-// Список типов — по спеке backend: docs/superpowers/specs/2026-09-22-audit-log-design.md
-const ENTITY_LABELS: Record<string, string> = {
-  Post: 'Новость',
-  Department: 'Отдел',
-  Tag: 'Тег',
-  Achievement: 'Достижение',
-  Book: 'Книга',
-  BookCollection: 'Сборник книг',
-  Club: 'Клуб',
-  Event: 'Событие',
-  MainSliderSlide: 'Слайд',
-  MapPoint: 'Точка на карте',
-  Notification: 'Уведомление',
-  Page: 'Страница',
-  Comic: 'Комикс',
-  ComicGenre: 'Жанр комиксов',
-  ComicSeries: 'Серия комиксов',
-  Game: 'Игра',
-  GameGenre: 'Жанр игр',
-  GameSeries: 'Серия игр',
-  NavigationItem: 'Пункт навигации',
-};
-
-const ACTION_LABELS: Record<AuditLogEntry['action'], { label: string; color: 'success' | 'primary' }> = {
-  CREATE: { label: 'Создано', color: 'success' },
-  UPDATE: { label: 'Изменено', color: 'primary' },
-};
-
-// Только те типы, для которых точно известен рабочий URL редактирования
-// (см. docs/deep-links.md). Page сюда не входит — бэкенд ищет её по slug, а в журнале есть только id.
-const ENTITY_LINK_BUILDERS: Partial<Record<string, (id: string) => string>> = {
-  Post: (id) => `/post/admin/${id}`,
-  Department: (id) => `/department?editId=${id}`,
-  Event: (id) => `/event/admin/${id}`,
-  MainSliderSlide: (id) => `/slide/admin/${id}`,
-  Notification: (id) => `/notification?editId=${id}`,
-  MapPoint: (id) => `/map-point?editId=${id}`,
-  Book: (id) => `/book/admin/${id}`,
-  BookCollection: (id) => `/collection/admin/${id}`,
-  Game: (id) => `/game/admin/${id}`,
-  Comic: (id) => `/comic/admin/${id}`,
-  NavigationItem: (id) => `/navigation?editId=${id}`,
-  Club: (id) => `/club?editId=${id}`,
-};
-
-const auditLogLink = (entry: AuditLogEntry): string | null => {
-  const builder = ENTITY_LINK_BUILDERS[entry.entityType];
-  return builder ? builder(entry.entityId) : null;
-};
-
 const notificationApi = useNotificationApi();
 const postApi = usePostApi();
 const eventApi = useEventApi();
@@ -350,8 +299,8 @@ const knownTitles = computed(() => {
   return titles;
 });
 
-const auditTitle = (entry: AuditLogEntry) => knownTitles.value.get(`${entry.entityType}:${entry.entityId}`);
-const auditAuthor = (entry: AuditLogEntry) => entry.user?.name || entry.user?.username || 'Система';
+const auditTitle = (entry: AuditLogEntry) =>
+  entry.entityTitle ?? knownTitles.value.get(`${entry.entityType}:${entry.entityId}`);
 
 const capitalize = (text: string) => text.charAt(0).toUpperCase() + text.slice(1);
 
@@ -613,7 +562,12 @@ useHead({ title: 'НОМБ | Панель управления' });
       </section>
 
       <section class="rounded-2xl bg-default ring-1 ring-default p-5">
-        <h2 class="!mb-3 !text-base !font-semibold text-highlighted">Последние изменения</h2>
+        <div class="mb-3 flex items-center justify-between gap-2">
+          <h2 class="!mb-0 !text-base !font-semibold text-highlighted">Последние изменения</h2>
+          <UButton to="/audit-log" variant="link" size="sm" trailing-icon="i-lucide-arrow-right" class="px-0">
+            Весь журнал
+          </UButton>
+        </div>
         <div v-if="auditLog === null" class="space-y-2">
           <USkeleton v-for="i in 4" :key="i" class="h-10 w-full" />
         </div>
@@ -635,8 +589,8 @@ useHead({ title: 'НОМБ | Панель управления' });
                   <div class="min-w-0 flex-1">
                     <p class="text-sm leading-snug text-default">
                       <span class="font-medium text-highlighted">{{ auditAuthor(entry) }}</span>
-                      · {{ ACTION_LABELS[entry.action]?.label.toLowerCase() ?? entry.action }}:
-                      {{ (ENTITY_LABELS[entry.entityType] ?? entry.entityType).toLowerCase() }}
+                      · {{ AUDIT_ACTION_LABELS[entry.action]?.label.toLowerCase() ?? entry.action }}:
+                      {{ auditEntityLabel(entry.entityType).toLowerCase() }}
                       <span v-if="auditTitle(entry)" class="font-medium text-highlighted">«{{ auditTitle(entry) }}»</span>
                     </p>
                     <p class="text-xs text-dimmed tabular-nums">{{ dayjs(entry.createdAt).format('HH:mm') }}</p>

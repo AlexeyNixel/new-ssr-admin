@@ -1,6 +1,13 @@
 <script setup lang="ts">
 import type { TableColumn, TableRow } from '@nuxt/ui';
-import { ListRowActions, ListVisibilityBadge, UButton, UTooltip, ModalsAdminShortLink } from '#components';
+import {
+  ListRowActions,
+  ListVisibilityBadge,
+  UButton,
+  UTooltip,
+  ModalsAdminShortLink,
+  ModalsAdminShortLinkStats,
+} from '#components';
 import { useShortLinkApi } from '~~/services/api/short-link.api';
 import type { IShortLink } from '~~/services/types/short-link.type';
 import type { Meta } from '~~/services/api';
@@ -9,6 +16,7 @@ const PAGE_SIZE = 20;
 
 const overlay = useOverlay();
 const modal = overlay.create(ModalsAdminShortLink);
+const statsModal = overlay.create(ModalsAdminShortLinkStats);
 const toast = useToast();
 const shortLinkApi = useShortLinkApi();
 const linkUrl = useShortLinkUrl();
@@ -85,9 +93,12 @@ useModalRouteOpener({
   onClosed: () => reload(),
 });
 
+const openStats = (shortLink: IShortLink) => statsModal.open({ shortLink });
+
 const rowActions = (shortLink: IShortLink) => [
   [
     { label: 'Редактировать', icon: 'i-lucide-pencil', onSelect: () => handleOpenModal(shortLink) },
+    { label: 'Статистика и QR-код', icon: 'i-lucide-qr-code', onSelect: () => openStats(shortLink) },
     { label: 'Скопировать ссылку', icon: 'i-lucide-copy', onSelect: () => copyLink(shortLink) },
     { label: 'Открыть исходную ссылку', icon: 'i-lucide-external-link', to: shortLink.url, target: '_blank' },
   ],
@@ -140,7 +151,21 @@ const columns: TableColumn<IShortLink>[] = [
   {
     id: 'clicks',
     header: 'Переходы',
-    cell: ({ row }) => h('span', { class: 'font-medium tabular-nums' }, row.original.clicks.toLocaleString('ru-RU')),
+    cell: ({ row }) =>
+      h(UTooltip, { text: 'Статистика по дням и QR-код' }, () =>
+        h(UButton, {
+          label: row.original.clicks.toLocaleString('ru-RU'),
+          icon: 'i-lucide-chart-column',
+          color: 'neutral',
+          variant: 'ghost',
+          size: 'sm',
+          class: 'font-medium tabular-nums',
+          onClick: (event: MouseEvent) => {
+            event.stopPropagation();
+            openStats(row.original);
+          },
+        })
+      ),
   },
   {
     id: 'createdAt',
