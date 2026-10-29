@@ -40,6 +40,7 @@
 | Сборники книг   | `/collection?editId=<id>` → `/collection/admin/<id>` | `GET /api/book-collection/:id?isDeleted=true` |
 | Навигация       | `/navigation?editId=<id>`               | `GET /api/navigation-item/:id`   |
 | Клубы           | `/club?editId=<id>`                     | `GET /api/clubs/:id?include=preview` |
+| Достижения      | `/achievement?editId=<id>`              | `GET /api/achievements/:id`      |
 
 Пример: `https://admin.infomania.ru/club?editId=1f0c...` — откроется страница
 «Клубы» с уже открытой модалкой редактирования этого клуба.

@@ -71,6 +71,8 @@ export const auditEntityLink = (type: string, id: string, slug?: string | null):
       return `/club?editId=${id}`;
     case 'ShortLink':
       return `/short-link?editId=${id}`;
+    case 'Achievement':
+      return `/achievement?editId=${id}`;
     case 'Feedback':
       return `/feedback?editId=${id}`;
     case 'Exhibition':

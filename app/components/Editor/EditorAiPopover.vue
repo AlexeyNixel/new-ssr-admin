@@ -4,6 +4,7 @@ import type { Editor } from '@tiptap/vue-3';
 import { useClipboard } from '@vueuse/core';
 import { AI_MODE_LIST, AI_MODES, type AiMode, type AiModeId } from '~~/services/ai/prompts';
 import { useAiFormat } from '~/composables/useAiFormat';
+import { captureAiSource, injectAiImages, stripImageMarkers, type AiImage } from '~/utils/aiImages';
 
 const props = defineProps<{ editor: Editor }>();
 
@@ -22,6 +23,9 @@ const scope = ref<{ kind: 'selection' | 'document'; from: number; to: number }>(
 
 const activeMode = computed<AiMode>(() => AI_MODES[mode.value]);
 
+/** Картинки из обрабатываемого фрагмента: в модель уходят метками, обратно — HTML. */
+const scopeImages = ref<AiImage[]>([]);
+
 const hasText = computed(() => props.editor.getText().trim().length > 0);
 
 /** Убираем артефакты маленькой модели: markdown-ограждения и блоки <think>. */
@@ -33,15 +37,31 @@ const cleaned = computed(() =>
     .trim()
 );
 
+/** Ответ с возвращёнными на место фотографиями — для предпросмотра и вставки. */
+const previewHtml = computed(() => injectAiImages(cleaned.value, scopeImages.value));
+
 const captureSource = (): string => {
   const { state } = props.editor;
   const { from, to, empty } = state.selection;
-  if (!empty) {
-    scope.value = { kind: 'selection', from, to };
-    return state.doc.textBetween(from, to, '\n\n', '\n');
+
+  const source = captureAiSource(
+    props.editor,
+    empty ? 0 : from,
+    empty ? state.doc.content.size : to
+  );
+
+  scope.value = empty
+    ? { kind: 'document', from: 0, to: 0 }
+    : { kind: 'selection', from, to };
+
+  // Метки нужны только там, где ответ вставляется в редактор как HTML
+  if (activeMode.value.output !== 'html') {
+    scopeImages.value = [];
+    return stripImageMarkers(source.text);
   }
-  scope.value = { kind: 'document', from: 0, to: 0 };
-  return props.editor.getText();
+
+  scopeImages.value = source.images;
+  return source.text.trim();
 };
 
 const start = async () => {
@@ -60,12 +80,16 @@ watch(mode, () => {
 
 // При открытии запускаем обработку, при закрытии — обрываем запрос.
 watch(open, (v) => {
-  if (v) start();
-  else abort();
+  if (v) {
+    start();
+  } else {
+    abort();
+    scopeImages.value = [];
+  }
 });
 
 const applyToEditor = () => {
-  const html = cleaned.value;
+  const html = previewHtml.value;
   if (!html) return;
   const chain = props.editor.chain().focus();
   if (scope.value.kind === 'selection') {
@@ -78,7 +102,7 @@ const applyToEditor = () => {
 };
 
 const copyResult = async () => {
-  await clipboard.copy(cleaned.value);
+  await clipboard.copy(activeMode.value.output === 'html' ? previewHtml.value : cleaned.value);
   toast.add({ title: 'Скопировано', color: 'success', icon: 'i-lucide-copy' });
 };
 
@@ -121,6 +145,10 @@ const scopeLabel = computed(() =>
           </UButton>
         </div>
         <p class="text-xs text-muted">{{ activeMode.description }}</p>
+        <p v-if="scopeImages.length" class="flex items-center gap-1.5 text-xs text-muted">
+          <UIcon name="i-lucide-images" class="size-3.5 shrink-0" />
+          Фотографий в тексте: {{ scopeImages.length }} — сохранятся и встанут по смыслу
+        </p>
 
         <!-- Результат -->
         <div
@@ -144,7 +172,7 @@ const scopeLabel = computed(() =>
             <div
               v-if="activeMode.output === 'html'"
               class="prose prose-sm max-w-none dark:prose-invert"
-              v-html="cleaned || '<span class=\'text-muted\'>…</span>'"
+              v-html="previewHtml || '<span class=\'text-muted\'>…</span>'"
             />
             <p v-else class="whitespace-pre-wrap">{{ cleaned }}</p>
             <UIcon

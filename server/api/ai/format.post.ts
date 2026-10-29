@@ -1,4 +1,4 @@
-import { AI_MODES, type AiModeId } from '~~/services/ai/prompts';
+import { AI_MODES, AI_IMAGE_MARKER_RE, AI_IMAGE_RULES, type AiModeId } from '~~/services/ai/prompts';
 
 /**
  * Прокси к модели на ai.infomania.ru (нативный Ollama API, /api/chat).
@@ -52,7 +52,11 @@ export default defineEventHandler(async (event) => {
       think: false, // qwen3 поддерживает «размышления» — для форматирования они лишние и замедляют
       options: { temperature: preset.temperature, ...(numPredict && { num_predict: numPredict }) },
       messages: [
-        { role: 'system', content: preset.system },
+        // Если в тексте есть метки фотографий — просим сохранить их и расставить по смыслу
+        {
+          role: 'system',
+          content: AI_IMAGE_MARKER_RE.test(text) ? `${preset.system}\n\n${AI_IMAGE_RULES}` : preset.system,
+        },
         { role: 'user', content: preset.task ? `Текст:\n${text}\n\n${preset.task}` : text },
       ],
     }),

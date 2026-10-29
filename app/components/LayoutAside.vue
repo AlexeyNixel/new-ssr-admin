@@ -51,6 +51,11 @@ const navGroups: NavGroup[] = [
         link: '/media',
         icon: 'i-lucide-images',
       },
+      {
+        label: 'Достижения',
+        link: '/achievement',
+        icon: 'i-lucide-trophy',
+      },
     ],
   },
   {

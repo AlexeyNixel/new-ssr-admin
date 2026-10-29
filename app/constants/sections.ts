@@ -25,6 +25,7 @@ export const SECTION_GROUPS: AdminSectionGroup[] = [
       { key: 'tags', label: 'Теги', path: '/tag' },
       { key: 'exhibitions', label: 'Выставки', path: '/exhibition' },
       { key: 'media', label: 'Медиатека', path: '/media' },
+      { key: 'achievements', label: 'Достижения', path: '/achievement' },
     ],
   },
   {
@@ -74,7 +75,7 @@ export const SECTION_TEMPLATES: { label: string; icon: string; sections: string[
   {
     label: 'Контент',
     icon: 'i-lucide-newspaper',
-    sections: ['notifications', 'posts', 'pages', 'tags', 'exhibitions', 'media', 'slides'],
+    sections: ['notifications', 'posts', 'pages', 'tags', 'exhibitions', 'media', 'slides', 'achievements'],
   },
   { label: 'Мероприятия', icon: 'i-lucide-calendar', sections: ['events', 'slides', 'clubs', 'media'] },
   { label: 'Полный доступ', icon: 'i-lucide-key-round', sections: null },

@@ -16,6 +16,8 @@ export const API_ENDPOINTS = {
   uploadExhibition: '/api/files/upload/exhibition/',
   clubs: '/api/clubs/',
   mapPoint: '/api/map-point/',
+  achievements: '/api/achievements/',
+  achievementsAdmin: '/api/achievements/admin',
   game: '/api/games/',
   gameGenre: '/api/games/genres/',
   gameSeries: '/api/games/series/',
