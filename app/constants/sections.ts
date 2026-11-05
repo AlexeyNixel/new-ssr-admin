@@ -35,6 +35,7 @@ export const SECTION_GROUPS: AdminSectionGroup[] = [
       { key: 'collections', label: 'Сборники книг', path: '/collection' },
       { key: 'games', label: 'Игры', path: '/game' },
       { key: 'comics', label: 'Комиксы', path: '/comic' },
+      { key: 'podcasts', label: 'Подкасты', path: '/podcast' },
     ],
   },
   {
@@ -71,7 +72,7 @@ export const sectionForPath = (path: string) =>
 
 /** Готовые наборы — отмечают галочки одним кликом; null — полный доступ */
 export const SECTION_TEMPLATES: { label: string; icon: string; sections: string[] | null }[] = [
-  { label: 'Библиотекарь', icon: 'i-lucide-library', sections: ['books', 'collections', 'games', 'comics', 'media'] },
+  { label: 'Библиотекарь', icon: 'i-lucide-library', sections: ['books', 'collections', 'games', 'comics', 'podcasts', 'media'] },
   {
     label: 'Контент',
     icon: 'i-lucide-newspaper',

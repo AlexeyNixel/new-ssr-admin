@@ -82,6 +82,11 @@ const navGroups: NavGroup[] = [
         link: '/comic',
         icon: 'i-heroicons-book-open',
       },
+      {
+        label: 'Подкасты',
+        link: '/podcast',
+        icon: 'i-heroicons-musical-note',
+      },
     ],
   },
   {
