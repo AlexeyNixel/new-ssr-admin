@@ -22,4 +22,14 @@ export const eventSchema = z.object({
     .refine((val) => val !== null, 'Укажите возрастное ограничение'),
   place: z.string('Выберите место проведения').min(1, 'Выберите место проведения'),
   category: z.enum(['MASTER', 'MUSIC', 'GAME', 'TALK'], 'Выберите тип события'),
+  // Пусто — ссылки нет; иначе только http(s). Пустая строка уходит на сервер как null
+  ticketUrl: z
+    .string()
+    .trim()
+    .refine(
+      (val) => !val || /^https?:\/\/\S+$/i.test(val),
+      'Ссылка должна начинаться с http:// или https://'
+    )
+    .optional(),
+  isPushkin: z.boolean().default(false),
 });

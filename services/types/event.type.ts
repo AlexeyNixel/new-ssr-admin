@@ -12,6 +12,10 @@ export interface IEvent {
   /** null — тип не указан (старые события); сайт угадывает его по названию */
   category?: EventCategory | null;
   isDeleted: boolean;
+  /** Ссылка на покупку билета (касса) */
+  ticketUrl?: string | null;
+  /** Билет можно купить по Пушкинской карте */
+  isPushkin: boolean;
 }
 
 export interface EventQuery {

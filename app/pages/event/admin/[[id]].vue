@@ -25,6 +25,8 @@ const form = reactive({
   place: undefined as string | undefined,
   category: undefined as EventCategory | undefined,
   isDeleted: false,
+  ticketUrl: '',
+  isPushkin: false,
 });
 
 /*
@@ -70,6 +72,8 @@ if (sourceId) {
       category: data.category ?? undefined,
       // копия создаётся видимой, даже если оригинал скрыт
       isDeleted: isUpdate ? !!data.isDeleted : false,
+      ticketUrl: data.ticketUrl ?? '',
+      isPushkin: !!data.isPushkin,
     });
     if (data.eventTime) parseEventTime(data.eventTime);
   } catch {
@@ -146,6 +150,7 @@ const { isDirty, markSaved, onError, draft } = useEntityForm({
     age: 'Возрастное ограничение',
     place: 'Место проведения',
     category: 'Тип события',
+    ticketUrl: 'Ссылка на билет',
   },
 });
 
@@ -237,6 +242,9 @@ const onSubmit = async () => {
     ...form,
     title: form.title.trim(),
     age: form.age ?? 0,
+    // пустое поле — ссылки нет; сервер принимает null и сохраняет NULL
+    ticketUrl: form.ticketUrl.trim() || null,
+    isPushkin: !!form.isPushkin,
   };
 
   try {
@@ -533,6 +541,30 @@ useHead({ title: isUpdate ? 'НОМБ | Редактирование событ�
             <UFormField name="age" data-field="age" label="Возрастное ограничение" required>
               <EntityFormAgeInput v-model="form.age" />
             </UFormField>
+          </EntityFormCard>
+
+          <EntityFormCard title="Билеты" icon="i-lucide-ticket">
+            <UFormField
+              name="ticketUrl"
+              data-field="ticketUrl"
+              label="Ссылка на билет"
+              help="Касса: kassir.ru, culture.ru, quicktickets и т.п. Нет предпродажи — оставьте поле пустым"
+            >
+              <UInput
+                v-model="form.ticketUrl"
+                type="url"
+                inputmode="url"
+                placeholder="https://…"
+                icon="i-lucide-link"
+                class="w-full"
+              />
+            </UFormField>
+
+            <USwitch
+              v-model="form.isPushkin"
+              label="Билет по Пушкинской карте"
+              description="Событие попадёт на страницу «Пушкинская карта»"
+            />
           </EntityFormCard>
 
           <EntityFormChecklist :items="checklist" />
