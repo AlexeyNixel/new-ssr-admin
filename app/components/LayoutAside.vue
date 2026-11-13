@@ -99,6 +99,11 @@ const navGroups: NavGroup[] = [
         icon: 'i-solar-calendar-line-duotone',
       },
       {
+        label: 'Выставки в календаре',
+        link: '/library-exhibition',
+        icon: 'i-lucide-gallery-horizontal',
+      },
+      {
         label: 'Слайды',
         link: '/slide',
         icon: 'i-material-symbols-image-outline',
