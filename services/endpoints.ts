@@ -7,6 +7,8 @@ export const API_ENDPOINTS = {
   department: '/api/departments/',
   tag: '/api/tags/',
   event: '/api/event/',
+  libraryExhibition: '/api/library-exhibition/',
+  libraryExhibitionAdmin: '/api/library-exhibition/admin',
   slides: '/api/main-slider/',
   file: '/api/file/',
   book: '/api/book/',

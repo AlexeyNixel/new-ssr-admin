@@ -42,6 +42,7 @@ export const SECTION_GROUPS: AdminSectionGroup[] = [
     label: 'Мероприятия',
     sections: [
       { key: 'events', label: 'События', path: '/event' },
+      { key: 'library-exhibitions', label: 'Выставки в календаре', path: '/library-exhibition' },
       { key: 'slides', label: 'Слайды', path: '/slide' },
       { key: 'clubs', label: 'Клубы', path: '/club' },
     ],
@@ -78,6 +79,6 @@ export const SECTION_TEMPLATES: { label: string; icon: string; sections: string[
     icon: 'i-lucide-newspaper',
     sections: ['notifications', 'posts', 'pages', 'tags', 'exhibitions', 'media', 'slides', 'achievements'],
   },
-  { label: 'Мероприятия', icon: 'i-lucide-calendar', sections: ['events', 'slides', 'clubs', 'media'] },
+  { label: 'Мероприятия', icon: 'i-lucide-calendar', sections: ['events', 'library-exhibitions', 'slides', 'clubs', 'media'] },
   { label: 'Полный доступ', icon: 'i-lucide-key-round', sections: null },
 ];

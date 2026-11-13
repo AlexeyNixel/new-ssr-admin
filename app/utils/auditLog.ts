@@ -26,6 +26,7 @@ export const AUDIT_ENTITY_LABELS: Record<string, string> = {
   NavigationItem: 'Пункт навигации',
   ShortLink: 'Короткая ссылка',
   Exhibition: 'Выставка',
+  LibraryExhibition: 'Выставка в календаре',
   User: 'Пользователь',
   Feedback: 'Обращение',
 };
@@ -75,6 +76,8 @@ export const auditEntityLink = (type: string, id: string, slug?: string | null):
       return `/achievement?editId=${id}`;
     case 'Feedback':
       return `/feedback?editId=${id}`;
+    case 'LibraryExhibition':
+      return `/library-exhibition?editId=${id}`;
     case 'Exhibition':
       return '/exhibition';
     default:
